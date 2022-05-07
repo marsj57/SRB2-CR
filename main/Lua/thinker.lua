@@ -150,7 +150,7 @@ addHook("ThinkFrame", do
 	for p in players.iterate
 		if p.exiting 
 		or p.spectator 
-		or (p.playerstate == PST_LIVE) then 
+		or (p.playerstate ~= PST_LIVE) then 
 			continue
 		end
 		doFireRing(p, p.cmd)

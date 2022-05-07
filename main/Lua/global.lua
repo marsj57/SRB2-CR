@@ -166,9 +166,11 @@ rawset(_G, "R_ProjectSprite", function(v, thing, cam)
 		return
 	end
 
-	local skin = skins[thing.skin]
-	if (thing.skin and (skin.flags & SF_HIRES)) then
-		this_scale = FixedMul(this_scale, skin.highresscale)
+	if thing.player
+		local skin = skins[thing.skin]
+		if (thing.skin and (skin.flags & SF_HIRES)) then
+			this_scale = FixedMul(this_scale, skin.highresscale)
+		end
 	end
 
 	gxt = -FixedMul(tr_x, viewsin)
@@ -194,11 +196,11 @@ rawset(_G, "R_ProjectSprite", function(v, thing, cam)
 	local patch = nil
 	local flipped = false
 	local frameangle = ((ang+ANGLE_202h)>>29)
-	if thing.player then
-		local super = (thing.player.powers[pw_super] > 0)
+	if thing.player or thing.sprite2 then
+		local super = thing.player and (thing.player.powers[pw_super] > 0)
 		patch, flipped = v.getSprite2Patch(thing.skin, thing.sprite2, super, thing.frame, frameangle+1)
 	else
-		patch, flipped = v.getSprite2Patch(thing.sprite, thing.frame, frameangle+1)
+		patch, flipped = v.getSpritePatch(thing.sprite, thing.frame, frameangle+1)
 	end
 
 	if (patch == nil) then
@@ -265,7 +267,7 @@ rawset(_G, "R_ProjectSprite", function(v, thing, cam)
 	if flipped then
 		flags = $ | V_FLIP
 	end
-	local color = v.getColormap(TC_BLINK, thing.color)
+	local color = v.getColormap(TC_BLINK, thing.color or SKINCOLOR_GREY)
 	v.drawScaled(x, y, spryscale, patch, flags, color)
 end)
 -- End Lactozilla

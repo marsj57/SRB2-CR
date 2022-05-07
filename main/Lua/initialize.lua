@@ -63,6 +63,7 @@ addHook("PlayerSpawn", function(p)
 		o.target = mo
 		o.skin = p.mo.skin
 		o.tics = -1 -- Special S_THOK state thing. Don't make this disappear.
+		o.health = -1
 		mo.outline = o
 	end
 	
@@ -74,6 +75,7 @@ addHook("PlayerSpawn", function(p)
 		o.flags2 = $ | MF2_DONTDRAW
 		o.tics = -1
 		o.target = mo
+		o.health = -1
 		p.awayviewmobj = o
 		p.awayviewtics = 2
 	end

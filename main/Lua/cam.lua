@@ -46,7 +46,7 @@ addHook("PostThinkFrame", do
 	local furthest = {
 						--x = {nil, 0},
 						--y = {nil, 0},
-						--z = {nil, 0},
+						z = {nil, 0},
 						d = {nil, 0}
 					}
 	for _,v in ipairs(totalPlayers)
@@ -62,12 +62,12 @@ addHook("PostThinkFrame", do
 		temp = abs(v.y - center.y)
 		if (temp > furthest.y[2]) then
 			furthest.y = {v, temp}
-		end
+		end*/
 		
 		temp = abs(v.z + FixedMul(v.scale, (mobjinfo[v.type].height * P_MobjFlip(v))) - center.z)
 		if (temp > furthest.z[2]) then
 			furthest.z = {v, temp}
-		end*/
+		end
 	end
 
 	-- Set these coordinates...
@@ -93,8 +93,8 @@ addHook("PostThinkFrame", do
 	-- And move!
 	local factor = 8
 	local zoomMax = 3*RING_DIST
-	local zoomPercent = (furthest.d[2] >= zoomMax) and FRACUNIT or FixedDiv(furthest.d[2], zoomMax)
-	local zoom = ease.linear(zoomPercent, 10, 90)<<FRACBITS
+	local zoomPercent = (furthest.d[2] >= zoomMax) and FRACUNIT or FixedDiv(furthest.d[2] + furthest.z[2]*3, zoomMax)
+	local zoom = ease.linear(zoomPercent, 10, 100)<<FRACBITS
 	for p in players.iterate -- Since everybody has their own awayviewmobj...
 		if not valid(p.awayviewmobj) then continue end
 		local cam = p.awayviewmobj -- Not using the exposed camera_t because the exposed camera_t likes to angle itself to the consoleplayer.
@@ -110,9 +110,9 @@ addHook("PostThinkFrame", do
 		
 		-- Aiming math towards the center
 		local dist = R_PointToDist2(cam.x, cam.y, center.x, center.y)
-		local hdist = R_PointToDist2(0, cam.z, dist, center.z) --(cam.z - center.z)
+		local hdist = (cam.z - center.z) --R_PointToDist2(0, cam.z, dist, center.z) --(cam.z - center.z)
 		-- Aim towards the center
-		p.awayviewaiming = R_PointToAngle2(0, 0, dist, -hdist)/2
+		p.awayviewaiming = R_PointToAngle2(0, 0, dist, -hdist) - ANG2
 		
 		-- Actual camera teleporting. Not used except to reference in our hud function.
 		P_TeleportCameraMove(camera,cam.x,cam.y,cam.z)
@@ -127,12 +127,13 @@ hud.add(function(v,p,c)
 	if not p.awayviewmobj or p.spectator then return end
 	--if not valid(p.mo) then return end
 	--if not valid(c) then return end
-	for px in players.iterate
-		if not px.mo then continue end
-		local mo = px.mo
-		if (px.playerstate == PST_DEAD) and (mo.fuse <= 1) then continue end
-		if P_CheckSight(px.awayviewmobj, mo) then continue end
-		R_ProjectSprite(v, mo, c)
+	for m in mobjs.iterate()
+		if not valid(m) then continue end
+		if (m.health <= 0)
+		or (m.player and (m.player.playerstate == PST_DEAD)) then continue end
+		if (m.flags2 & MF2_DONTDRAW) then continue end
+		if P_CheckSight(p.awayviewmobj, m) then continue end
+		R_ProjectSprite(v, m, c)
 	end
 end, "game")
 

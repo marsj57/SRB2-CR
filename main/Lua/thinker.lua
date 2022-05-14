@@ -74,7 +74,7 @@ addHook("PreThinkFrame", do
 		if not valid(p.awayviewmobj) then continue end
 		if not (p.pflags & PF_ANALOGMODE) then p.pflags = $ | PF_ANALOGMODE end
 		cmd.angleturn = ABSOLUTE_ANGLE>>16
-		if (p.weapondelay <= 1) then p.weapondelay = 1 end
+		--if (p.weapondelay <= 1) then p.weapondelay = 1 end
 	end
 end)
 
@@ -146,7 +146,7 @@ addHook("ThinkFrame", do
 							target.z - FixedMul(o.scale, 4*FRACUNIT))
 	end
 	
-	-- Copied from source
+	/*-- Copied from source
 	for p in players.iterate
 		if p.exiting 
 		or p.spectator 
@@ -154,7 +154,7 @@ addHook("ThinkFrame", do
 			continue
 		end
 		doFireRing(p, p.cmd)
-	end
+	end*/
 end)
 
 addHook("MobjThinker", function(mo)

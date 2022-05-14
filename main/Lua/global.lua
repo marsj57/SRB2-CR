@@ -197,7 +197,7 @@ rawset(_G, "R_ProjectSprite", function(v, thing, cam)
 	local flipped = false
 	local frameangle = ((ang+ANGLE_202h)>>29)
 	if thing.player or thing.sprite2 then
-		local super = thing.player and (thing.player.powers[pw_super] > 0)
+		local super = thing.player and (thing.player.powers[pw_super] > 0) or false
 		patch, flipped = v.getSprite2Patch(thing.skin, thing.sprite2, super, thing.frame, frameangle+1)
 	else
 		patch, flipped = v.getSpritePatch(thing.sprite, thing.frame, frameangle+1)

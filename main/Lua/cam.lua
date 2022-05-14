@@ -131,7 +131,8 @@ hud.add(function(v,p,c)
 		if not valid(m) then continue end
 		if (m.health <= 0)
 		or (m.player and (m.player.playerstate == PST_DEAD)) then continue end
-		if (m.flags2 & MF2_DONTDRAW) then continue end
+		if (m.flags2 & MF2_DONTDRAW) -- Base player, or object mobj
+		or (m.tracer and m.tracer.player and (m.tracer.flags2 & MF2_DONTDRAW)) then continue end -- Followmobj
 		if P_CheckSight(p.awayviewmobj, m) then continue end
 		R_ProjectSprite(v, m, c)
 	end

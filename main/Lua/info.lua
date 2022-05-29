@@ -35,3 +35,17 @@ states[S_RKAW1] = {SPR_RKAW, A|FF_FULLBRIGHT|FF_PAPERSPRITE, 1, nil, 0, 0, S_NUL
 SafeFreeslot("sfx_pplode")
 sfxinfo[sfx_pplode].caption = "Player Explode"
 sfxinfo[sfx_pplode].flags = SF_X2AWAYSOUND|SF_X4AWAYSOUND|SF_X8AWAYSOUND
+
+-- Sounds
+SafeFreeslot("sfx_gtlng")
+sfxinfo[sfx_gtlng].caption = "Gatling fire"
+sfxinfo[sfx_gtlng].flags = SF_X2AWAYSOUND|SF_X4AWAYSOUND|SF_X8AWAYSOUND
+
+-- Sounds
+SafeFreeslot("sfx_basic")
+sfxinfo[sfx_basic].caption = "Basic fire"
+sfxinfo[sfx_basic].flags = SF_X2AWAYSOUND|SF_X4AWAYSOUND|SF_X8AWAYSOUND
+
+SafeFreeslot("sfx_3way")
+sfxinfo[sfx_3way].caption = "3-way fire"
+sfxinfo[sfx_3way].flags = SF_X2AWAYSOUND|SF_X4AWAYSOUND|SF_X8AWAYSOUND

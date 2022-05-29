@@ -2,7 +2,8 @@
 for _, filename in ipairs({
 	"global.lua",
 	"info.lua",
-	"initialize.lua",
+	"typeStruct.lua",
+	"partsIndex.lua",
 	"thinker.lua",
 	"cam.lua",
 }) do

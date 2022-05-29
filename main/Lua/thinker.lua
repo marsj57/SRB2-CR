@@ -68,25 +68,38 @@ end)
 
 addHook("PreThinkFrame", do
 	for p in players.iterate
-		if not valid(p.mo) or p.spectator then continue end
+		if not valid(p.mo) 
+		or p.spectator 
+		or (p.playerstate == PST_DEAD) then 
+			continue 
+		end
 		local mo = p.mo
 		local cmd = p.cmd
 		if not valid(p.awayviewmobj) then continue end
 		if not (p.pflags & PF_ANALOGMODE) then p.pflags = $ | PF_ANALOGMODE end
-		cmd.angleturn = ABSOLUTE_ANGLE>>16
+		cmd.angleturn = FLCR.CameraBattleAngle>>16
 		--if (p.weapondelay <= 1) then p.weapondelay = 1 end
 	end
 end)
 
-addHook("ThinkFrame", do
-	-- Camera mobj thinker. Referenced by p.awayviewmobj
-	for p in players.iterate
-		if not valid(p.mo) or p.spectator then continue end
-		local mo = p.mo
-		if not valid(p.awayviewmobj) then continue end
-		p.awayviewtics = 2
-	end
+addHook("PlayerSpawn", function(p)
+	if not valid(p) then return false end
+	if not valid(p.mo) then return false end
+	local mo = p.mo
 	
+	if not mo.outline then
+		local o = P_SpawnMobj(mo.x, mo.y, mo.z, MT_DUMMY)
+		o.state = S_THOK
+		o.angle = mo.angle
+		o.target = mo
+		o.skin = p.mo.skin
+		o.tics = -1 -- Special S_THOK state thing. Don't make this disappear.
+		o.health = -1
+		mo.outline = o
+	end
+end)
+
+addHook("ThinkFrame", do
 	-- Target finder, and thinker.
 	for p in players.iterate
 		if not valid(p.mo) or p.spectator 
@@ -215,10 +228,6 @@ addHook("MobjDeath", function(mo)
 		local p = mo.player
 		mo.flags = $ & ~(MF_SOLID|MF_SHOOTABLE)
 		mo.flags = $ | (MF_NOBLOCKMAP|MF_NOCLIP|MF_NOCLIPHEIGHT|MF_NOGRAVITY)
-
-		if not p.bot and not p.spectator and (p.lives ~= INFLIVES) and G_GametypeUsesLives() then
-			if not (p.pflags & PF_FINISHED) then p.lives = $ - 1 end
-		end
 		
 		mo.fuse = TICRATE -- NEEDS to be set to have the player visible on death.
 		mo.state = S_PLAY_PAIN
@@ -226,6 +235,7 @@ addHook("MobjDeath", function(mo)
 		mo.momx = $/4
 		mo.momy = $/4
 		P_SetObjectMomZ(mo, 20*FRACUNIT, false)
+		p.cmd.angleturn = 0
 		return true
 	end
 end, MT_PLAYER)

@@ -7,14 +7,13 @@
 --
 -- Flame
 
-local wep
 local Guns = FLCR.Weapons.Guns
 local Bombs = FLCR.Weapons.Bombs
 local Pods = FLCR.Weapons.Pods
 
 -- Guns
 FLCR.AddGunWeapon({
-	name = "basic", 
+	name = "basic",
 	desc = "A training gun that fires 3 rounds straight ahead. It's for absolute beginners. The rounds are weaker at greater distances.",
 	usesound = sfx_basic,
 	parttype = CRPT_GUN,
@@ -52,9 +51,33 @@ FLCR.AddGunWeapon({
 	down = 6,
 })
 
+FLCR.AddGunWeapon({
+	name = "Vertical", 
+	desc = "Fires 2 rounds that ascend diagonally, clearing walls. Use them as you hide behind walls.",
+	usesound = sfx_gtlng,
+	parttype = CRPT_GUN,
+	special = CRL_INVALID,
+	attack = 4,
+	speed = 5,
+	homing = 3,
+	reload = 5,
+	down = 7,
+})
+
+FLCR.AddGunWeapon({
+	name = "Sniper", 
+	desc = "Fires one quick, straight round. While the round flies fast, it leaves you in danger for a time.",
+	usesound = sfx_gtlng,
+	parttype = CRPT_GUN,
+	special = CRL_INVALID,
+	attack = 7,
+	speed = 9,
+	homing = 1,
+	reload = 2,
+	down = 7,
+})
+
 local crgunnames = {
-	"vertical",
-	"sniper",
 	"stun",
 	"hornet",
 	"flame",
@@ -71,7 +94,7 @@ end
 FLCR.AddBombWeapon({
 	name = "standard", 
 	desc = "Flies in an arc toward target. It's large blast radius makes aiming and multiple blows a snap.",
-	usesound = 0,
+	usesound = sfx_s3k81,
 	parttype = CRPT_BOMB,
 	special = CRL_INVALID,
 	attack = 7,
@@ -84,7 +107,7 @@ FLCR.AddBombWeapon({
 FLCR.AddBombWeapon({
 	name = "standard f", 
 	desc = "Flies in an arc toward target. Knocks target sideways on impact, flushing out hidden foes.",
-	usesound = 0,
+	usesound = sfx_s3k81,
 	parttype = CRPT_BOMB,
 	special = CRL_F,
 	attack = 6,
@@ -97,7 +120,7 @@ FLCR.AddBombWeapon({
 FLCR.AddBombWeapon({
 	name = "standard s", 
 	desc = "Flies in an arc toward target. Immobilizes target upon impact for a short time.",
-	usesound = 0,
+	usesound = sfx_s3k81,
 	parttype = CRPT_BOMB,
 	special = CRL_S,
 	attack = 4,
@@ -110,7 +133,7 @@ FLCR.AddBombWeapon({
 FLCR.AddBombWeapon({
 	name = "standard k", 
 	desc = "Flies in an arc toward target. Knocks target down on impact.",
-	usesound = 0,
+	usesound = sfx_s3k81,
 	parttype = CRPT_BOMB,
 	special = CRL_K,
 	attack = 6,
@@ -123,7 +146,7 @@ FLCR.AddBombWeapon({
 FLCR.AddBombWeapon({
 	name = "standard x", 
 	desc = "Flies in an arc toward target. Explosion sends target high into the air.",
-	usesound = 0,
+	usesound = sfx_s3k81,
 	parttype = CRPT_BOMB,
 	special = CRL_X,
 	attack = 4,
@@ -148,7 +171,7 @@ end
 FLCR.AddPodWeapon({
 	name = "standard", 
 	desc = "Flies straight ahead. Blows target diagonally upward.",
-	usesound = 0,
+	usesound = sfx_s3k82,
 	parttype = CRPT_POD,
 	special = CRL_INVALID,
 	attack = 4,

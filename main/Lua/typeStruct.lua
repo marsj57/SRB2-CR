@@ -72,20 +72,32 @@ local defaultWeaponStruct = {
 	down = 0, -- Gun and Bomb ONLY, affects how much endurance is removed from opponent's meter
 	size = 0, -- Bomb and Pod ONLY, Size of the blast
 	time = 0, -- Bomb and Pod ONLY, How long the blast lasts
-	func = nil
+	spawnfunc = nil,
+	thinkfunc = nil
 }
-registerMetatable(defaultWeaponStruct)
+--registerMetatable(defaultWeaponStruct)
+
+local newIndexMethod = setmetatable({}, {
+	__newindex = function(t,k,v)
+		for Dk,Dv in pairs(defaultWeaponStruct) do -- iterate thru fallback table
+			if v[Dk] == nil then -- if v does not have a value assigned to this key,
+				v[Dk] = Dv -- we give it the one in fallback
+			end
+		end
+		rawset(t,k,v)
+	end
+})
 
 local function ResetGunWeapons()
-	FLCR.Weapons.Guns = setmetatable({}, {__index = defaultWeaponStruct})
+	FLCR.Weapons.Guns = newIndexMethod
 end
 
 local function ResetBombWeapons()
-	FLCR.Weapons.Bombs = setmetatable({}, {__index = defaultWeaponStruct})
+	FLCR.Weapons.Bombs = newIndexMethod
 end
 
 local function ResetPodWeapons()
-	FLCR.Weapons.Pods = setmetatable({}, {__index = defaultWeaponStruct})
+	FLCR.Weapons.Pods = newIndexMethod
 end
 
 ResetGunWeapons()

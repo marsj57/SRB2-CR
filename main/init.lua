@@ -4,7 +4,7 @@ for _, filename in ipairs({
 	"info.lua",
 	"typeStruct.lua",
 	"partsIndex.lua",
-	"thinker.lua",
+	"miscThinkers.lua",
 	"cam.lua",
 }) do
 	dofile(filename)

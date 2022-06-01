@@ -66,22 +66,6 @@ rawset(_G, "look4ClosestMo", function(mo, dist, mtype)
 	return closestmo
 end)
 
-addHook("PreThinkFrame", do
-	for p in players.iterate
-		if not valid(p.mo) 
-		or p.spectator 
-		or (p.playerstate == PST_DEAD) then 
-			continue 
-		end
-		local mo = p.mo
-		local cmd = p.cmd
-		if not valid(p.awayviewmobj) then continue end
-		if not (p.pflags & PF_ANALOGMODE) then p.pflags = $ | PF_ANALOGMODE end
-		cmd.angleturn = FLCR.CameraBattleAngle>>16
-		--if (p.weapondelay <= 1) then p.weapondelay = 1 end
-	end
-end)
-
 addHook("PlayerSpawn", function(p)
 	if not valid(p) then return false end
 	if not valid(p.mo) then return false end
@@ -91,7 +75,7 @@ addHook("PlayerSpawn", function(p)
 		local o = P_SpawnMobj(mo.x, mo.y, mo.z, MT_DUMMY)
 		o.state = S_THOK
 		o.angle = mo.angle
-		o.target = mo
+		o.refmo = mo
 		o.skin = p.mo.skin
 		o.tics = -1 -- Special S_THOK state thing. Don't make this disappear.
 		o.health = -1
@@ -136,7 +120,7 @@ addHook("ThinkFrame", do
 		local mo = p.mo
 		if not valid(mo.outline) then continue end
 		local o = mo.outline
-		local target = o.target
+		local target = o.refmo
 		o.angle = target.angle
 		o.skin = target.skin
 		o.sprite2 = target.sprite2
@@ -170,10 +154,11 @@ addHook("ThinkFrame", do
 	end*/
 end)
 
+-- Thinker for the outline mobj when the host (refmobj) dies
 addHook("MobjThinker", function(mo)
-	if (not valid(mo.target) and mo.skin)
-	or (valid(mo.target) and valid(mo.target.player) and (mo.target.player.playerstate == PST_DEAD)) then
-		P_RemoveMobj(mo)
+	if (not valid(mo.refmo) and mo.skin)
+	or (valid(mo.refmo) and valid(mo.refmo.player) and (mo.refmo.player.playerstate == PST_DEAD)) then
+		P_RemoveMobj(mo) -- You should remove yourself, NOW!
 	end
 end, MT_DUMMY)
 
@@ -235,7 +220,7 @@ addHook("MobjDeath", function(mo)
 		mo.momx = $/4
 		mo.momy = $/4
 		P_SetObjectMomZ(mo, 20*FRACUNIT, false)
-		p.cmd.angleturn = 0
+		--p.cmd.angleturn = 0
 		return true
 	end
 end, MT_PLAYER)

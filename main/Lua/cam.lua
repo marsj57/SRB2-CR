@@ -7,6 +7,19 @@
 --
 -- Flame
 
+-- The goal of this file is to be a standalone file.
+
+freeslot("MT_FLCRCAM")
+
+mobjinfo[MT_FLCRCAM] = {
+	doomednum = -1,
+	spawnstate = S_INVISIBLE,
+	spawnhealth = 1000,
+	radius = 16*FRACUNIT,
+	height = 32*FRACUNIT,
+	flags = MF_NOGRAVITY|MF_NOCLIPTHING|MF_NOBLOCKMAP|MF_NOCLIPHEIGHT|MF_NOCLIP
+}
+
 -- Lactozilla
 local MINZ = (FRACUNIT*4)
 local FEETADJUST = -(15<<FRACBITS)
@@ -182,6 +195,25 @@ addHook("MapLoad", function(mapnum)
 	FLCR.CameraBattleAngle = 0
 end)
 
+addHook("PreThinkFrame", do
+	for p in players.iterate
+		if not valid(p.mo) 
+		or p.spectator 
+		or (p.playerstate == PST_DEAD) then
+			continue 
+		end
+		
+		-- Set Analog if not already
+		if not (p.pflags & PF_ANALOGMODE) then p.pflags = $ | PF_ANALOGMODE end
+		
+		-- Awayview time will always be 2 seconds unless player no longer exists
+		p.awayviewtics = 3*TICRATE
+		p.awayviewmobj.tics = p.awayviewtics
+		
+		p.cmd.angleturn = FLCR.CameraBattleAngle>>16
+	end
+end)
+
 addHook("PlayerSpawn", function(p)
 	if not valid(p) then return false end
 	if not valid(p.mo) then return false end
@@ -189,7 +221,7 @@ addHook("PlayerSpawn", function(p)
 	
 	-- Camera mobj. Not using camera_t.
 	if not p.awayviewmobj and (gametype == GT_MATCH) then
-		local o = P_SpawnMobj(mo.x, mo.y, mo.z, MT_DUMMY)
+		local o = P_SpawnMobj(mo.x, mo.y, mo.z, MT_FLCRCAM)
 		o.state = S_THOK
 		o.angle = mo.angle
 		o.flags2 = $ | MF2_DONTDRAW
@@ -197,7 +229,7 @@ addHook("PlayerSpawn", function(p)
 		o.target = mo
 		o.health = -1
 		p.awayviewmobj = o
-		p.awayviewtics = 2
+		p.awayviewtics = o.tics
 	end
 	
 	p.pflags = $ | PF_ANALOGMODE
@@ -206,13 +238,10 @@ addHook("PlayerSpawn", function(p)
 	p.rings = 50
 end, MT_PLAYER)
 
-addHook("ThinkFrame", do
-	-- Camera mobj thinker. Referenced by p.awayviewmobj
-	for p in players.iterate
-		if not valid(p.mo) or p.spectator then continue end
-		local mo = p.mo
-		if not valid(p.awayviewmobj) then continue end
-		p.awayviewtics = 2
+addHook("PlayerThink", function(p)
+	if (p.playerstate == PST_DEAD)
+	and valid(p.awayviewmobj) and not p.awayviewtics then
+		P_RemoveMobj(p.awayviewmobj)
 	end
 end)
 
@@ -318,11 +347,6 @@ addHook("PostThinkFrame", do
 		local hdist = (cam.z - center.z) --R_PointToDist2(0, cam.z, dist, center.z) --(cam.z - center.z)
 		-- Aim towards the center
 		p.awayviewaiming = R_PointToAngle2(0, 0, dist, -hdist) - ANG2
-		
-		-- Actual camera teleporting. Not used except to reference in our hud function.
-		P_TeleportCameraMove(camera,cam.x,cam.y,cam.z)
-		camera.angle = cam.angle
-		camera.aiming = p.awayviewaiming
 	end
 end)
 
@@ -330,6 +354,10 @@ hud.add(function(v,p,c)
 	--if not valid(v) then return end
 	if not valid(p) then return end
 	if not p.awayviewmobj or p.spectator then return end
+	local avm = p.awayviewmobj
+	P_TeleportCameraMove(c, avm.x, avm.y, avm.z)
+	c.angle = avm.angle
+	c.aiming = p.awayviewaiming
 	--if not valid(p.mo) then return end
 	--if not valid(c) then return end
 	for m in mobjs.iterate()
@@ -338,7 +366,7 @@ hud.add(function(v,p,c)
 		or (m.player and (m.player.playerstate == PST_DEAD)) then continue end
 		if (m.flags2 & MF2_DONTDRAW) -- Base player, or object mobj
 		or (m.tracer and m.tracer.player and (m.tracer.flags2 & MF2_DONTDRAW)) then continue end -- Followmobj
-		if P_CheckSight(p.awayviewmobj, m) then continue end
+		if P_CheckSight(avm, m) then continue end
 		R_ProjectSprite(v, m, c)
 	end
 end, "game")

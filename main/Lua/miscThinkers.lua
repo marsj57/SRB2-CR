@@ -103,7 +103,7 @@ addHook("ThinkFrame", do
 			else
 				spawnArrow(mo, target)
 				if not p.climbing
-				and not (p.pflags & PF_SPINNING)
+				--and not (p.pflags & PF_SPINNING)
 				and not (p.pflags & PF_STARTDASH)
 				and not (p.pflags & PF_GLIDING) then
 					mo.angle = R_PointToAngle2(mo.x, mo.y, target.x, target.y)
@@ -205,7 +205,8 @@ rawset(_G, "deathThink1", function(p)
 end)
 
 addHook("PlayerThink", function(p)
-	if (p.playerstate == PST_DEAD) then deathThink1(p) end
+	if not valid(p) then return end
+	if (p.playerstate == PST_DEAD) then deathThink1(p) return end
 end)
 
 addHook("MobjDeath", function(mo)

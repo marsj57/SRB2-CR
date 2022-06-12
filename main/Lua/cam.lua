@@ -206,7 +206,7 @@ addHook("PreThinkFrame", do
 		-- Set Analog if not already
 		if not (p.pflags & PF_ANALOGMODE) then p.pflags = $ | PF_ANALOGMODE end
 		
-		-- Awayview time will always be 2 seconds unless player no longer exists
+		-- Awayview time will always be 3 seconds unless player no longer exists
 		p.awayviewtics = 3*TICRATE
 		p.awayviewmobj.tics = p.awayviewtics
 		
@@ -346,7 +346,7 @@ addHook("PostThinkFrame", do
 		local dist = R_PointToDist2(cam.x, cam.y, center.x, center.y)
 		local hdist = (cam.z - center.z) --R_PointToDist2(0, cam.z, dist, center.z) --(cam.z - center.z)
 		-- Aim towards the center
-		p.awayviewaiming = R_PointToAngle2(0, 0, dist, -hdist) - ANG2
+		p.awayviewaiming = R_PointToAngle2(0, 0, dist, -hdist) -- ANG2
 	end
 end)
 
@@ -369,6 +369,9 @@ hud.add(function(v,p,c)
 		if P_CheckSight(avm, m) then continue end
 		R_ProjectSprite(v, m, c)
 	end
+	
+	/*local testpatch = v.cachePatch("CRHU")
+	v.draw(1,1,testpatch,V_SNAPTORIGHT)*/
 end, "game")
 
 addHook("NetVars", function(n)

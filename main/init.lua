@@ -4,6 +4,7 @@ for _, filename in ipairs({
 	"info.lua",
 	"typeStruct.lua",
 	"partsIndex.lua",
+	"gameplayFunctions.lua",
 	"miscThinkers.lua",
 	"cam.lua",
 }) do

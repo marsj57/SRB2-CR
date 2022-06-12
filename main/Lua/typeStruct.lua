@@ -58,13 +58,18 @@ createEnum(specialLetter, {
 })
 
 local defaultWeaponStruct = {
-	name = "Invalid",
-	desc = "This weapon is missing a description. Please give this weapon a description!",
-	mt = MT_DUMMY,
-	usesound = 0,
+	name = "Invalid", -- Name of weapon to rawset (CRWEP_ (Part Type below) _Name)
+	desc = "This weapon is missing a description. Please give this weapon a description!", -- Self explainitory
+	mo = MT_DUMMY,
+	usesound = 0, -- Use sound for spawning
 	parttype = CRPT_INVALID, -- Gun, Bomb, or Pod
-	special = CRL_INVALID,
-	fuse = 0, -- Bullet lifetime
+	special = CRL_INVALID, -- Special letter, see above table
+	func = nil, -- Function
+
+	firedelay = 0, -- Firing delay between shots
+	maxrounds = 0, -- How many rounds can your weapon fire per-clip?
+	
+	-- Hud Display stuff
 	attack = 0,
 	speed = 0,
 	homing = 0, -- Gun and Pod ONLY
@@ -72,70 +77,53 @@ local defaultWeaponStruct = {
 	down = 0, -- Gun and Bomb ONLY, affects how much endurance is removed from opponent's meter
 	size = 0, -- Bomb and Pod ONLY, Size of the blast
 	time = 0, -- Bomb and Pod ONLY, How long the blast lasts
-	spawnfunc = nil,
-	thinkfunc = nil
 }
 --registerMetatable(defaultWeaponStruct)
 
-local newIndexMethod = setmetatable({}, {
-	__newindex = function(t,k,v)
-		for Dk,Dv in pairs(defaultWeaponStruct) do -- iterate thru fallback table
-			if v[Dk] == nil then -- if v does not have a value assigned to this key,
-				v[Dk] = Dv -- we give it the one in fallback
+local function ResetWeapons()
+	FLCR.Weapons = setmetatable({}, {
+		__newindex = function(t,k,v)
+			for Dk,Dv in pairs(defaultWeaponStruct) do -- iterate thru fallback table
+				if v[Dk] == nil then -- if v does not have a value assigned to this key,
+					v[Dk] = Dv -- we give it the one in fallback
+				end
 			end
+			rawset(t,k,v)
 		end
-		rawset(t,k,v)
+	})
+end
+
+ResetWeapons()
+
+FLCR.AddWeapon = function(t)
+	t = $ or {}
+	assert(t.name, "Weapon name not provided!")
+	assert(t.parttype, "Weapon Part Type not provided!")
+	local rsn = "CRWEP_"
+	local pt = t.parttype
+	if (pt == CRPT_GUN) then -- Gun
+		rsn = $ + "GUN_" + string.upper(t.name:gsub(" ", ""))
+	elseif (pt == CRPT_BOMB) then -- Bomb
+		rsn = $ + "BOMB_" + string.upper(t.name:gsub(" ", ""))
+	elseif (pt == CRPT_POD) then -- Pod
+		rsn = $ + "POD_" + string.upper(t.name:gsub(" ", ""))
+	/*elseif (pt == CRPT_LEG) then
+		rsn = $ + "LEG_" + string.upper(t.name:gsub(" ", ""))*/
 	end
-})
+	assert(not FLCR.Weapons[_G[rsn]], "Weapon "..t.name.." ("..rsn..") not registered as it is already registered!")
 
-local function ResetGunWeapons()
-	FLCR.Weapons.Guns = newIndexMethod
-end
-
-local function ResetBombWeapons()
-	FLCR.Weapons.Bombs = newIndexMethod
-end
-
-local function ResetPodWeapons()
-	FLCR.Weapons.Pods = newIndexMethod
-end
-
-ResetGunWeapons()
-ResetBombWeapons()
-ResetPodWeapons()
-
-FLCR.AddGunWeapon = function(t)
-	t = $ or {}
-	assert(t.name, "Gun name not provided!")
-	local rsn = "CRWEP_GUN_" + string.upper(t.name:gsub(" ", ""))
-	assert(not FLCR.Weapons.Guns[_G[rsn]], "Gun "..t.name.." not registered as it is already registered!")
-
-	local id = #FLCR.Weapons.Guns + 1
+	local id = #FLCR.Weapons + 1
 	rawset(_G, rsn, id)
-	FLCR.Weapons.Guns[id] = t
-	print("Added new GUN Weapon: " + t.name + " (" + rsn + ")")
-end
+	FLCR.Weapons[id] = t
 
-FLCR.AddBombWeapon = function(t)
-	t = $ or {}
-	assert(t.name, "Bomb name not provided!")
-	local rsn = "CRWEP_BOMB_" + string.upper(t.name:gsub(" ", ""))
-	assert(not FLCR.Weapons.Bombs[_G[rsn]], "Bomb "..t.name.." not registered as it is already registered!")
-
-	local id = #FLCR.Weapons.Bombs + 1
-	rawset(_G, rsn, id)
-	FLCR.Weapons.Bombs[id] = t
-	print("Added new BOMB Weapon: " + t.name + " (" + rsn + ")")
-end
-
-FLCR.AddPodWeapon = function(t)
-	t = $ or {}
-	assert(t.name, "Pod name not provided!")
-	local rsn = "CRWEP_POD_" + string.upper(t.name:gsub(" ", ""))
-	assert(not FLCR.Weapons.Pods[_G[rsn]], "Pod "..t.name.." not registered as it is already registered!")
-
-	local id = #FLCR.Weapons.Pods + 1
-	rawset(_G, rsn, id)
-	FLCR.Weapons.Pods[id] = t
-	print("Added new POD Weapon: " + t.name + " (" + rsn + ")")
+	--local pts = string.sub(rsn, 7, 8) -- Part type String
+	if (pt == CRPT_GUN) then -- Gun
+		print("Added new GUN Weapon:  " + t.name + " (" + rsn + ")")
+	elseif (pt == CRPT_BOMB) then -- Bomb
+		print("Added new BOMB Weapon: " + t.name + " (" + rsn + ")")
+	elseif (pt == CRPT_POD) then -- Pod
+		print("Added new POD Weapon:  " + t.name + " (" + rsn + ")")
+	/*elseif (pt == CRPT_LEG) then -- Legs?
+		print("Added new LEG Part:  " + t.name + " (" + rsn + ")")*/
+	end
 end

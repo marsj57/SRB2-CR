@@ -7,17 +7,43 @@
 --
 -- Flame
 
-local Guns = FLCR.Weapons.Guns
-local Bombs = FLCR.Weapons.Bombs
-local Pods = FLCR.Weapons.Pods
-
 -- Guns
-FLCR.AddGunWeapon({
-	name = "basic",
+FLCR.AddWeapon({
+	name = "Basic",
 	desc = "A training gun that fires 3 rounds straight ahead. It's for absolute beginners. The rounds are weaker at greater distances.",
+	mo = MT_REDRING,
 	usesound = sfx_basic,
 	parttype = CRPT_GUN,
-	special = CRL_INVALID,
+	func = function(p, w)
+		if not valid(p) then return end
+		if p.spectator then return end
+		if (p.playerstate == PST_DEAD) then return end
+		if (P_PlayerInPain(p)) then return end
+		if not valid(p.mo) then return end
+		local mo = p.mo
+
+		if (p.weaponfire -- If you are in weapon fire
+		and (p.weapondelay%w.multiint)) -- Modulo by your weapon's firedelay, a non zero number?
+		or (p.weaponfirecount >= w.maxrounds)
+			return
+		elseif not p.weaponfire then
+			p.weapondelay = (w.multiint * w.maxrounds)
+			p.powers[pw_nocontrol] = p.weapondelay + 10
+		end
+		
+		local th = P_SpawnPlayerMissile(mo, w.mo)
+		if valid(th) then 
+			th.target = mo
+			S_StartSound(th, w.usesound)
+		else
+			S_StartSound(mo, w.usesound)
+		end
+		p.weaponfirecount = $ + 1
+	end,
+	
+	multiint = TICRATE/3, -- Multishot interval
+	maxrounds = 3, -- How many rounds can your weapon fire per-clip?
+
 	attack = 4,
 	speed = 5,
 	homing = 2,
@@ -25,12 +51,11 @@ FLCR.AddGunWeapon({
 	down = 6,
 })
 
-FLCR.AddGunWeapon({
+FLCR.AddWeapon({
 	name = "3way", 
 	desc = "Fires 3 straight rounds in 3 rows. The farther you are from the enemy, the better its homing.",
 	usesound = sfx_3way,
 	parttype = CRPT_GUN,
-	special = CRL_INVALID,
 	attack = 5,
 	speed = 5,
 	homing = 4,
@@ -38,12 +63,42 @@ FLCR.AddGunWeapon({
 	down = 6,
 })
 
-FLCR.AddGunWeapon({
-	name = "gatling", 
+FLCR.AddWeapon({
+	name = "Gatling", 
 	desc = "Fires multiple small rounds straight ahead. Stay close to the enemy for better shots.",
+	mo = MT_REDRING,
 	usesound = sfx_gtlng,
 	parttype = CRPT_GUN,
-	special = CRL_INVALID,
+	func = function(p, w)
+		if not valid(p) then return end
+		if p.spectator then return end
+		if (p.playerstate == PST_DEAD) then return end
+		if (P_PlayerInPain(p)) then return end
+		if not valid(p.mo) then return end
+		local mo = p.mo
+
+		if (p.weaponfire -- If you are in weapon fire
+		and (p.weapondelay%w.multiint)) -- Modulo by your weapon's firedelay, a non zero number?
+		or (p.weaponfirecount >= w.maxrounds)
+			return
+		elseif not p.weaponfire then
+			p.weapondelay = (w.multiint * w.maxrounds) + TICRATE
+			p.powers[pw_nocontrol] = p.weapondelay + 20
+		end
+		
+		local th = P_SpawnPlayerMissile(mo, w.mo)
+		if valid(th) then 
+			th.target = mo
+			S_StartSound(th, w.usesound)
+		else
+			S_StartSound(mo, w.usesound)
+		end
+		p.weaponfirecount = $ + 1
+	end,
+	
+	multiint = TICRATE/9, -- Multishot interval
+	maxrounds = 9, -- How many rounds can your weapon fire per-clip?
+
 	attack = 4,
 	speed = 7,
 	homing = 2,
@@ -51,12 +106,11 @@ FLCR.AddGunWeapon({
 	down = 6,
 })
 
-FLCR.AddGunWeapon({
+FLCR.AddWeapon({
 	name = "Vertical", 
 	desc = "Fires 2 rounds that ascend diagonally, clearing walls. Use them as you hide behind walls.",
 	usesound = sfx_gtlng,
 	parttype = CRPT_GUN,
-	special = CRL_INVALID,
 	attack = 4,
 	speed = 5,
 	homing = 3,
@@ -64,12 +118,11 @@ FLCR.AddGunWeapon({
 	down = 7,
 })
 
-FLCR.AddGunWeapon({
+FLCR.AddWeapon({
 	name = "Sniper", 
 	desc = "Fires one quick, straight round. While the round flies fast, it leaves you in danger for a time.",
 	usesound = sfx_gtlng,
 	parttype = CRPT_GUN,
-	special = CRL_INVALID,
 	attack = 7,
 	speed = 9,
 	homing = 1,
@@ -77,26 +130,72 @@ FLCR.AddGunWeapon({
 	down = 7,
 })
 
-local crgunnames = {
-	"stun",
-	"hornet",
-	"flame",
-	"dragon",
-	"splash",
-}
-for _, gn in ipairs(crgunnames)
-	FLCR.AddGunWeapon({ name = gn, 
-						parttype = CRPT_GUN 
-						})
-end
+FLCR.AddWeapon({
+	name = "Stun", 
+	desc = "Fires continuous short-ranged electric shots that paralyze foes. Use at close range.",
+	usesound = 0,
+	parttype = CRPT_GUN,
+	attack = 2,
+	speed = 7,
+	homing = 3,
+	reload = 9,
+	down = 7,
+})
+
+FLCR.AddWeapon({
+	name = "Hornet", 
+	desc = "Spreads five bee-shaped rounds that chase its target.",
+	usesound = 0,
+	parttype = CRPT_GUN,
+	attack = 6,
+	speed = 3,
+	homing = 6,
+	reload = 3,
+	down = 6,
+})
+
+FLCR.AddWeapon({
+	name = "Flame", 
+	desc = "Fires flame-shaped rounds straight ahead. Its power increases with distance.",
+	usesound = 0,
+	parttype = CRPT_GUN,
+	attack = 5,
+	speed = 4,
+	homing = 3,
+	reload = 5,
+	down = 7,
+})
+
+FLCR.AddWeapon({
+	name = "Dragon", 
+	desc = "Fires one dragon-shaped round that zeroes in on foes. Stay on your guard after firing.",
+	usesound = 0,
+	parttype = CRPT_GUN,
+	attack = 7,
+	speed = 4,
+	homing = 7,
+	reload = 3,
+	down = 8,
+})
+
+FLCR.AddWeapon({
+	name = "splash", 
+	desc = "Fires 3 large yet weak rounds straight ahead. Briefly immobolizes foes.",
+	usesound = 0,
+	parttype = CRPT_GUN,
+	attack = 1,
+	speed = 4,
+	homing = 3,
+	reload = 10,
+	down = 2,
+})
 
 -- Bombs
-FLCR.AddBombWeapon({
+FLCR.AddWeapon({
 	name = "standard", 
 	desc = "Flies in an arc toward target. It's large blast radius makes aiming and multiple blows a snap.",
 	usesound = sfx_s3k81,
 	parttype = CRPT_BOMB,
-	special = CRL_INVALID,
 	attack = 7,
 	speed = 5,
 	size = 5,
@@ -104,7 +203,7 @@ FLCR.AddBombWeapon({
 	down = 6,
 })
 
-FLCR.AddBombWeapon({
+FLCR.AddWeapon({
 	name = "standard f", 
 	desc = "Flies in an arc toward target. Knocks target sideways on impact, flushing out hidden foes.",
 	usesound = sfx_s3k81,
@@ -117,7 +216,7 @@ FLCR.AddBombWeapon({
 	down = 6,
 })
 
-FLCR.AddBombWeapon({
+FLCR.AddWeapon({
 	name = "standard s", 
 	desc = "Flies in an arc toward target. Immobilizes target upon impact for a short time.",
 	usesound = sfx_s3k81,
@@ -130,7 +229,7 @@ FLCR.AddBombWeapon({
 	down = 3,
 })
 
-FLCR.AddBombWeapon({
+FLCR.AddWeapon({
 	name = "standard k", 
 	desc = "Flies in an arc toward target. Knocks target down on impact.",
 	usesound = sfx_s3k81,
@@ -143,7 +242,7 @@ FLCR.AddBombWeapon({
 	down = 10,
 })
 
-FLCR.AddBombWeapon({
+FLCR.AddWeapon({
 	name = "standard x", 
 	desc = "Flies in an arc toward target. Explosion sends target high into the air.",
 	usesound = sfx_s3k81,
@@ -162,13 +261,13 @@ local crbombnames = {
 	"titan"
 }
 for _, bn in ipairs(crbombnames)
-	FLCR.AddBombWeapon({ name = bn,
+	FLCR.AddWeapon({ name = bn,
 						parttype = CRPT_BOMB 
 						})
 end
 
 -- Pods
-FLCR.AddPodWeapon({
+FLCR.AddWeapon({
 	name = "standard", 
 	desc = "Flies straight ahead. Blows target diagonally upward.",
 	usesound = sfx_s3k82,
@@ -192,7 +291,7 @@ local crpodnames = {
 	"titan"
 }
 for _, pn in ipairs(crpodnames)
-	FLCR.AddPodWeapon({ name = pn, 
+	FLCR.AddWeapon({ name = pn, 
 						parttype = CRPT_POD 
 						})
 end

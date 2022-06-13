@@ -24,6 +24,10 @@ FLCR.gameplayStuff = function(p)
 
 	if p.weaponfire then
 		-- Autofiring
+		
+		-- Don't fire under the following conditions
+		-- Spectator is already checked earlier so check these!
+		if (p.playerstate == PST_DEAD) or P_PlayerInPain(p) then return end
 		FLCR.weaponFire(p, p.crloadout[p.crselection])
 		return -- Don't process anything else while this is going on
 	else
@@ -59,6 +63,7 @@ addHook("PreThinkFrame", do
 end)
 
 addHook("PlayerSpawn", function(p)
+	-- Set yourself up with a noob pack!
 	p.crloadout = {CRWEP_GUN_BASIC, CRWEP_GUN_GATLING, CRWEP_BOMB_STANDARD, CRWEP_POD_STANDARD}
 	p.crselection = 1
 end)
@@ -81,12 +86,10 @@ addHook("PlayerThink", function(p)
 
 	-- Weapon firing
 	-- Do not process anything on these following conditions...
-	if not p.crloadout 
-	or (p.playerstate == PST_DEAD)
-	or P_PlayerInPain(p) then
-		return
-	end
-	if not (p.weaponfire and p.powers[pw_nocontrol]) then
+	if not p.crloadout then return end -- No loadout
+	-- Spectator is already checked earlier so check these!
+	if (p.playerstate == PST_DEAD) or P_PlayerInPain(p) then return end
+	if not p.weaponfire then
 		-- Checks passed, let's fire your weapon!
 		if (cmd.buttons & BT_ATTACK) and not (p.pflags & PF_ATTACKDOWN) then
 			FLCR.weaponFire(p, p.crloadout[p.crselection]) -- Use the current weapon you have selected

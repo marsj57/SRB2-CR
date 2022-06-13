@@ -16,9 +16,6 @@ FLCR.AddWeapon({
 	parttype = CRPT_GUN,
 	func = function(p, w)
 		if not valid(p) then return end
-		if p.spectator then return end
-		if (p.playerstate == PST_DEAD) then return end
-		if (P_PlayerInPain(p)) then return end
 		if not valid(p.mo) then return end
 		local mo = p.mo
 
@@ -27,8 +24,8 @@ FLCR.AddWeapon({
 		or (p.weaponfirecount >= w.maxrounds)
 			return
 		elseif not p.weaponfire then
-			p.weapondelay = (w.multiint * w.maxrounds)
-			p.powers[pw_nocontrol] = p.weapondelay + 10
+			p.weapondelay = (w.multiint * w.maxrounds)*2 -- 66
+			p.powers[pw_nocontrol] = p.weapondelay - 5*(w.reload)
 		end
 		
 		local th = P_SpawnPlayerMissile(mo, w.mo)
@@ -56,6 +53,29 @@ FLCR.AddWeapon({
 	desc = "Fires 3 straight rounds in 3 rows. The farther you are from the enemy, the better its homing.",
 	usesound = sfx_3way,
 	parttype = CRPT_GUN,
+	func = function(p, w)
+		if not valid(p) then return end
+		if not valid(p.mo) then return end
+		local mo = p.mo
+		
+		if (p.weaponfire -- If you are in weapon fire
+		and (p.weapondelay%w.multiint)) -- Modulo by your weapon's firedelay, a non zero number?
+		or (p.weaponfirecount >= w.maxrounds)
+			return
+		elseif not p.weaponfire then
+			p.weapondelay = (w.multiint * w.maxrounds)*2 -- 54
+			p.powers[pw_nocontrol] = p.weapondelay - 5*(w.reload)
+		end
+		
+		for i = -1, 1, 1 do
+			local fa = i*ANGLE_45
+			--local th = P_SpawnPlayerMissile(mo, w.mo)
+		end
+	end,
+		
+	multiint = TICRATE/9, -- Multishot interval
+	maxrounds = 9, -- How many rounds can your weapon fire per-clip?
+	
 	attack = 5,
 	speed = 5,
 	homing = 4,
@@ -71,9 +91,6 @@ FLCR.AddWeapon({
 	parttype = CRPT_GUN,
 	func = function(p, w)
 		if not valid(p) then return end
-		if p.spectator then return end
-		if (p.playerstate == PST_DEAD) then return end
-		if (P_PlayerInPain(p)) then return end
 		if not valid(p.mo) then return end
 		local mo = p.mo
 
@@ -82,8 +99,8 @@ FLCR.AddWeapon({
 		or (p.weaponfirecount >= w.maxrounds)
 			return
 		elseif not p.weaponfire then
-			p.weapondelay = (w.multiint * w.maxrounds) + TICRATE
-			p.powers[pw_nocontrol] = p.weapondelay + 20
+			p.weapondelay = (w.multiint * w.maxrounds)*2 -- 54
+			p.powers[pw_nocontrol] = p.weapondelay - 5*(w.reload)
 		end
 		
 		local th = P_SpawnPlayerMissile(mo, w.mo)

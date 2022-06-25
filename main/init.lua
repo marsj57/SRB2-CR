@@ -2,8 +2,9 @@
 for _, filename in ipairs({
 	"global.lua",
 	"info.lua",
-	"typeStruct.lua",
-	"partsIndex.lua",
+	"utilityFuncs.lua",
+	"typeStruct.lua", -- Also calls "partsIndex.lua"
+	--"partsIndex.lua",
 	"gameplayFunctions.lua",
 	"miscThinkers.lua",
 	"cam.lua",

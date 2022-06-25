@@ -7,6 +7,8 @@
 --
 -- Flame
 
+local Lib = FLCRLib
+
 -- From Rollout Knockout
 rawset(_G, "spawnArrow", function(mo, target)
 	-- Need both a source 'mo' and a target 'mo'
@@ -42,30 +44,6 @@ rawset(_G, "spawnArrow", function(mo, target)
 	return arw
 end)
 
-rawset(_G, "look4ClosestMo", function(mo, dist, mtype)
-	if not valid(mo) then return end
-	
-	local closestmo
-	local closestdist = dist
-	for m in mobjs.iterate() do
-		if (m == mo) then continue end -- Skip us
-		if mtype and (m.type ~= mtype) then continue end -- If we have an mtype, search for it!
-		if (m.health <= 0) then continue end -- Dead
-		if (m.flags & MF_NOBLOCKMAP) or (m.flags & MF_SCENERY) then continue end -- Not Part of the blockmap. Ignore
-		if m.player and m.player.spectator then continue end
-		
-		local idist = FixedHypot(FixedHypot(m.x - mo.x, m.y - mo.y), 2*(m.z - mo.z))
-		if (idist > dist) then continue end -- Ignore objects outside of 'dist' range.
-		
-		if (idist < closestdist) then -- There's a mobj that's closer?
-			closestmo = m -- Then we're the real closest mobj!
-			closestdist = idist -- And this is our distance!
-		end
-	end
-	
-	return closestmo
-end)
-
 addHook("PlayerSpawn", function(p)
 	if not valid(p) then return false end
 	if not valid(p.mo) then return false end
@@ -90,7 +68,7 @@ addHook("ThinkFrame", do
 		or (p.playerstate == PST_DEAD) then continue end
 		local mo = p.mo
 		if not mo.target then
-			mo.target = look4ClosestMo(mo, 1024*FRACUNIT, MT_PLAYER)
+			mo.target = Lib.look4ClosestMo(mo, 1024*FRACUNIT, MT_PLAYER)
 		else
 			local target = mo.target
 			local sight = P_CheckSight(mo, target)

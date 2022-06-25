@@ -7,6 +7,8 @@
 --
 -- Flame
 
+local Lib = FLCRLib
+
 -- Guns
 FLCR.AddWeapon({
 	name = "Basic",
@@ -16,29 +18,33 @@ FLCR.AddWeapon({
 	parttype = CRPT_GUN,
 	func = function(p, w)
 		if not valid(p) then return end
+		if not p.crplayerdata then return end
+		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
+		if not valid(CRPD.player) then return end
 		if not valid(p.mo) then return end
 		local mo = p.mo
 
-		if (p.weaponfire -- If you are in weapon fire
-		and (p.weapondelay%w.multiint)) -- Modulo by your weapon's firedelay, a non zero number?
-		or (p.weaponfirecount >= w.maxrounds)
+		if (CRPD.firetics%w.multiint) -- Modulo by your weapon's firedelay, a non zero number?
+		or (CRPD.firemaxrounds >= w.maxrounds)
 			return
-		elseif not p.weaponfire then
-			p.weapondelay = (w.multiint * w.maxrounds)*2 -- 66
-			p.powers[pw_nocontrol] = p.weapondelay - 5*(w.reload)
+		elseif not CRPD.firetics then
+			CRPD.firetype = w.parttype
+			CRPD.firetics = (w.multiint * w.maxrounds)*2 -- 26.5
+			p.powers[pw_nocontrol] = CRPD.firetics - 3*(w.reload) -- -12 = 14.5
 		end
 		
 		local th = P_SpawnPlayerMissile(mo, w.mo)
+		S_StopSound(mo)
 		if valid(th) then 
 			th.target = mo
 			S_StartSound(th, w.usesound)
 		else
 			S_StartSound(mo, w.usesound)
 		end
-		p.weaponfirecount = $ + 1
+		CRPD.firemaxrounds = $ + 1
 	end,
 	
-	multiint = TICRATE/3, -- Multishot interval
+	multiint = TICRATE/4, -- Multishot interval
 	maxrounds = 3, -- How many rounds can your weapon fire per-clip?
 
 	attack = 4,
@@ -55,22 +61,26 @@ FLCR.AddWeapon({
 	parttype = CRPT_GUN,
 	func = function(p, w)
 		if not valid(p) then return end
+		if not p.crplayerdata then return end
+		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
+		if not valid(CRPD.player) then return end
 		if not valid(p.mo) then return end
 		local mo = p.mo
-		
-		if (p.weaponfire -- If you are in weapon fire
-		and (p.weapondelay%w.multiint)) -- Modulo by your weapon's firedelay, a non zero number?
-		or (p.weaponfirecount >= w.maxrounds)
+
+		if (CRPD.firetics%w.multiint) -- Modulo by your weapon's firedelay, a non zero number?
+		or (CRPD.firemaxrounds >= w.maxrounds)
 			return
-		elseif not p.weaponfire then
-			p.weapondelay = (w.multiint * w.maxrounds)*2 -- 54
-			p.powers[pw_nocontrol] = p.weapondelay - 5*(w.reload)
+		elseif not CRPD.firetics then
+			CRPD.firetype = w.parttype
+			CRPD.firetics = (w.multiint * w.maxrounds)*2 -- 48
+			p.powers[pw_nocontrol] = CRPD.firetics - 5*(w.reload)
 		end
 		
 		for i = -1, 1, 1 do
 			local fa = i*ANGLE_45
 			--local th = P_SpawnPlayerMissile(mo, w.mo)
 		end
+		CRPD.firemaxrounds = $ + 1
 	end,
 		
 	multiint = TICRATE/9, -- Multishot interval
@@ -91,26 +101,30 @@ FLCR.AddWeapon({
 	parttype = CRPT_GUN,
 	func = function(p, w)
 		if not valid(p) then return end
+		if not p.crplayerdata then return end
+		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
+		if not valid(CRPD.player) then return end
 		if not valid(p.mo) then return end
 		local mo = p.mo
 
-		if (p.weaponfire -- If you are in weapon fire
-		and (p.weapondelay%w.multiint)) -- Modulo by your weapon's firedelay, a non zero number?
-		or (p.weaponfirecount >= w.maxrounds)
+		if (CRPD.firetics%w.multiint) -- Modulo by your weapon's firedelay, a non zero number?
+		or (CRPD.firemaxrounds >= w.maxrounds)
 			return
-		elseif not p.weaponfire then
-			p.weapondelay = (w.multiint * w.maxrounds)*2 -- 54
-			p.powers[pw_nocontrol] = p.weapondelay - 5*(w.reload)
+		elseif not CRPD.firetics then
+			CRPD.firetype = w.parttype
+			CRPD.firetics = (w.multiint * w.maxrounds)*2 -- 54
+			p.powers[pw_nocontrol] = CRPD.firetics - 5*(w.reload)
 		end
 		
 		local th = P_SpawnPlayerMissile(mo, w.mo)
+		S_StopSound(mo)
 		if valid(th) then 
 			th.target = mo
 			S_StartSound(th, w.usesound)
 		else
 			S_StartSound(mo, w.usesound)
 		end
-		p.weaponfirecount = $ + 1
+		CRPD.firemaxrounds = $ + 1
 	end,
 	
 	multiint = TICRATE/9, -- Multishot interval
@@ -211,8 +225,9 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "standard", 
 	desc = "Flies in an arc toward target. It's large blast radius makes aiming and multiple blows a snap.",
+	mo = MT_REDRING,
 	usesound = sfx_s3k81,
-	parttype = CRPT_BOMB,
+	parttype = CRPT_BOMB,	
 	attack = 7,
 	speed = 5,
 	size = 5,

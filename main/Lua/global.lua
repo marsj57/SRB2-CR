@@ -8,11 +8,12 @@
 -- Flame
 
 rawset(_G, "FLCR", {}) -- Flame's Custom Robo
+FLCR.PlayerData = {}
 FLCR.Weapons = {} -- Weapons table
 FLCR.CameraBattleAngle = 0
 
-rawset(_G, "valid", function(v)
-	return v and v.valid
+rawset(_G, "valid", function(th)
+	return th and th.valid
 end)
 
 rawset(_G, "createFlags", function(tname, t)
@@ -48,59 +49,6 @@ rawset(_G, "SafeFreeslot", function(...)
 	end
 end)
 -- End Lach
-
--- Copied from source
-rawset(_G, "drainAmmo", function(p, power)
-	if not valid(p) then return end
-	p.powers[power] = $ - 1
-
-	if (p.rings < 1)
-		p.ammoremovalweapon = p.currentweapon
-		p.ammoremovaltimer = ammoremovaltics -- 2*TICRATE
-		
-		if (p.powers[power] > 0)
-			p.powers[power] = $ - 1
-			p.ammoremoval = 2
-		else
-			p.ammoremoval = 1
-		end
-	else
-		p.rings = $ - 1
-	end
-end)
-
--- Copied from source
-rawset(_G, "setWeaponDelay", function(p, delay)
-	if not valid(p) then return end
-	p.weapondelay = delay
-	if p.skin == 2 then -- knuckles
-		p.weapondelay = $ * 2
-		p.weapondelay = $ / 3
-	end
-end)
-
--- Copied from source
-rawset(_G, "doFireRing", function(p, cmd)
-	local mo
-	if not valid(p) then return end
-	
-	if not (cmd.buttons & (BT_ATTACK|BT_FIRENORMAL)) then
-		p.pflags = $ & ~PF_ATTACKDOWN
-		return
-	end
-	
-	if (p.pflags & PF_ATTACKDOWN) or p.climbing or (G_TagGametype() and not (p.pflags & PF_TAGIT)) then return end
-	if not G_RingSlingerGametype() or p.weapondelay > 1 then return end
-	
-	p.pflags = $ | PF_ATTACKDOWN
-	
-	-- Ring
-	if (p.rings <= 0) then return end
-	setWeaponDelay(p, TICRATE/4)
-	mo = P_SpawnPlayerMissile(p.mo, MT_REDRING, 0)
-	if valid (mo) then P_ColorTeamMissile(mo, p) end
-	p.rings = $ - 1
-end)
 
 /*-- Tatsuru
 local function FixedPow(a, b)

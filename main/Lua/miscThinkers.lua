@@ -59,6 +59,13 @@ addHook("PlayerSpawn", function(p)
 		o.health = -1
 		mo.outline = o
 	end
+	
+	-- Teamswitch called before PlayerSpawn, that's why we can do this!
+	if p.crplayerdata then
+		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
+		CRPD.health = 1000
+		CRPD.status = CRPS_NORMAL
+	end
 end)
 
 addHook("ThinkFrame", do

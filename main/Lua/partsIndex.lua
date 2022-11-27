@@ -16,7 +16,7 @@ FLCR.AddWeapon({
 	mo = MT_REDRING,
 	usesound = sfx_basic,
 	parttype = CRPT_GUN,
-	func = function(p, w)
+	spawnfunc = function(p, w)
 		if not valid(p) then return end
 		if not p.crplayerdata then return end
 		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
@@ -24,12 +24,14 @@ FLCR.AddWeapon({
 		if not valid(p.mo) then return end
 		local mo = p.mo
 
-		if (CRPD.firetics%w.multiint) -- Modulo by your weapon's firedelay, a non zero number?
-		or (CRPD.firemaxrounds >= w.maxrounds)
+		local multifireinterval = TICRATE/4 -- Multishot interval
+		local maxrounds = 3 -- How many rounds can your weapon fire per-clip?
+		if (CRPD.firetics%multifireinterval) -- Modulo by your weapon's firedelay, a non zero number?
+		or (CRPD.firemaxrounds >= maxrounds)
 			return
 		elseif not CRPD.firetics then
 			CRPD.firetype = w.parttype
-			CRPD.firetics = (w.multiint * w.maxrounds)*2 -- 26.5
+			CRPD.firetics = (multifireinterval * maxrounds)*2 -- 26.5
 			p.powers[pw_nocontrol] = CRPD.firetics - 3*(w.reload) -- -12 = 14.5
 		end
 		
@@ -44,8 +46,7 @@ FLCR.AddWeapon({
 		CRPD.firemaxrounds = $ + 1
 	end,
 	
-	multiint = TICRATE/4, -- Multishot interval
-	maxrounds = 3, -- How many rounds can your weapon fire per-clip?
+	thinkfunc = nil,
 
 	attack = 4,
 	speed = 5,
@@ -59,7 +60,7 @@ FLCR.AddWeapon({
 	desc = "Fires 3 straight rounds in 3 rows. The farther you are from the enemy, the better its homing.",
 	usesound = sfx_3way,
 	parttype = CRPT_GUN,
-	func = function(p, w)
+	spawnfunc = function(p, w)
 		if not valid(p) then return end
 		if not p.crplayerdata then return end
 		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
@@ -67,12 +68,14 @@ FLCR.AddWeapon({
 		if not valid(p.mo) then return end
 		local mo = p.mo
 
-		if (CRPD.firetics%w.multiint) -- Modulo by your weapon's firedelay, a non zero number?
-		or (CRPD.firemaxrounds >= w.maxrounds)
+		local multifireinterval = TICRATE/9 -- Multishot interval
+		local maxrounds = 3 -- How many rounds can your weapon fire per-clip?
+		if (CRPD.firetics%multifireinterval) -- Modulo by your weapon's firedelay, a non zero number?
+		or (CRPD.firemaxrounds >= maxrounds)
 			return
 		elseif not CRPD.firetics then
 			CRPD.firetype = w.parttype
-			CRPD.firetics = (w.multiint * w.maxrounds)*2 -- 48
+			CRPD.firetics = (multifireinterval * maxrounds)*2 -- 48
 			p.powers[pw_nocontrol] = CRPD.firetics - 5*(w.reload)
 		end
 		
@@ -82,9 +85,8 @@ FLCR.AddWeapon({
 		end
 		CRPD.firemaxrounds = $ + 1
 	end,
-		
-	multiint = TICRATE/9, -- Multishot interval
-	maxrounds = 9, -- How many rounds can your weapon fire per-clip?
+	
+	thinkfunc = nil,
 	
 	attack = 5,
 	speed = 5,
@@ -99,7 +101,7 @@ FLCR.AddWeapon({
 	mo = MT_REDRING,
 	usesound = sfx_gtlng,
 	parttype = CRPT_GUN,
-	func = function(p, w)
+	spawnfunc = function(p, w)
 		if not valid(p) then return end
 		if not p.crplayerdata then return end
 		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
@@ -107,12 +109,14 @@ FLCR.AddWeapon({
 		if not valid(p.mo) then return end
 		local mo = p.mo
 
-		if (CRPD.firetics%w.multiint) -- Modulo by your weapon's firedelay, a non zero number?
-		or (CRPD.firemaxrounds >= w.maxrounds)
+		local multifireinterval = TICRATE/9 -- Multishot interval
+		local maxrounds = 9 -- How many rounds can your weapon fire per-clip?
+		if (CRPD.firetics%multifireinterval) -- Modulo by your weapon's firedelay, a non zero number?
+		or (CRPD.firemaxrounds >= maxrounds)
 			return
 		elseif not CRPD.firetics then
 			CRPD.firetype = w.parttype
-			CRPD.firetics = (w.multiint * w.maxrounds)*2 -- 54
+			CRPD.firetics = (multifireinterval * maxrounds)*2 -- 54
 			p.powers[pw_nocontrol] = CRPD.firetics - 5*(w.reload)
 		end
 		
@@ -126,9 +130,8 @@ FLCR.AddWeapon({
 		end
 		CRPD.firemaxrounds = $ + 1
 	end,
-	
-	multiint = TICRATE/9, -- Multishot interval
-	maxrounds = 9, -- How many rounds can your weapon fire per-clip?
+
+	thinkfunc = nil,
 
 	attack = 4,
 	speed = 7,
@@ -140,7 +143,7 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "Vertical", 
 	desc = "Fires 2 rounds that ascend diagonally, clearing walls. Use them as you hide behind walls.",
-	usesound = sfx_gtlng,
+	usesound = sfx_vrtcl,
 	parttype = CRPT_GUN,
 	attack = 4,
 	speed = 5,
@@ -150,9 +153,9 @@ FLCR.AddWeapon({
 })
 
 FLCR.AddWeapon({
-	name = "Sniper", 
+	name = "Sniper",
 	desc = "Fires one quick, straight round. While the round flies fast, it leaves you in danger for a time.",
-	usesound = sfx_gtlng,
+	usesound = sfx_snip,
 	parttype = CRPT_GUN,
 	attack = 7,
 	speed = 9,

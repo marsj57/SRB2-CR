@@ -13,8 +13,8 @@ local Lib = FLCRLib
 Lib.weaponFire = function(p, id)
 	local w = FLCR.Weapons[id]
 
-	if (w.func ~= nil) then
-		w.func(p, w)
+	if (w.spawnfunc ~= nil) then
+		w.spawnfunc(p, w)
 	else
 		CONS_Printf(p, "NOT IMPLEMENTED YET!")
 	end
@@ -58,23 +58,27 @@ end
 Lib.look4ClosestMo = function(mo, dist, mtype)
 	if not valid(mo) then return end
 	
+	if not dist then dist = 1024*FRACUNIT end
+	
 	local closestmo
 	local closestdist = dist
-	for m in mobjs.iterate() do
-		if (m == mo) then continue end -- Skip us
-		if mtype and (m.type ~= mtype) then continue end -- If we have an mtype, search for it!
-		if (m.health <= 0) then continue end -- Dead
-		if (m.flags & MF_NOBLOCKMAP) or (m.flags & MF_SCENERY) then continue end -- Not Part of the blockmap. Ignore
-		if m.player and m.player.spectator then continue end
+	searchBlockmap("objects", function(refmo, found)
+		if (found == refmo) then return nil end
+		if mtype and (found.type ~= mtype) then return nil end
+		if (found.health <= 0) then return nil end
+		--if found.player and found.player.spectator then return nil end
 		
-		local idist = FixedHypot(FixedHypot(m.x - mo.x, m.y - mo.y), 2*(m.z - mo.z))
-		if (idist > dist) then continue end -- Ignore objects outside of 'dist' range.
+		local idist = FixedHypot(FixedHypot(found.x - refmo.x, found.y - refmo.y), 2*(found.z - refmo.z))
+		if (idist > dist) then return nil end -- Ignore objects outside of 'dist' range.
 		
-		if (idist < closestdist) then -- There's a mobj that's closer?
-			closestmo = m -- Then we're the real closest mobj!
-			closestdist = idist -- And this is our distance!
+		if (idist < closestdist) then
+			closestmo = found
+			closestdist = idist
 		end
-	end
+	end,
+	mo,
+	mo.x-dist,mo.x+dist,
+	mo.y-dist,mo.y+dist)
 	
 	return closestmo
 end

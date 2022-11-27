@@ -52,6 +52,18 @@ addHook("TeamSwitch", function(p, _, fromspectators)
 	end
 end)
 
+addHook("PlayerSpawn", function(p)
+	if not valid(p) then return false end
+	if not valid(p.mo) then return false end
+	local mo = p.mo
+	
+	-- Teamswitch called before PlayerSpawn, that's why we can do this!
+	if not p.crplayerdata then return end
+	local CRPD = FLCR.PlayerData[p.crplayerdata.id]
+	CRPD.health = 1000
+	CRPD.state = CRPS_NORMAL
+end)
+
 addHook("PreThinkFrame", do 
 	for player in players.iterate
 		if not valid(player) then return end
@@ -64,12 +76,22 @@ addHook("PreThinkFrame", do
 		p.weapondelay = 1 -- Do not fire weapon rings ever
 		p.crselection = 1
 		
+		-- Firing tics
 		if (CRPD.firetics <= 0) then
 			CRPD.firetype = CRPT_INVALID
 			CRPD.firetics = 0
 			CRPD.firemaxrounds = 0
 		else
 			CRPD.firetics = $ - 1
+		end
+		
+		-- State Change
+		if (CRPD.state > CRPS_NORMAL)
+		and (CRPD.statetics > 0) then
+			CRPD.statetics = $ - 1
+		else -- Timer ran our or abruptly returned to CRPS_NORMAL state
+			CRPD.state = CRPS_NORMAL -- Actually return to the normal state
+			CRPD.statetics = 0 -- Reset the timer
 		end
 	end
 end)
@@ -82,7 +104,7 @@ addHook("PlayerThink", function(player)
 	local p = CRPD.player
 	local loadout = CRPD.loadout
 	local cmd = p.cmd
-	local wmask = (cmd.buttons & BT_WEAPONMASK)
+	local wmask = (cmd.buttons & BT_WEAPONMASK) % 4 -- 0 and 1-3
 	p.wmaskheld = $ or {false, false, false} -- Use 3 weapon mask buttons
 
 	for i = 1, #p.wmaskheld do -- Weapon Mask
@@ -104,7 +126,6 @@ addHook("PlayerThink", function(player)
 		Lib.weaponFire(p, loadout[CRPD.loadoutsel]) -- Use the current weapon you have selected
 		p.pflags = $ | PF_ATTACKDOWN
 	elseif wmask and (wmask >= 1)
-	and (wmask <= #loadout)
 	and not p.wmaskheld[wmask] then
 		Lib.weaponFire(p, loadout[wmask]) -- Use a dedicated button input w/ BT_WEAPONMASK!
 		p.wmaskheld[wmask] = true

@@ -8,7 +8,7 @@
 -- Flame
 
 /*
-	Parts will be separated into categories
+	Parts are separated into categories
 
 	Gun Parts
 	Bomb Parts
@@ -21,6 +21,7 @@ createEnum(partType, {
 	"CRPT_GUN",
 	"CRPT_BOMB",
 	"CRPT_POD",
+	--"CRPT_LEG"
 })
 
 /*
@@ -55,6 +56,24 @@ createEnum(specialLetter, {
 	"CRL_S",
 	"CRL_T",
 	"CRL_X"
+})
+
+/*
+	Players have various states to be in!
+	
+	NORMAL - Player can function like normal
+	HIT - Player is in recoil from a hit. RE: being combo'd?
+	DOWN - Player is in a downed state. Takes 60% of damage received
+	REBIRTH - Player is in a rebirth/invulnerable state. Cannot be hit.
+*/
+local playerStates = {}
+createEnum(playerStates, {
+	"CRPS_INVALID",
+	
+	"CRPS_NORMAL",
+	"CRPS_HIT",
+	"CRPS_DOWN",
+	"CRPS_REBIRTH",
 })
 
 FLCR.AddWeapon = function(t)
@@ -97,11 +116,8 @@ local defaultWeaponStruct = {
 	usesound = 0, -- Use sound for spawning
 	parttype = CRPT_INVALID, -- Gun, Bomb, or Pod
 	special = CRL_INVALID, -- Special letter, see above table
-	func = nil, -- Function
-
-	-- For multi-fire weapons
-	firedelay = 0, -- Firing delay between shots
-	maxrounds = 0, -- How many rounds can your weapon fire per-clip?
+	spawnfunc = nil, -- Function for when the bullet spawns
+	thinkfunc = nil, -- Does this bullet have a special thinker (Eg. Homing) while in flight?
 	
 	-- Hud Display stuff
 	attack = 0,
@@ -139,7 +155,8 @@ local defaultPlayerStruct = {
 		firetics = 0,
 		firemaxrounds = 0,
 		firetype = CRPT_INVALID,
-		downed = false
+		state = CRPS_INVALID,
+		statetics = 0
 	}
 }
 registerMetatable(defaultPlayerStruct)

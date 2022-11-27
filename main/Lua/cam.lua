@@ -191,6 +191,28 @@ rawset(_G, "R_ProjectSprite", function(v, thing, cam)
 end)
 -- End Lactozilla
 
+rawset(_G, "R_ScreenTransform", function(x, y, z, v, p, cam)
+	local ang, aim
+	if cam.chase then -- obtain the differences
+		z = $ - cam.z
+		ang = cam.angle
+		aim = cam.aiming
+	else
+		z = $ - p.viewz
+		ang = p.mo.angle
+		aim = p.aiming
+	end
+	local h = R_PointToDist(x, y)
+	local da = ang - R_PointToAngle(x, y)
+	local sizex = (v.width()/2)
+	local sizey = (v.height()/2)
+
+	return sizex<<FRACBITS + tan(da)*sizex,
+	sizey<<FRACBITS + (tan(aim) - FixedDiv(z, 1 + FixedMul(cos(da), h)))*sizex,
+	FixedDiv((sizex<<FRACBITS), h+1),
+	(abs(da) > ANG60) or (abs(aim - R_PointToAngle2(0, 0, h, z)) > ANGLE_45)
+end)
+
 addHook("MapLoad", function(mapnum)
 	FLCR.CameraBattleAngle = 0
 end)
@@ -350,6 +372,7 @@ addHook("PostThinkFrame", do
 	end
 end)
 
+-- For displaying all Mobj's behind walls
 hud.add(function(v,p,c)
 	--if not valid(v) then return end
 	if not valid(p) then return end
@@ -362,17 +385,99 @@ hud.add(function(v,p,c)
 	--if not valid(c) then return end
 	for m in mobjs.iterate()
 		if not valid(m) then continue end
+		if (FixedHypot(FixedHypot(avm.x - m.x, avm.y - m.y), 
+									avm.z - m.z) > 8*RING_DIST) then
+			continue -- Out of range
+		end
 		if (m.health <= 0)
 		or (m.player and (m.player.playerstate == PST_DEAD)) then continue end
 		if (m.flags2 & MF2_DONTDRAW) -- Base player, or object mobj
 		or (m.tracer and m.tracer.player and (m.tracer.flags2 & MF2_DONTDRAW)) then continue end -- Followmobj
 		if P_CheckSight(avm, m) then continue end
+
 		R_ProjectSprite(v, m, c)
 	end
-	
-	/*local testpatch = v.cachePatch("CRHU")
-	v.draw(1,1,testpatch,V_SNAPTORIGHT)*/
 end, "game")
+
+-- Player Number, Health Bar, Downed meter
+hud.add(function(v,p,c)
+	if not valid(p) then return end
+	if not p.awayviewmobj or p.spectator then return end
+	local avm = p.awayviewmobj
+
+	-- Leaving this equivalent here in case I need it in the future.
+	/*for m in mobjs.iterate()
+		if not valid(m) then continue end
+		if not (m.player)
+		or (m.player and (m.player.playerstate == PST_DEAD)) then continue end
+		
+		local x,y,scale,oob = R_ScreenTransform(m.x, m.y, m.z, v,p,c)
+		local patch = v.cachePatch("CRHUDBG")
+		local flags = (V_NOSCALESTART|V_NOSCALEPATCH|V_20TRANS)
+		local color = v.getColormap(m.skin, m.color or SKINCOLOR_GREY)
+		v.drawScaled(x - (patch.width)<<FRACBITS, y, 2*FRACUNIT, patch, flags, color)
+	end*/
+	
+	local range = 8*RING_DIST
+	searchBlockmap("objects", function(refmo, found)
+		if not found.player then return nil end
+		if (found.player.playerstate == PST_DEAD) then return nil end
+		if not found.player.crplayerdata then return nil end
+		local CRPD = FLCR.PlayerData[found.player.crplayerdata.id]
+		
+		local x,y,scale,oob = R_ScreenTransform(found.x, found.y, found.z, v, p, c)
+		-- Visual debug for values
+		/*v.drawString(v.width()/2, 0, 
+				x>>FRACBITS ..", ".. (x/scale) .. "\n"
+				.. y>>FRACBITS ..", ".. (y/scale) .. "\n"
+				.. scale>>FRACBITS, V_NOSCALESTART)*/
+		
+		local bgpatch = v.cachePatch("CRHUDBG")
+		local flags = V_NOSCALESTART|V_20TRANS
+		local color = v.getColormap(found.skin, found.color or SKINCOLOR_GREY)
+		local dxint, dxfix = v.dupx()
+		x = x - ((bgpatch.width*dxfix)/2) + 30<<FRACBITS
+		v.drawScaled(x, y, FRACUNIT, bgpatch, flags, color) -- BG Patch
+		
+		flags = $ & ~(V_20TRANS)
+
+		-- Player Number
+		v.drawString(x + (13*(bgpatch.width*dxint)/100)<<FRACBITS,
+					y + (42*(bgpatch.height*dxint)/100)<<FRACBITS,
+					"P" .. CRPD.id,
+					flags, "fixed")
+		
+		-- Health NUMBER
+		v.drawNum((x>>FRACBITS + 96*(bgpatch.width*dxint)/100),
+					(y>>FRACBITS + 44*(bgpatch.height*dxint)/100), CRPD.health, flags)
+		
+		-- Health Bar
+		-- For visual, ( 75*(bgpatch.width*dxint)/100 ) is 100% of the health bar
+		v.drawFill((x>>FRACBITS + 20*(bgpatch.width*dxint)/100), 
+					(y>>FRACBITS + 85*(bgpatch.height*dxint)/100), CRPD.health*(75*(bgpatch.width*dxint)/100)/1000, 6, 1|flags)
+		v.drawFill((x>>FRACBITS + 20*(bgpatch.width*dxint)/100), 
+					(y>>FRACBITS + 88*(bgpatch.height*dxint)/100), CRPD.health*(75*(bgpatch.width*dxint)/100)/1000, 4, 15|flags)	
+
+		-- 'Downed meter' bits
+		local dmbitp = v.cachePatch("CRHUDDM")
+		for i = 0, 2 do
+			local inc = i * (dmbitp.width)
+			v.drawScaled(x + ((67+inc)*(bgpatch.width*dxint)/100)<<FRACBITS,
+						y + ((8*(bgpatch.height*dxint)/100))<<FRACBITS, FRACUNIT, dmbitp, flags, v.getColormap(TC_DEFAULT,SKINCOLOR_WHITE)) -- BG Patch
+		end
+	end,
+	avm, -- refmo
+	avm.x-range,avm.x+range,
+	avm.y-range,avm.y+range)
+end, "game")
+
+
+/*local range = 1024*FRACUNIT
+searchBlockmap("objects", function(refmo, found)
+end,
+mo, -- refmo
+mo.x-range,mo.x+range,
+mo.y-range,mo.y+range)*/
 
 addHook("NetVars", function(n)
 	FLCR.CameraBattleAngle = n($)

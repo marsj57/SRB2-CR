@@ -9,6 +9,8 @@
 
 -- The goal of this file is to be a standalone file.
 
+local Lib = FLCRLib
+
 freeslot("MT_FLCRCAM")
 
 mobjinfo[MT_FLCRCAM] = {
@@ -436,7 +438,7 @@ hud.add(function(v,p,c)
 		local flags = V_NOSCALESTART|V_20TRANS
 		local color = v.getColormap(found.skin, found.color or SKINCOLOR_GREY)
 		local dxint, dxfix = v.dupx()
-		x = x - ((bgpatch.width*dxfix)/2) + 30<<FRACBITS
+		x = x - (42*(bgpatch.width*dxfix)/100)
 		v.drawScaled(x, y, FRACUNIT, bgpatch, flags, color) -- BG Patch
 		
 		flags = $ & ~(V_20TRANS)
@@ -465,6 +467,12 @@ hud.add(function(v,p,c)
 			v.drawScaled(x + ((67+inc)*(bgpatch.width*dxint)/100)<<FRACBITS,
 						y + ((8*(bgpatch.height*dxint)/100))<<FRACBITS, FRACUNIT, dmbitp, flags, v.getColormap(TC_DEFAULT,SKINCOLOR_WHITE)) -- BG Patch
 		end
+		
+		-- "Status" text to show what state the player is in
+		v.drawString(x + ((bgpatch.width*dxint)/2)<<FRACBITS,
+					y + 102*(bgpatch.height*dxint)/100<<FRACBITS,
+					Lib.getCRState(CRPD.player),
+					flags, "fixed-center")
 	end,
 	avm, -- refmo
 	avm.x-range,avm.x+range,
@@ -478,6 +486,20 @@ end,
 mo, -- refmo
 mo.x-range,mo.x+range,
 mo.y-range,mo.y+range)*/
+
+-- Debug stuff
+/*hud.add(function(v,p,c)
+	if p.spectator then return end
+	for i = 1, #players
+		local PD = FLCR.PlayerData[i]
+		local name = PD.player and PD.player.name or "nil"
+		local flags
+		if (PD.player == p)
+			flags = V_YELLOWMAP
+		end
+		v.drawString(0,(8*(i-1)),name, flags)
+	end
+end,"game")*/
 
 addHook("NetVars", function(n)
 	FLCR.CameraBattleAngle = n($)

@@ -55,6 +55,23 @@ Lib.assignPlayerToSlot = function(p, slot)
 	print("Player "..p.name.." has been assigned to slot "..slot..".")
 end
 
+-- Get the status of whatever state you're in.
+Lib.getCRState = function(p)
+	if not valid(p) then return false end
+	if not p.crplayerdata then return false end
+	local CRPD = FLCR.PlayerData[p.crplayerdata.id]
+	
+	-- Returns both text and correspnding number
+	if CRPD.state
+	and (CRPD.state >= CRPS_NORMAL)
+	and (CRPD.state <= CRPS_REBIRTH)
+		local stateText = { "NORMAL", "HIT", "DOWNED", "REBIRTH" }
+		return stateText[CRPD.state], CRPD.state
+	else
+		return "INVALID", CRPD.state
+	end
+end
+
 Lib.look4ClosestMo = function(mo, dist, mtype)
 	if not valid(mo) then return end
 	

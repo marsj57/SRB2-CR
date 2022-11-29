@@ -135,17 +135,3 @@ end)
 addHook("NetVars", function(net)
 	FLCR.PlayerData = net($)
 end)
-
--- Debug stuff
-/*hud.add(function(v,p,c)
-	if p.spectator then return end
-	for i = 1, #players
-		local PD = FLCR.PlayerData[i]
-		local name = PD.player and PD.player.name or "nil"
-		local flags
-		if (PD.player == p)
-			flags = V_YELLOWMAP
-		end
-		v.drawString(0,(8*(i-1)),name, flags)
-	end
-end,"game")*/

@@ -10,6 +10,8 @@
 rawset(_G, "FLCRLib", {})
 local Lib = FLCRLib
 
+-- weaponFire: Fires your CR weapon, calling the weapon's spawn function
+-- Flame
 Lib.weaponFire = function(p, id)
 	local w = FLCR.Weapons[id]
 
@@ -20,7 +22,29 @@ Lib.weaponFire = function(p, id)
 	end
 end
 
+-- SetTarget: Sets a target and returns the mobj if valid.
+-- Returns a nil value if no target. Can be used in if statements to check conditionals.
+-- Flame
+--
+-- mo (mobj_t)		- source mobj
+-- target (mobj_t)		- target mobj
+Lib.SetTarget = function(mo, target)
+	mo.target = target
+	return target
+end
+
+-- SetTracer: Same as above, but sets a tracer instead
+-- Flame
+--
+-- mo (mobj_t)		- source mobj
+-- tracer (mobj_t)		- target mobj
+Lib.SetTracer = function(mo, tracer)
+	mo.tracer = tracer
+	return tracer
+end
+
 -- Tatsuru
+-- Removes a player to a slot
 Lib.removePlayerFromSlot = function(slot)
 	local CRPD = FLCR.PlayerData
 	
@@ -37,6 +61,7 @@ Lib.removePlayerFromSlot = function(slot)
 end
 
 -- Tatsuru
+-- Assigns a player to a slot
 Lib.assignPlayerToSlot = function(p, slot)
 	local CRPD = FLCR.PlayerData
 	
@@ -72,6 +97,45 @@ Lib.getCRState = function(p)
 	end
 end
 
+Lib.get3Dangle = function(tmthing, thing)
+	local x1, x2 = tmthing.x - tmthing.momx, thing.x - thing.momy
+	local y1, y2 = tmthing.y - tmthing.momy, thing.x - thing.momy
+	local hdist = R_PointToDist2(x1, y1, x2, y2)
+	local hangle = R_PointToAngle2(x1, y1, x2, y2)
+	local zdiff = (tmthing.z + tmthing.height/2) - (thing.z + thing.height/2)
+	local zangle = R_PointToAngle2(0, 0, hdist, zdiff)
+	return hangle, zangle
+end
+
+-- doDamage: Deals damage do a player if CR data is present
+-- Flame
+Lib.doDamage = function(plyr, atk, dwn)
+	if not valid(plyr) then return end
+	if not plyr.crplayerdata then return end
+	local CRPD = FLCR.PlayerData[plyr.crplayerdata.id]
+	if (CRPD.state == CRPS_REBIRTH) then return end -- Invulnerable
+	
+	-- Just to spice things up, damage can have either a -20% or 20% multiplier
+	if (CRPD.state == CRPS_DOWN) then
+		-- While downed, you only take 50% dmg. Also, knockdown does not apply.
+		CRPD.health = $ - (atk*P_RandomRange(80,120))/200
+	else
+		CRPD.health = $ - (atk*P_RandomRange(80,120))/100
+		if not dwn then return end
+		CRPD.curKnockdown = $ - dwn
+		if (CRPD.curKnockdown < 0) then 
+			CRPD.curKnockdown = 0
+		end
+	end
+end
+
+
+-- look4ClosestMo: Looks for the closest mobj around 'mo'
+-- Flame
+--
+-- mo (mobj_t)			- source mobj
+-- dist (fixed_t)		- distance to search (Defaults to 1024*FRACUNITS if not specified)
+-- dist (MT_* type)		- Look for a specific MT_* object?
 Lib.look4ClosestMo = function(mo, dist, mtype)
 	if not valid(mo) then return end
 	

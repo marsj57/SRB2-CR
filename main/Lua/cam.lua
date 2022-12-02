@@ -406,19 +406,6 @@ hud.add(function(v,p,c)
 	if not valid(p) then return end
 	if not p.awayviewmobj or p.spectator then return end
 	local avm = p.awayviewmobj
-
-	-- Leaving this equivalent here in case I need it in the future.
-	/*for m in mobjs.iterate()
-		if not valid(m) then continue end
-		if not (m.player)
-		or (m.player and (m.player.playerstate == PST_DEAD)) then continue end
-		
-		local x,y,scale,oob = R_ScreenTransform(m.x, m.y, m.z, v,p,c)
-		local patch = v.cachePatch("CRHUDBG")
-		local flags = (V_NOSCALESTART|V_NOSCALEPATCH|V_20TRANS)
-		local color = v.getColormap(m.skin, m.color or SKINCOLOR_GREY)
-		v.drawScaled(x - (patch.width)<<FRACBITS, y, 2*FRACUNIT, patch, flags, color)
-	end*/
 	
 	local range = 8*RING_DIST
 	searchBlockmap("objects", function(refmo, found)
@@ -461,14 +448,22 @@ hud.add(function(v,p,c)
 					(y>>FRACBITS + 88*(bgpatch.height*dxint)/100), CRPD.health*(75*(bgpatch.width*dxint)/100)/1000, 4, 15|flags)	
 
 		-- 'Downed meter' bits
-		local dmbitp = v.cachePatch("CRHUDDM")
-		for i = 0, 2 do
-			local inc = i * (dmbitp.width)
-			v.drawScaled(x + ((67+inc)*(bgpatch.width*dxint)/100)<<FRACBITS,
+		if (CRPD.curKnockdown > 0) then
+			local dmbitp = v.cachePatch("CRHUDDM")
+			local pipCount = ease.linear(FixedDiv(CRPD.curKnockdown, 100),1,3)
+			for i = 1, pipCount do
+				local inc = (i-1) * (dmbitp.width)
+				v.drawScaled(x + ((67+inc)*(bgpatch.width*dxint)/100)<<FRACBITS,
 						y + ((8*(bgpatch.height*dxint)/100))<<FRACBITS, FRACUNIT, dmbitp, flags, v.getColormap(TC_DEFAULT,SKINCOLOR_WHITE)) -- BG Patch
+			end
 		end
 		
 		-- "Status" text to show what state the player is in
+		if (CRPD.statetics > TICRATE) then
+			local fade = min(10, (CRPD.statetics-TICRATE)/2)
+			if (fade > 9) then return nil end -- Don't process anything else if visible for more than a second
+			flags = $ | (fade*V_10TRANS)
+		end
 		v.drawString(x + ((bgpatch.width*dxint)/2)<<FRACBITS,
 					y + 102*(bgpatch.height*dxint)/100<<FRACBITS,
 					Lib.getCRState(CRPD.player),

@@ -156,7 +156,10 @@ local defaultPlayerStruct = {
 		firemaxrounds = 0,
 		firetype = CRPT_INVALID,
 		state = CRPS_INVALID,
-		statetics = 0
+		prevstate = CRPS_INVALID,
+		statetics = 0,
+		curKnockdown = 100,
+		downed = false
 	}
 }
 registerMetatable(defaultPlayerStruct)

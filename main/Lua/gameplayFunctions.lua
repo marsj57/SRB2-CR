@@ -17,6 +17,13 @@ FLCR.gameplayStuff = function(player)
 	local p = CRPD.player
 	local loadout = CRPD.loadout
 
+	-- State Change
+	CRPD.statetics = min(INT32_MAX, $ + 1)
+	if (CRPD.prevstate ~= CRPD.state) then
+		CRPD.prevstate = CRPD.state
+		CRPD.statetics = 0
+	end
+
 	local cmd = p.cmd
 	p.weaponshuffleheld = $ or false
 
@@ -74,7 +81,6 @@ addHook("PreThinkFrame", do
 		local p = CRPD.player
 		
 		p.weapondelay = 1 -- Do not fire weapon rings ever
-		p.crselection = 1
 		
 		-- Firing tics
 		if (CRPD.firetics <= 0) then
@@ -83,15 +89,6 @@ addHook("PreThinkFrame", do
 			CRPD.firemaxrounds = 0
 		else
 			CRPD.firetics = $ - 1
-		end
-		
-		-- State Change
-		if (CRPD.state > CRPS_NORMAL)
-		and (CRPD.statetics > 0) then
-			CRPD.statetics = $ - 1
-		else -- Timer ran our or abruptly returned to CRPS_NORMAL state
-			CRPD.state = CRPS_NORMAL -- Actually return to the normal state
-			CRPD.statetics = 0 -- Reset the timer
 		end
 	end
 end)

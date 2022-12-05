@@ -158,8 +158,8 @@ local defaultPlayerStruct = {
 		state = CRPS_INVALID,
 		prevstate = CRPS_INVALID,
 		statetics = 0,
-		curKnockdown = 100,
-		downed = false
+		curknockdown = 0,
+		knockdowntics = 0
 	}
 }
 registerMetatable(defaultPlayerStruct)

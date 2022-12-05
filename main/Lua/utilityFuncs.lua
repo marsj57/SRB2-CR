@@ -43,6 +43,11 @@ Lib.SetTracer = function(mo, tracer)
 	return tracer
 end
 
+Lib.FixedLerp = function(val1,val2,amt)
+	local p = FixedMul(FRACUNIT-amt,val1) + FixedMul(amt,val2)
+	return p
+end
+
 -- Tatsuru
 -- Removes a player to a slot
 Lib.removePlayerFromSlot = function(slot)
@@ -91,40 +96,77 @@ Lib.getCRState = function(p)
 	and (CRPD.state >= CRPS_NORMAL)
 	and (CRPD.state <= CRPS_REBIRTH)
 		local stateText = { "NORMAL", "HIT", "DOWNED", "REBIRTH" }
-		return stateText[CRPD.state], CRPD.state
+		return { stateText[CRPD.state], CRPD.state }
 	else
-		return "INVALID", CRPD.state
+		return { "INVALID", 0 }
 	end
 end
 
-Lib.get3Dangle = function(tmthing, thing)
-	local x1, x2 = tmthing.x - tmthing.momx, thing.x - thing.momy
-	local y1, y2 = tmthing.y - tmthing.momy, thing.x - thing.momy
-	local hdist = R_PointToDist2(x1, y1, x2, y2)
-	local hangle = R_PointToAngle2(x1, y1, x2, y2)
-	local zdiff = (tmthing.z + tmthing.height/2) - (thing.z + thing.height/2)
-	local zangle = R_PointToAngle2(0, 0, hdist, zdiff)
-	return hangle, zangle
+-- Clairebun
+-- getXYZangle: Self explainitory
+Lib.getXYZangle = function(mo1, mo2)
+	local x1, x2 = mo1.x - mo1.momx, mo2.x - mo2.momx
+	local y1, y2 = mo1.y - mo1.momy, mo2.y - mo2.momy
+	local angle = R_PointToAngle2(x1, y1, x2, y2)
+	local dist = R_PointToDist2(x1, y1, x2, y2)
+	local z1, z2 = mo1.z + mo1.height/2, mo2.z + mo2.height/2
+	local zdist = z2 - z1
+	local zangle = R_PointToAngle2(0, 0, dist, zdist)
+	return angle, zangle
+end
+
+-- Clairebun
+Lib.getThrust = function(mo1, mo2, minimal)
+	local xyangle, zangle = Lib.getXYZangle(mo1, mo2) -- Get thrust direction based on collision angle
+	local speed
+	if minimal
+		speed = mo1.scale/2 -- "Shove" knockback
+	else
+		 -- Momentum-influenced knockback
+		local momx = mo1.momx - mo2.momx
+		local momy = mo1.momy - mo2.momy
+		local momz = mo1.momz - mo2.momz
+		speed = FixedHypot(FixedHypot(momx, momy), momz)
+	end
+	local thrust = P_ReturnThrustX(mo1, zangle, speed)
+	local zthrust = P_ReturnThrustY(mo1, zangle, speed)
+	local xthrust = P_ReturnThrustX(mo1, xyangle, thrust)
+	local ythrust = P_ReturnThrustY(mo1, xyangle, thrust)
+	return xthrust, ythrust, zthrust
 end
 
 -- doDamage: Deals damage do a player if CR data is present
 -- Flame
-Lib.doDamage = function(plyr, atk, dwn)
+--
+-- plyr (player_t)		- player that gets damaged
+-- atk (int)			- amount of damage to apply
+-- dwn (int)			- amount of 'down' meter to apply
+-- variance (boolean)	- does damage have variance or is it a static value?
+Lib.doDamage = function(plyr, atk, dwn, variance)
 	if not valid(plyr) then return end
 	if not plyr.crplayerdata then return end
 	local CRPD = FLCR.PlayerData[plyr.crplayerdata.id]
 	if (CRPD.state == CRPS_REBIRTH) then return end -- Invulnerable
+	if not variance then variance = false end -- Default value
 	
-	-- Just to spice things up, damage can have either a -20% or 20% multiplier
+	-- Just to spice things up, damage has variance!
 	if (CRPD.state == CRPS_DOWN) then
 		-- While downed, you only take 50% dmg. Also, knockdown does not apply.
-		CRPD.health = $ - (atk*P_RandomRange(80,120))/200
-	else
-		CRPD.health = $ - (atk*P_RandomRange(80,120))/100
+		local v = variance and (atk*P_RandomRange(80,120))/200 or atk
+		CRPD.health = $ - v
 		if not dwn then return end
-		CRPD.curKnockdown = $ - dwn
-		if (CRPD.curKnockdown < 0) then 
-			CRPD.curKnockdown = 0
+		CRPD.curknockdown = $ + dwn
+		if (CRPD.curknockdown >= 200) then
+			CRPD.curknockdown = 200
+		end
+	else
+		-- Damage can have either a -20% or 20% multiplier
+		local v = variance and (atk*P_RandomRange(80,120))/100 or atk
+		CRPD.health = $ - v
+		if not dwn then return end
+		CRPD.curknockdown = $ + dwn
+		if (CRPD.curknockdown >= 100) then
+			CRPD.state = CRPS_DOWN
 		end
 	end
 end

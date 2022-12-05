@@ -13,7 +13,7 @@ local Lib = FLCRLib
 FLCR.AddWeapon({
 	name = "Basic",
 	desc = "A training gun that fires 3 rounds straight ahead. It's for absolute beginners. The rounds are weaker at greater distances.",
-	mo = MT_REDRING,
+	mo = MT_DUMMY,
 	usesound = sfx_basic,
 	parttype = CRPT_GUN,
 	spawnfunc = function(p, w)
@@ -35,18 +35,35 @@ FLCR.AddWeapon({
 			p.powers[pw_nocontrol] = CRPD.firetics - 3*(w.reload) -- -12 = 14.5
 		end
 		
+		--Lib.spawnBullet(mo, w)
+		local xyangle, zangle = mo.angle, p.aiming
+		if mo.target then
+			xyangle, zangle = Lib.getXYZangle(mo, mo.target)
+		end
 		local th = P_SpawnPlayerMissile(mo, w.mo)
-		S_StopSound(mo)
-		if valid(th) then 
-			th.target = mo
+		if valid(th) then
 			S_StartSound(th, w.usesound)
-		else
-			S_StartSound(mo, w.usesound)
+			th.flags = MF_NOGRAVITY|MF_MISSILE
+			th.damage = w.attack * 8 -- 32
+			th.knockdown = 24 -- Getting hit with all 3 shots applies 74 knockdown
+			th.thinkfunc = w.thinkfunc
+			th.angle = xyangle
+			th.state = S_RRNG1
+			th.color = SKINCOLOR_YELLOW
+			th.fuse = 3*TICRATE
+			P_InstaThrust(th,th.angle,mobjinfo[MT_REDRING].speed)
+			P_SetObjectMomZ(th, (zangle/ANG1)*FRACUNIT, false)
 		end
 		CRPD.firemaxrounds = $ + 1
 	end,
 	
-	thinkfunc = nil,
+	thinkfunc = function(mo)
+		if not valid(mo) then return end
+		local factor = 64
+		mo.momx = $ - $/factor
+		mo.momy = $ - $/factor
+		mo.momz = $ - $/factor
+	end,
 
 	attack = 4,
 	speed = 5,

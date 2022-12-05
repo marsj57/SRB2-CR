@@ -22,6 +22,32 @@ mobjinfo[MT_FLCRCAM] = {
 	flags = MF_NOGRAVITY|MF_NOCLIPTHING|MF_NOBLOCKMAP|MF_NOCLIPHEIGHT|MF_NOCLIP
 }
 
+local function CRHudToggle()
+	if true then
+		hud.disable("rings")
+		hud.disable("lives")
+		hud.disable("weaponrings")
+		hud.disable("nightslink")
+		hud.disable("nightsdrill")
+		hud.disable("nightsrings")
+		hud.disable("nightsscore")
+		hud.disable("nightstime")
+		hud.disable("nightsrecords")
+		hud.disable("rankings")
+	else
+		hud.enable("rings")
+		hud.enable("lives")
+		hud.enable("weaponrings")
+		hud.enable("nightslink")
+		hud.enable("nightsdrill")
+		hud.enable("nightsrings")
+		hud.enable("nightsscore")
+		hud.enable("nightstime")
+		hud.enable("nightsrecords")
+		hud.enable("rankings")
+	end
+end
+
 -- Lactozilla
 local MINZ = (FRACUNIT*4)
 local FEETADJUST = -(15<<FRACBITS)
@@ -374,6 +400,9 @@ addHook("PostThinkFrame", do
 	end
 end)
 
+-- Enable or disable the Vanilla HUD
+hud.add(CRHudToggle, "game")
+
 -- For displaying all Mobj's behind walls
 hud.add(function(v,p,c)
 	--if not valid(v) then return end
@@ -448,9 +477,9 @@ hud.add(function(v,p,c)
 					(y>>FRACBITS + 88*(bgpatch.height*dxint)/100), CRPD.health*(75*(bgpatch.width*dxint)/100)/1000, 4, 15|flags)	
 
 		-- 'Downed meter' bits
-		if (CRPD.curKnockdown > 0) then
+		if (CRPD.curknockdown < 100) then
 			local dmbitp = v.cachePatch("CRHUDDM")
-			local pipCount = ease.linear(FixedDiv(CRPD.curKnockdown, 100),1,3)
+			local pipCount = ease.linear((1+CRPD.curknockdown)*FRACUNIT/100,4*FRACUNIT,1*FRACUNIT)>>FRACBITS
 			for i = 1, pipCount do
 				local inc = (i-1) * (dmbitp.width)
 				v.drawScaled(x + ((67+inc)*(bgpatch.width*dxint)/100)<<FRACBITS,
@@ -459,14 +488,14 @@ hud.add(function(v,p,c)
 		end
 		
 		-- "Status" text to show what state the player is in
-		if (CRPD.statetics > TICRATE) then
-			local fade = min(10, (CRPD.statetics-TICRATE)/2)
+		if (CRPD.statetics > 2*TICRATE) then
+			local fade = min(10, (CRPD.statetics-(2*TICRATE))/2)
 			if (fade > 9) then return nil end -- Don't process anything else if visible for more than a second
 			flags = $ | (fade*V_10TRANS)
 		end
 		v.drawString(x + ((bgpatch.width*dxint)/2)<<FRACBITS,
 					y + 102*(bgpatch.height*dxint)/100<<FRACBITS,
-					Lib.getCRState(CRPD.player),
+					Lib.getCRState(CRPD.player)[1],
 					flags, "fixed-center")
 	end,
 	avm, -- refmo
@@ -474,6 +503,9 @@ hud.add(function(v,p,c)
 	avm.y-range,avm.y+range)
 end, "game")
 
+/*for i = 1, 100
+	print(i ..", ".. ease.linear((1+i)*FRACUNIT/100,4*FRACUNIT,1*FRACUNIT)>>FRACBITS)
+end*/
 
 /*local range = 1024*FRACUNIT
 searchBlockmap("objects", function(refmo, found)

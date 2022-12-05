@@ -59,18 +59,22 @@ addHook("PlayerSpawn", function(p)
 		o.health = -1
 		mo.outline = o
 	end
-	
-	-- Teamswitch called before PlayerSpawn, that's why we can do this!
-	if p.crplayerdata then
-		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
-		CRPD.health = 1000
-		CRPD.status = CRPS_NORMAL
-	end
 end)
+
+addHook("MobjThinker",function(mo)
+	if not valid(mo) then return false end
+	mo.fuse = min($,TICRATE)
+end, MT_FLINGRING)
 
 addHook("ThinkFrame", do
 	-- Target finder, and thinker.
-	for p in players.iterate
+	for player in players.iterate
+		if not valid(player) then continue end
+		if not player.crplayerdata then continue end
+		local CRPD = FLCR.PlayerData[player.crplayerdata.id]
+		if not valid(CRPD.player) then continue end
+		local p = CRPD.player
+		
 		if not valid(p.mo) or p.spectator 
 		or (p.playerstate == PST_DEAD) then continue end
 		local mo = p.mo
@@ -83,8 +87,10 @@ addHook("ThinkFrame", do
 			local zdiff = (target.z - mo.z)
 			
 			if not sight or (dist > 1024*FRACUNIT)
-			or (valid(target.player) and target.player.playerstate == PST_DEAD) then 
+			or (valid(target.player) and target.player.playerstate == PST_DEAD)
+			or (valid(target.player) and target.player.spectator) then 
 				mo.target = nil
+				p.aiming = 0
 			else
 				spawnArrow(mo, target)
 				if not p.climbing
@@ -92,7 +98,7 @@ addHook("ThinkFrame", do
 				and not (p.pflags & PF_STARTDASH)
 				and not (p.pflags & PF_GLIDING) then
 					mo.angle = R_PointToAngle2(mo.x, mo.y, target.x, target.y)
-					p.drawangle = mo.angle
+					if (CRPD.state == CRPS_NORMAL) then p.drawangle = mo.angle end
 					p.aiming = R_PointToAngle2(0, 0, dist, zdiff)
 				end
 			end
@@ -106,7 +112,7 @@ addHook("ThinkFrame", do
 		if not valid(mo.outline) then continue end
 		local o = mo.outline
 		local target = o.refmo
-		o.angle = target.angle
+		o.angle = target.player and target.player.drawangle or target.angle
 		o.skin = target.skin
 		o.sprite2 = target.sprite2
 		o.state = target.state
@@ -127,16 +133,6 @@ addHook("ThinkFrame", do
 							target.y + FixedMul(sin(bga), FRACUNIT), 
 							target.z - FixedMul(o.scale, 4*FRACUNIT))
 	end
-	
-	/*-- Copied from source
-	for p in players.iterate
-		if p.exiting 
-		or p.spectator 
-		or (p.playerstate ~= PST_LIVE) then 
-			continue
-		end
-		doFireRing(p, p.cmd)
-	end*/
 end)
 
 -- Thinker for the outline mobj when the host (refmobj) dies
@@ -168,8 +164,6 @@ rawset(_G, "deathThink1", function(p)
 		local xpld = P_SpawnMobj(mo.x, mo.y, mo.z, MT_DUMMY) -- Spawn an object.
 		xpld.state = S_RXPL1
 		xpld.scale = 2*FRACUNIT
-		/*local xpld = P_SpawnMobj(mo.x, mo.y, mo.z + mo.height/2, MT_DUMMY) -- Spawn an object.
-		xpld.state = S_SXPA*/
 		S_StartSound(xpld, sfx_pplode) -- Play a sound.
 		--if cv_rkquake.value then -- If the specified consvar is enabled...
 			P_StartQuake(40*FRACUNIT, 5) -- Shake the screen.

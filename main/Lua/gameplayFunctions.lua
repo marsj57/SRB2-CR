@@ -9,44 +9,6 @@
 
 local Lib = FLCRLib
 
-FLCR.gameplayStuff = function(player)
-	if not valid(player) then return end
-	if not player.crplayerdata then return end
-	local CRPD = FLCR.PlayerData[player.crplayerdata.id]
-	if not valid(CRPD.player) then return end
-	local p = CRPD.player
-	local loadout = CRPD.loadout
-
-	-- State Change
-	CRPD.statetics = min(INT32_MAX, $ + 1)
-	if (CRPD.prevstate ~= CRPD.state) then
-		CRPD.prevstate = CRPD.state
-		CRPD.statetics = 0
-	end
-
-	local cmd = p.cmd
-	p.weaponshuffleheld = $ or false
-
-	if p.weaponshuffleheld
-	and not ((cmd.buttons & BT_WEAPONNEXT) 
-	or (cmd.buttons & BT_WEAPONPREV)) then 
-		p.weaponshuffleheld = false 
-	end
-
-	if CRPD.firetype and (CRPD.firetics > 0) then
-		Lib.weaponFire(p, loadout[CRPD.firetype])
-	end
-
-	-- Weapon shuffling
-	if (cmd.buttons & BT_WEAPONNEXT) and not p.weaponshuffleheld then
-		CRPD.loadoutsel = (CRPD.loadoutsel >= #loadout) and 1 or $ + 1
-		p.weaponshuffleheld = true
-	elseif (cmd.buttons & BT_WEAPONPREV) and not p.weaponshuffleheld then
-		CRPD.loadoutsel = (CRPD.loadoutsel <= 1) and #loadout or $ - 1
-		p.weaponshuffleheld = true
-	end
-end
-
 addHook("TeamSwitch", function(p, _, fromspectators)
 	if not valid(p) then return end
 	--if true return end
@@ -59,6 +21,14 @@ addHook("TeamSwitch", function(p, _, fromspectators)
 	end
 end)
 
+-- Bullet thinker code
+addHook("MobjThinker", function(mo)
+	if not valid(mo.target) then return false end
+	if not mo.thinkfunc then return false end
+	mo.thinkfunc(mo)
+	return false
+end)
+
 addHook("PlayerSpawn", function(p)
 	if not valid(p) then return false end
 	if not valid(p.mo) then return false end
@@ -69,15 +39,15 @@ addHook("PlayerSpawn", function(p)
 	local CRPD = FLCR.PlayerData[p.crplayerdata.id]
 	CRPD.health = 1000
 	CRPD.state = CRPS_NORMAL
+	mo.scale = 4*FRACUNIT/3
 end)
 
 addHook("PreThinkFrame", do 
 	for player in players.iterate
-		if not valid(player) then return end
-		if not player.crplayerdata then return end
-		--if (leveltime%TICRATE == 0) then print(player.crplayerdata.id) end
+		if not valid(player) then continue end
+		if not player.crplayerdata then continue end
 		local CRPD = FLCR.PlayerData[player.crplayerdata.id]
-		if not valid(CRPD.player) then return end
+		if not valid(CRPD.player) then continue end
 		local p = CRPD.player
 		
 		p.weapondelay = 1 -- Do not fire weapon rings ever
@@ -90,42 +60,103 @@ addHook("PreThinkFrame", do
 		else
 			CRPD.firetics = $ - 1
 		end
+		
+		-- State Change
+		CRPD.statetics = min(INT32_MAX, $ + 1)
+		if (CRPD.prevstate ~= CRPD.state) then
+			CRPD.prevstate = CRPD.state
+			CRPD.statetics = 0
+		end
+		
+		-- State specific timers
+		if (CRPD.state == CRPS_DOWN) then
+			CRPD.knockdowntics = $ + 1
+		else
+			CRPD.knockdowntics = 0
+		end
+		
 	end
 end)
 
-addHook("PlayerThink", function(player)
-	if not valid(player) then return end
-	if not player.crplayerdata then return end
-	local CRPD = FLCR.PlayerData[player.crplayerdata.id]
-	if not valid(CRPD.player) then return end
-	local p = CRPD.player
-	local loadout = CRPD.loadout
-	local cmd = p.cmd
-	local wmask = (cmd.buttons & BT_WEAPONMASK) % 4 -- 0 and 1-3
-	p.wmaskheld = $ or {false, false, false} -- Use 3 weapon mask buttons
+addHook("ThinkFrame", do
+	for player in players.iterate
+		if not valid(player) then continue end
+		if not player.crplayerdata then continue end
+		local CRPD = FLCR.PlayerData[player.crplayerdata.id]
+		if not valid(CRPD.player) then continue end
+		local p = CRPD.player
+		local mo = p.mo 
+		local loadout = CRPD.loadout
+		local cmd = p.cmd
+		local wmask = (cmd.buttons & BT_WEAPONMASK) % 4 -- 0 and 1-3
+		p.wmaskheld = $ or {false, false, false} -- Use 3 weapon mask buttons
 
-	for i = 1, #p.wmaskheld do -- Weapon Mask
-		if (i == wmask) then continue end
-		p.wmaskheld[i] = false
-	end
+		p.losstime = 30*TICRATE -- Special Ring Loss
 
-	FLCR.gameplayStuff(p)
+		-- Button holding
+		for i = 1, #p.wmaskheld do -- Weapon Mask
+			if (i == wmask) then continue end
+			p.wmaskheld[i] = false
+		end
 
-	-- Weapon firing
-	-- Spectator is already checked earlier so check these!
-	if (p.playerstate == PST_DEAD) 
-	or P_PlayerInPain(p) 
-	or CRPD.firetics then
-		return
-	end
-	-- Checks passed, let's fire your weapon!
-	if (cmd.buttons & BT_ATTACK) and not (p.pflags & PF_ATTACKDOWN) then
-		Lib.weaponFire(p, loadout[CRPD.loadoutsel]) -- Use the current weapon you have selected
-		p.pflags = $ | PF_ATTACKDOWN
-	elseif wmask and (wmask >= 1)
-	and not p.wmaskheld[wmask] then
-		Lib.weaponFire(p, loadout[wmask]) -- Use a dedicated button input w/ BT_WEAPONMASK!
-		p.wmaskheld[wmask] = true
+		-- Weapon shuffling
+		p.weaponshuffleheld = $ or false
+		if p.weaponshuffleheld
+		and not ((cmd.buttons & BT_WEAPONNEXT) 
+		or (cmd.buttons & BT_WEAPONPREV)) then 
+			p.weaponshuffleheld = false 
+		end
+
+		if (cmd.buttons & BT_WEAPONNEXT) and not p.weaponshuffleheld then
+			CRPD.loadoutsel = (CRPD.loadoutsel >= #loadout) and 1 or $ + 1
+			p.weaponshuffleheld = true
+		elseif (cmd.buttons & BT_WEAPONPREV) and not p.weaponshuffleheld then
+			CRPD.loadoutsel = (CRPD.loadoutsel <= 1) and #loadout or $ - 1
+			p.weaponshuffleheld = true
+		end
+
+		-- State thinker
+		if (p.playerstate == PST_DEAD)
+		or (CRPD.state ~= CRPS_NORMAL) then
+			if (CRPD.state == CRPS_HIT)
+			and ((mo.eflags & MFE_JUSTHITFLOOR)
+			or (CRPD.statetics > TICRATE)) then
+				CRPD.state = CRPS_NORMAL
+			elseif (CRPD.state == CRPS_DOWN) then
+				mo.state = S_PLAY_PAIN
+				if ((mo.eflags & MFE_JUSTHITFLOOR)
+				and (CRPD.curknockdown >= 200))
+				or (CRPD.knockdowntics > 3*TICRATE) then
+					CRPD.curknockdown = 0
+					CRPD.knockdowntics = 0
+					p.powers[pw_flashing] = 2*TICRATE
+					CRPD.state = CRPS_REBIRTH -- Force rebirth state
+				end
+			elseif (CRPD.state == CRPS_REBIRTH) then
+				mo.state = S_PLAY_STND
+				p.drawangle = $ + ANG15
+				if (CRPD.statetics > TICRATE) then
+					CRPD.state = CRPS_NORMAL
+				end
+			end
+			continue
+		end
+
+		-- Weapon firing.
+		-- Continued weapon fire
+		if CRPD.firetype and (CRPD.firetics > 0) then
+			Lib.weaponFire(p, loadout[CRPD.firetype])
+		else
+			-- Initial weapon firing
+			if (cmd.buttons & BT_ATTACK) and not (p.pflags & PF_ATTACKDOWN) then
+				Lib.weaponFire(p, loadout[CRPD.loadoutsel]) -- Use the current weapon you have selected
+				p.pflags = $ | PF_ATTACKDOWN
+			elseif wmask and (wmask >= 1)
+			and not p.wmaskheld[wmask] then
+				Lib.weaponFire(p, loadout[wmask]) -- Use a dedicated button input w/ BT_WEAPONMASK!
+				p.wmaskheld[wmask] = true
+			end
+		end
 	end
 end)
 

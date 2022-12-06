@@ -60,20 +60,22 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 
 		target.z = $ + 1
 		target.state = S_PLAY_PAIN
-		--P_PlayerRingBurst(p, damage/8) -- Either rings or player needs invulnerability here
+		P_PlayerRingBurst(p, damage/8)
+		S_StartSound(target, sfx_s3kb9) -- [Ring Loss]
 
 		local xthrust, ythrust, zthrust = Lib.getThrust(target, inflictor)
-		target.momx = $ - xthrust/8
-		target.momy = $ - ythrust/8
+		target.momx = $ - xthrust/9
+		target.momy = $ - ythrust/9
 		target.z = $ + 1
 		P_SetObjectMomZ(target, zthrust, false)
 		return true
 	elseif not valid(inflictor)
 	and ((damagetype == DMG_FIRE) or (damagetype == DMG_ELECTRIC)) then
 		damage = 50
-		Lib.doDamage(p, damage)
-		CRPD.state = CRPS_HIT
-		CRPD.statetics = 0
+		local knockdown = 100 -- Immediately get knocked down
+		Lib.doDamage(p, damage, knockdown)
+		CRPD.state = CRPS_DOWN
+		CRPD.statetics = TICRATE
 		
 		target.z = $ + 1
 		target.state = S_PLAY_PAIN

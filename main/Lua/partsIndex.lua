@@ -34,25 +34,31 @@ FLCR.AddWeapon({
 			CRPD.firetics = (multifireinterval * maxrounds)*2 -- 26.5
 			p.powers[pw_nocontrol] = CRPD.firetics - 3*(w.reload) -- -12 = 14.5
 		end
-		
-		--Lib.spawnBullet(mo, w)
+
+		-- Let's spawn the bullet!
 		local xyangle, zangle = mo.angle, p.aiming
-		if mo.target then
-			xyangle, zangle = Lib.getXYZangle(mo, mo.target)
-		end
 		local th = P_SpawnPlayerMissile(mo, w.mo)
-		if valid(th) then
-			S_StartSound(th, w.usesound)
-			th.flags = MF_NOGRAVITY|MF_MISSILE
+		if valid(th) 
+		and P_TryMove(th, th.x + FixedMul(cos(xyangle), FixedMul(2*th.radius,mo.scale)), 
+							th.y + FixedMul(sin(xyangle), FixedMul(2*th.radius,mo.scale)), true) then
+			th.target = mo -- Host
+			if mo.target then -- Host has a target?
+				xyangle, zangle = Lib.getXYZangle(mo, mo.target)
+				th.tracer = mo.target -- Set your tracer to your host's target for later
+			end
+			S_StartSoundAtVolume(th, w.usesound, 192)
+			if not (mobjinfo[w.mo].flags & MF_MISSILE) then -- Some weird behavior with non-native missles
+				th.flags = MF_NOGRAVITY|MF_MISSILE
+				P_SetObjectMomZ(th, (zangle/ANG1)*FRACUNIT, false)
+			end
+			th.thinkfunc = w.thinkfunc
 			th.damage = w.attack * 8 -- 32
 			th.knockdown = 24 -- Getting hit with all 3 shots applies 74 knockdown
-			th.thinkfunc = w.thinkfunc
 			th.angle = xyangle
 			th.state = S_RRNG1
 			th.color = SKINCOLOR_YELLOW
 			th.fuse = 3*TICRATE
-			P_InstaThrust(th,th.angle,mobjinfo[MT_REDRING].speed)
-			P_SetObjectMomZ(th, (zangle/ANG1)*FRACUNIT, false)
+			P_InstaThrust(th,th.angle,(10*FRACUNIT)*w.speed)
 		end
 		CRPD.firemaxrounds = $ + 1
 	end,
@@ -63,6 +69,11 @@ FLCR.AddWeapon({
 		mo.momx = $ - $/factor
 		mo.momy = $ - $/factor
 		mo.momz = $ - $/factor
+		if mo.tracer then
+			local t = mo.tracer
+			local angle = R_PointToAngle2(mo.x, mo.y, t.x, t.y)
+			P_Thrust(mo, angle, FRACUNIT/factor)
+		end
 	end,
 
 	attack = 4,
@@ -148,7 +159,18 @@ FLCR.AddWeapon({
 		CRPD.firemaxrounds = $ + 1
 	end,
 
-	thinkfunc = nil,
+	thinkfunc = function(mo)
+		if not valid(mo) then return end
+		local factor = 64
+		mo.momx = $ - $/factor
+		mo.momy = $ - $/factor
+		mo.momz = $ - $/factor
+		if mo.tracer then
+			local t = mo.tracer
+			local angle = R_PointToAngle2(mo.x, mo.y, t.x, t.y)
+			P_Thrust(mo, angle, FRACUNIT/factor)
+		end
+	end,
 
 	attack = 4,
 	speed = 7,

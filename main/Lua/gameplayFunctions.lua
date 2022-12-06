@@ -49,7 +49,7 @@ addHook("PreThinkFrame", do
 		local CRPD = FLCR.PlayerData[player.crplayerdata.id]
 		if not valid(CRPD.player) then continue end
 		local p = CRPD.player
-		
+				
 		p.weapondelay = 1 -- Do not fire weapon rings ever
 		
 		-- Firing tics
@@ -91,7 +91,7 @@ addHook("ThinkFrame", do
 		local wmask = (cmd.buttons & BT_WEAPONMASK) % 4 -- 0 and 1-3
 		p.wmaskheld = $ or {false, false, false} -- Use 3 weapon mask buttons
 
-		p.losstime = 30*TICRATE -- Special Ring Loss
+		p.losstime = 40*TICRATE -- Special Ring Loss
 
 		-- Button holding
 		for i = 1, #p.wmaskheld do -- Weapon Mask
@@ -124,6 +124,7 @@ addHook("ThinkFrame", do
 				CRPD.state = CRPS_NORMAL
 			elseif (CRPD.state == CRPS_DOWN) then
 				mo.state = S_PLAY_PAIN
+				p.powers[pw_nocontrol] = TICRATE -- No movement, short time
 				if ((mo.eflags & MFE_JUSTHITFLOOR)
 				and (CRPD.curknockdown >= 200))
 				or (CRPD.knockdowntics > 3*TICRATE) then
@@ -134,8 +135,11 @@ addHook("ThinkFrame", do
 				end
 			elseif (CRPD.state == CRPS_REBIRTH) then
 				mo.state = S_PLAY_STND
-				p.drawangle = $ + ANG15
-				if (CRPD.statetics > TICRATE) then
+				mo.momx = 0
+				mo.momy = 0
+				mo.momz = 0
+				p.drawangle = $ + ANGLE_45*CRPD.statetics -- Fancy little animation
+				if (CRPD.statetics > (2*TICRATE/3)) then
 					CRPD.state = CRPS_NORMAL
 				end
 			end

@@ -61,6 +61,7 @@ createEnum(specialLetter, {
 /*
 	Players have various states to be in!
 	
+	ACTION - Player just spawned (Handling Spawning Functions most likely)
 	NORMAL - Player can function like normal
 	HIT - Player is in recoil from a hit. RE: being combo'd?
 	DOWN - Player is in a downed state. Takes 60% of damage received
@@ -70,10 +71,20 @@ local playerStates = {}
 createEnum(playerStates, {
 	"CRPS_INVALID",
 	
+	"CRPS_ACTION",
 	"CRPS_NORMAL",
 	"CRPS_HIT",
 	"CRPS_DOWN",
 	"CRPS_REBIRTH",
+})
+
+rawset(_G, "strcol", { -- String Color
+	--0, -- CRPS_INVALID
+	V_ORANGEMAP, -- CRPS_ACTION
+	0, -- CRPS_NORMAL
+	V_REDMAP, -- CRPS_HIT
+	V_AZUREMAP, -- CRPS_DOWN
+	V_ROSYMAP, -- CRPS_REBIRTH
 })
 
 FLCR.AddWeapon = function(t)
@@ -150,7 +161,21 @@ local defaultPlayerStruct = {
 		id = 0,
 		player = nil,
 		loadout = {CRWEP_GUN_BASIC, CRWEP_BOMB_STANDARD, CRWEP_POD_STANDARD}, -- Noob Pack
+		/*-- Noob pack
+		gunwep = CRWEP_GUN_BASIC,
+		bombwep = CRWEP_BOMB_STANDARD,
+		podwep = CRWEP_POD_STANDARD,*/
 		loadoutsel = 1,
+		/*cmd = {
+				forwardmove = 0,
+				sidemove = 0,
+				buttons = 0,
+				},
+		prevcmd = {
+				forwardmove = 0,
+				sidemove = 0,
+				buttons = 0,
+				},*/
 		health = 0,
 		firetics = 0,
 		firemaxrounds = 0,

@@ -493,9 +493,11 @@ hud.add(function(v,p,c)
 			if (fade > 9) then return nil end -- Don't process anything else if visible for more than a second
 			flags = $ | (fade*V_10TRANS)
 		end
+		local statusstr, statusnum = Lib.getCRState(CRPD.player)
+		flags = $ | strcol[statusnum]
 		v.drawString(x + ((bgpatch.width*dxint)/2)<<FRACBITS,
 					y + 102*(bgpatch.height*dxint)/100<<FRACBITS,
-					Lib.getCRState(CRPD.player)[1],
+					statusstr,
 					flags, "fixed-center")
 	end,
 	avm, -- refmo

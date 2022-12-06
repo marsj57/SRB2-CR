@@ -61,6 +61,12 @@ addHook("PlayerSpawn", function(p)
 	end
 end)
 
+-- Spilled rings thinker
+addHook("MobjSpawn", function(mo)
+	if not valid(mo) then return false end
+	mo.flags = $ | MF_NOCLIPTHING
+end, MT_FLINGRING)
+
 addHook("MobjThinker",function(mo)
 	if not valid(mo) then return false end
 	mo.fuse = min($,TICRATE)
@@ -84,7 +90,7 @@ addHook("ThinkFrame", do
 			local target = mo.target
 			local sight = P_CheckSight(mo, target)
 			local dist = FixedHypot(mo.x - target.x, mo.y - target.y)
-			local zdiff = (target.z - mo.z)
+			local zdiff = ((target.z+(target.height/2)) - (mo.z+(mo.height/2)))
 			
 			if not sight or (dist > 1024*FRACUNIT)
 			or (valid(target.player) and target.player.playerstate == PST_DEAD)

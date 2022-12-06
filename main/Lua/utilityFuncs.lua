@@ -93,12 +93,12 @@ Lib.getCRState = function(p)
 	
 	-- Returns both text and correspnding number
 	if CRPD.state
-	and (CRPD.state >= CRPS_NORMAL)
+	and (CRPD.state >= CRPS_ACTION)
 	and (CRPD.state <= CRPS_REBIRTH)
-		local stateText = { "NORMAL", "HIT", "DOWNED", "REBIRTH" }
-		return { stateText[CRPD.state], CRPD.state }
+		local stateText = { "ACTION", "NORMAL", "HIT", "SKILL ISSUE", "REBIRTH" }
+		return stateText[CRPD.state], CRPD.state
 	else
-		return { "INVALID", 0 }
+		return "INVALID", 0
 	end
 end
 
@@ -151,7 +151,7 @@ Lib.doDamage = function(plyr, atk, dwn, variance)
 	
 	-- Just to spice things up, damage has variance!
 	if (CRPD.state == CRPS_DOWN) then
-		-- While downed, you only take 50% dmg. Also, knockdown does not apply.
+		-- While downed, you only take 50% dmg. Knockdown applies, but it speeds up recovery.
 		local v = variance and (atk*P_RandomRange(80,120))/200 or atk
 		CRPD.health = $ - v
 		if not dwn then return end
@@ -160,7 +160,7 @@ Lib.doDamage = function(plyr, atk, dwn, variance)
 			CRPD.curknockdown = 200
 		end
 	else
-		-- Damage can have either a -20% or 20% multiplier
+		-- Damage can have either a -20% or 20% multiplier.
 		local v = variance and (atk*P_RandomRange(80,120))/100 or atk
 		CRPD.health = $ - v
 		if not dwn then return end
@@ -170,7 +170,6 @@ Lib.doDamage = function(plyr, atk, dwn, variance)
 		end
 	end
 end
-
 
 -- look4ClosestMo: Looks for the closest mobj around 'mo'
 -- Flame

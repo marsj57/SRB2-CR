@@ -49,7 +49,7 @@ FLCR.AddWeapon({
 			S_StartSoundAtVolume(th, w.usesound, 192)
 			if not (mobjinfo[w.mo].flags & MF_MISSILE) then -- Some weird behavior with non-native missles
 				th.flags = MF_NOGRAVITY|MF_MISSILE
-				P_SetObjectMomZ(th, (zangle/ANG1)*FRACUNIT, false)
+				P_SetObjectMomZ(th, (zangle/(4*ANG1/3))*FRACUNIT, false)
 			end
 			th.thinkfunc = w.thinkfunc
 			th.damage = w.attack * 8 -- 32

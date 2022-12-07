@@ -126,7 +126,7 @@ Lib.getThrust = function(mo1, mo2, minimal)
 		local momx = mo1.momx - mo2.momx
 		local momy = mo1.momy - mo2.momy
 		local momz = mo1.momz - mo2.momz
-		speed = FixedHypot(FixedHypot(momx, momy), momz)
+		speed = R_PointToDist2(0, 0, R_PointToDist2(0, 0, momx, momy), momz)
 	end
 	local thrust = P_ReturnThrustX(mo1, zangle, speed)
 	local zthrust = P_ReturnThrustY(mo1, zangle, speed)

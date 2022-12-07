@@ -67,7 +67,7 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 		target.momx = $ - xthrust/9
 		target.momy = $ - ythrust/9
 		target.z = $ + 1
-		P_SetObjectMomZ(target, zthrust, false)
+		P_SetObjectMomZ(target, 2*zthrust/3, true)
 		return true
 	elseif not valid(inflictor)
 	and ((damagetype == DMG_FIRE) or (damagetype == DMG_ELECTRIC)) then

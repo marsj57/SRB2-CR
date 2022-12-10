@@ -64,10 +64,12 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 		S_StartSound(target, sfx_s3kb9) -- [Ring Loss]
 
 		local xthrust, ythrust, zthrust = Lib.getThrust(target, inflictor)
-		target.momx = $ - xthrust/9
-		target.momy = $ - ythrust/9
+		local factor = 9
+		target.momx = $ - xthrust/factor
+		target.momy = $ - ythrust/factor
 		target.z = $ + 1
-		zthrust = ($ > 0) and min($, 40*FRACUNIT) or max($, -40*FRACUNIT)
+		--zthrust = ($ > 0) and min($, 40*FRACUNIT) or max($, -40*FRACUNIT)
+		zthrust = min(abs($), 20*FRACUNIT)
 		P_SetObjectMomZ(target, zthrust, true)
 		return true
 	elseif not valid(inflictor)

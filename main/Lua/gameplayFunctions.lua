@@ -62,7 +62,7 @@ addHook("PreThinkFrame", do
 		end
 		
 		-- State Change
-		CRPD.statetics = min(INT32_MAX, $ + 1)
+		CRPD.statetics = min(INT32_MAX, $ + 1) -- Counts up instead of down. Informs how long we've been in this state for
 		if (CRPD.prevstate ~= CRPD.state) then
 			CRPD.prevstate = CRPD.state
 			CRPD.statetics = 0
@@ -70,7 +70,7 @@ addHook("PreThinkFrame", do
 		
 		-- State specific timers
 		if (CRPD.state == CRPS_DOWN) then
-			CRPD.knockdowntics = $ + 1
+			CRPD.knockdowntics = min(INT32_MAX, $ + 1) -- Counts up instead of down
 		else
 			CRPD.knockdowntics = 0
 		end
@@ -131,6 +131,8 @@ addHook("ThinkFrame", do
 					CRPD.curknockdown = 0
 					CRPD.knockdowntics = 0
 					p.powers[pw_flashing] = 2*TICRATE
+					local fx = P_SpawnMobjFromMobj(mo, 0, 0, 0, MT_DUMMY)
+					fx.state = S_FX_LINEUP
 					CRPD.state = CRPS_REBIRTH -- Force rebirth state
 				end
 			elseif (CRPD.state == CRPS_REBIRTH) then
@@ -143,7 +145,7 @@ addHook("ThinkFrame", do
 					CRPD.state = CRPS_NORMAL
 				end
 			end
-			continue
+			continue -- Don't process aything else for this player, move to the next player.
 		end
 
 		-- Weapon firing.

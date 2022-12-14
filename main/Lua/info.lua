@@ -7,9 +7,9 @@
 --
 -- Flame
 
-SafeFreeslot("MT_DUMMY")
+SafeFreeslot("MT_DUMMY", "MT_DUMMYFX")
 
-mobjinfo[MT_DUMMY] = {
+local dummy_t = {
 	doomednum = -1,
 	spawnstate = S_INVISIBLE,
 	spawnhealth = 1000,
@@ -17,6 +17,9 @@ mobjinfo[MT_DUMMY] = {
 	height = 32*FRACUNIT,
 	flags = MF_NOGRAVITY|MF_NOCLIPTHING|MF_NOBLOCKMAP|MF_NOCLIPHEIGHT|MF_NOCLIP
 }
+
+mobjinfo[MT_DUMMY] = dummy_t
+mobjinfo[MT_DUMMYFX] = dummy_t
 
 -- Arrows!
 SafeFreeslot("SPR_RKAW", "S_RKAW1")

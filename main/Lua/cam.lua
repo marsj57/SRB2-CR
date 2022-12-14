@@ -285,7 +285,6 @@ addHook("PlayerSpawn", function(p)
 	p.pflags = $ | PF_ANALOGMODE
 	--CV_Set(CV_FindVar("chasecam"), 1)
 	camera.chase = true
-	p.rings = 50
 end, MT_PLAYER)
 
 addHook("PlayerThink", function(p)

@@ -12,16 +12,12 @@ local Lib = FLCRLib
 -- From Rollout Knockout
 rawset(_G, "spawnArrow", function(mo, target)
 	-- Need both a source 'mo' and a target 'mo'
-	if not valid(mo) then return end
-	if not valid(target) then return end
-	/*if (type(dist) ~= "number") then
-		error("Error: spawnArrow expects a number")
-		return
-	end*/
+	if not (valid(mo) and valid(target)) then return end
 	
 	local arw = P_SpawnMobj(mo.x, mo.y, mo.z + 3*mobjinfo[mo.type].height, MT_DUMMY)
+	local xyangle, zangle = Lib.getXYZangle(mo, target)
 	arw.state = S_RKAW1
-	arw.angle = R_PointToAngle2(mo.x, mo.y, target.x, target.y)
+	arw.angle = xyangle
 	arw.target = mo
 	arw.color = target.color or SKINCOLOR_GREEN -- Opponent's color
 	-- Fancy maths. Ensure your papersprite angle points towards your opponent.
@@ -30,17 +26,13 @@ rawset(_G, "spawnArrow", function(mo, target)
 						mo.y,-- + FixedMul(sin(arw.angle), 3*mo.radius + FixedMul(sin(ft), 4*FRACUNIT)),
 						mo.z + 3*mobjinfo[mo.type].height)
 
-	-- Some more fancy maths. Grow/shrink according to your target's distance
-	local tdist, zdiff = R_PointToDist2(mo.x, mo.y, target.x, target.y), (target.z - mo.z)
-	local zaim = R_PointToAngle2(0, 0, tdist, zdiff) -- Use that distance to 'aim' towards your target
-	local camangle = R_PointToAngle(mo.x, mo.y)
-	
-	---- Grow/shrink
-	--arw.scale = FixedDiv(FixedMul(FRACUNIT, dist), tdist)/2
-	
-	-- Rollangle
-	if ((camangle - arw.angle) < 0) then zaim = InvAngle($) end
-	arw.rollangle = zaim
+	-- Rollangle stuff, this is purely visual
+	local camangle = R_PointToAngle(arw.x, arw.y)
+	if ((camangle - arw.angle) < 0) then 
+		zangle = InvAngle($)
+	end
+
+	arw.rollangle = zangle
 	return arw
 end)
 

@@ -37,6 +37,7 @@ addHook("PlayerSpawn", function(p)
 	-- Teamswitch called before PlayerSpawn, that's why we can do this!
 	if not p.crplayerdata then return end
 	local CRPD = FLCR.PlayerData[p.crplayerdata.id]
+	p.rings = 20
 	CRPD.health = 1000
 	CRPD.state = CRPS_NORMAL
 	mo.scale = 4*FRACUNIT/3

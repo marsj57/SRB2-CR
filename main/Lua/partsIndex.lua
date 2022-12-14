@@ -107,16 +107,41 @@ FLCR.AddWeapon({
 			p.powers[pw_nocontrol] = CRPD.firetics - 5*(w.reload)
 		end
 		
-		for i = -1, 1, 1 do
+		-- Let's spawn the bullets!
+		/*for i = -1, 1, 1 do
+			local xyangle, zangle = mo.angle, p.aiming
 			local fa = i*ANGLE_45
-			--local th = P_SpawnPlayerMissile(mo, w.mo)
-		end
+			mo.extravalue1 = i
+			local th = P_SpawnMobjFromMobj(mo, 0, 0, mo.height/2, MT_DUMMY)
+			if valid(th) 
+			and P_TryMove(th, th.x + FixedMul(cos(mo.angle + fa), FixedMul(2*th.radius,mo.scale)), 
+							th.y + FixedMul(sin(mo.angle + fa), FixedMul(2*th.radius,mo.scale)), true) then
+				th.target = mo -- Host
+				if mo.target then -- Host has a target?
+					xyangle, zangle = Lib.getXYZangle(mo, mo.target)
+					th.tracer = mo.target -- Set your tracer to your host's target for later
+				end
+				if not i then S_StartSoundAtVolume(th, w.usesound, 192) end -- Only spawn one sound.
+				-- TODO: Z AIMING
+				th.thinkfunc = w.thinkfunc
+				th.damage = w.attack * 8 -- 32
+				th.knockdown = 24 -- Getting hit with all 3 shots applies 74 knockdown
+				th.angle = xyangle
+				th.state = S_RRNG1
+				th.color = SKINCOLOR_YELLOW
+				th.fuse = 3*TICRATE
+				P_InstaThrust(th,th.angle,(10*FRACUNIT)*w.speed)
+			end
+		end*/
 		CRPD.firemaxrounds = $ + 1
 	end,
 	
 	thinkfunc = function(mo)
 		if not valid(mo) then return end
-		if not mo.extravalue1 then return end
+		-- Bullet Lifetime equals 1/7th of a second?
+		-- Stop heading in an angle and straighten out
+		if mo.extravalue1 then return end
+		-- Middle bullet has a little bit of homing
 	end,
 	
 	attack = 5,

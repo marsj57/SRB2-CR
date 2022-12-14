@@ -85,6 +85,7 @@ Lib.assignPlayerToSlot = function(p, slot)
 	print("Player "..p.name.." has been assigned to slot "..slot..".")
 end
 
+-- Flame
 -- Get the status of whatever state you're in.
 Lib.getCRState = function(p)
 	if not valid(p) then return false end
@@ -176,11 +177,10 @@ end
 --
 -- mo (mobj_t)			- source mobj
 -- dist (fixed_t)		- distance to search (Defaults to 1024*FRACUNITS if not specified)
--- dist (MT_* type)		- Look for a specific MT_* object?
+-- mtype (MT_* type)		- Look for a specific MT_* object?
 Lib.look4ClosestMo = function(mo, dist, mtype)
-	if not valid(mo) then return end
-	
-	if not dist then dist = 1024*FRACUNIT end
+	if not valid(mo) then return nil end
+	if not dist then dist = FixedMul(1024*FRACUNIT, mo.scale) end
 	
 	local closestmo
 	local closestdist = dist
@@ -190,7 +190,7 @@ Lib.look4ClosestMo = function(mo, dist, mtype)
 		if (found.health <= 0) then return nil end
 		--if found.player and found.player.spectator then return nil end
 		
-		local idist = FixedHypot(FixedHypot(found.x - refmo.x, found.y - refmo.y), 2*(found.z - refmo.z))
+		local idist = FixedMul(FixedHypot(FixedHypot(found.x - refmo.x, found.y - refmo.y), (found.z - refmo.z)), refmo.scale)
 		if (idist > dist) then return nil end -- Ignore objects outside of 'dist' range.
 		
 		if (idist < closestdist) then

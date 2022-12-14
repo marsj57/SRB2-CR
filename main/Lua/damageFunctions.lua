@@ -49,43 +49,68 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 	local p = CRPD.player -- Simplify
 	
 	if valid(inflictor) then
+		-- Default damage if damage / knockback isn't specified
 		damage = inflictor.damage or 5
 		local knockdown = inflictor.knockdown or 10
 		
+		-- Do the damage, set the state
 		Lib.doDamage(p, damage, knockdown, true)
 		if (CRPD.state ~= CRPS_DOWN)
 			CRPD.state = CRPS_HIT
 			CRPD.statetics = 0
 		end
 
+		P_PlayerRingBurst(p, damage/10) -- Visual effect to shoy "You got hit!" (1/10th of damage received) 
+		S_StartSound(target, sfx_s3kb9) -- [Ring Loss]
+		
+		-- Extra small visual effect to show "You got hit!"
+		local fx = P_SpawnMobjFromMobj(target, 0, 0, 0, MT_DUMMYFX)
+		fx.angle = inflictor.angle or R_PointToAngle2(inflictor.x, inflictor.y, target.x, target.y)
+		--fx.angle = $ - ANGLE_90
+		fx.state = S_FX_HIT1 + P_RandomRange(0,2)
+		local xyangle, zangle = Lib.getXYZangle(inflictor, target)
+		-- FX Rollangle stuff. This is purely visual
+		local camangle = R_PointToAngle(inflictor.x, inflictor.y)
+		if ((camangle - inflictor.angle) < 0) then 
+			zangle = InvAngle($)
+		end
+		fx.rollangle = zangle
+
+		-- Get thrust angle... and thrust!
 		target.z = $ + 1
 		target.state = S_PLAY_PAIN
-		P_PlayerRingBurst(p, damage/8)
-		S_StartSound(target, sfx_s3kb9) -- [Ring Loss]
-
 		local xthrust, ythrust, zthrust = Lib.getThrust(target, inflictor)
-		local factor = 9
+		local factor = 10
 		target.momx = $ - xthrust/factor
 		target.momy = $ - ythrust/factor
-		target.z = $ + 1
 		--zthrust = ($ > 0) and min($, 40*FRACUNIT) or max($, -40*FRACUNIT)
 		zthrust = min(abs($), 20*FRACUNIT)
 		P_SetObjectMomZ(target, zthrust, true)
-		return true
+		return true -- Override default behavior
 	elseif not valid(inflictor)
 	and ((damagetype == DMG_FIRE) or (damagetype == DMG_ELECTRIC)) then
+		-- Default damage
 		damage = 50
 		local knockdown = 100 -- Immediately get knocked down
+		-- Do the damage, set the state
 		Lib.doDamage(p, damage, knockdown)
 		CRPD.state = CRPS_DOWN
 		CRPD.statetics = TICRATE
 		
+		-- Extra small visual effect to show "You got hit!"
+		local fx = P_SpawnMobjFromMobj(target, 0, 0, 0, MT_DUMMYFX)
+		if (damagetype == DMG_ELECTRIC) then
+			fx.scale = 2*FRACUNIT
+			fx.state = S_FX_ELECUP
+		end
+		
+		-- Get thrust angle... and thrust!
 		target.z = $ + 1
 		target.state = S_PLAY_PAIN
 		target.momx = $>>1
 		target.momy = $>>1
 		P_SetObjectMomZ(target, 40*FRACUNIT, false)
-		return true
+		return true -- Override default behavior
 	end
 end, MT_PLAYER)
 

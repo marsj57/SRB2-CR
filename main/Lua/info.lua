@@ -35,35 +35,37 @@ end
 
 -- Recovery Line FX - "Lines up"
 SafeFreeslot("SPR_LINU", "S_FX_LINEUP")
-states[S_FX_LINEUP] = {SPR_LINU, A|FF_FULLBRIGHT|FF_ANIMATE , 19, nil, 19, 1, S_INVISIBLE}
+states[S_FX_LINEUP] = {SPR_LINU, A|FF_FULLBRIGHT|FF_ANIMATE , 19, nil, 19, 1, S_NULL}
 
 -- Wind dissapate FX - "B/W Fire center"
 SafeFreeslot("SPR_WFX1", "S_FX_WIND")
-states[S_FX_WIND] = { SPR_WFX1, A|FF_FULLBRIGHT|FF_ANIMATE|FF_PAPERSPRITE, 23, nil, 23, 1, S_INVISIBLE }
+states[S_FX_WIND] = { SPR_WFX1, A|FF_FULLBRIGHT|FF_ANIMATE|FF_PAPERSPRITE, 23, nil, 23, 1, S_NULL }
 
--- Hit FX - Sparks Hit Explosion right
+-- Hit FX Right
 SafeFreeslot("SPR_HITA", "S_FX_HIT1")
-states[S_FX_HIT1] = { SPR_HITA, A|FF_FULLBRIGHT|FF_ANIMATE|FF_PAPERSPRITE, 7, nil, 7, 1, S_INVISIBLE }
+states[S_FX_HIT1] = { SPR_HITA, A|FF_FULLBRIGHT|FF_ANIMATE|FF_PAPERSPRITE, 7, nil, 7, 1, S_NULL }
 SafeFreeslot("SPR_HITB", "S_FX_HIT2")
-states[S_FX_HIT2] = { SPR_HITB, A|FF_FULLBRIGHT|FF_ANIMATE|FF_PAPERSPRITE, 8, nil, 8, 1, S_INVISIBLE }
+states[S_FX_HIT2] = { SPR_HITB, A|FF_FULLBRIGHT|FF_ANIMATE|FF_PAPERSPRITE, 8, nil, 8, 1, S_NULL }
 SafeFreeslot("SPR_HITC", "S_FX_HIT3")
-states[S_FX_HIT3] = { SPR_HITC, A|FF_FULLBRIGHT|FF_ANIMATE|FF_PAPERSPRITE, 8, nil, 8, 1, S_INVISIBLE }
--- Sparks - Hit Explosion center
+states[S_FX_HIT3] = { SPR_HITC, A|FF_FULLBRIGHT|FF_ANIMATE|FF_PAPERSPRITE, 8, nil, 8, 1, S_NULL }
+-- Hit FX Center
 SafeFreeslot("SPR_HITD", "S_FX_HIT4")
-states[S_FX_HIT4] = { SPR_HITD, A|FF_FULLBRIGHT|FF_ANIMATE, 7, nil, 7, 1, S_INVISIBLE }
+states[S_FX_HIT4] = { SPR_HITD, A|FF_FULLBRIGHT|FF_ANIMATE, 7, nil, 7, 1, S_NULL }
 SafeFreeslot("SPR_HITE", "S_FX_HIT5")
-states[S_FX_HIT5] = { SPR_HITE, A|FF_FULLBRIGHT|FF_ANIMATE, 7, nil, 7, 1, S_INVISIBLE }
+states[S_FX_HIT5] = { SPR_HITE, A|FF_FULLBRIGHT|FF_ANIMATE, 7, nil, 7, 1, S_NULL }
 -- Sparks - Floor, Loop up
 SafeFreeslot("SPR_FSPK", "S_FX_FSPARK")
 states[S_FX_FSPARK] = { SPR_FSPK, A|FF_FULLBRIGHT|FF_ANIMATE, -1, nil, 3, 1, S_FX_FSPARK }
 
 -- Energy Ray Up
 SafeFreeslot("SPR_NRGU", "S_FX_ENERGYUP")
-states[S_FX_ENERGYUP] = { SPR_NRGU, A|FF_FULLBRIGHT|FF_ANIMATE, 31, nil, 31, 1, S_INVISIBLE }
+states[S_FX_ENERGYUP] = { SPR_NRGU, A|FF_FULLBRIGHT|FF_ANIMATE, 31, nil, 31, 1, S_NULL }
 
--- Electricity Hit FX - Explosion Up
-SafeFreeslot("SPR_ELEA", "S_FX_ELECUP")
-states[S_FX_ELECUP] = { SPR_ELEA, A|FF_FULLBRIGHT|FF_ANIMATE, 15, nil, 15, 1, S_INVISIBLE }
+-- Electricity Hit FX - Floor up
+SafeFreeslot("SPR_ELEA", "S_FX_ELECUP1")
+states[S_FX_ELECUP1] = { SPR_ELEA, A|FF_FULLBRIGHT|FF_ANIMATE, 15, nil, 15, 1, S_NULL }
+SafeFreeslot("SPR_ELEB", "S_FX_ELECUP2")
+states[S_FX_ELECUP2] = { SPR_ELEB, A|FF_FULLBRIGHT|FF_ANIMATE, 12, nil, 12, 1, S_NULL }
 
 -- Sounds
 SafeFreeslot("sfx_pplode")

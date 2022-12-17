@@ -36,6 +36,60 @@ rawset(_G, "spawnArrow", function(mo, target)
 	return arw
 end)
 
+addHook("ThinkFrame", do
+	if (leveltime%3) then return end -- Don't trigger every tic
+	for sector in sectors.iterate
+		if not valid(sector) then continue end
+		local sec = sector
+		-- If sector special is a elemental damaging floor, spawn some FX!
+		local IsSectorElectric = (GetSecSpecial(sec.special, 1) == 4) and true or false
+		local IsSectorFire = (GetSecSpecial(sec.special, 1) == 3) and true or false
+		if IsSectorElectric then
+			local numlines = #sec.lines
+			local vtx = {} -- Vertex collection table.
+			for i = 0, numlines - 1 do
+				table.insert(vtx, { x = sec.lines[i].v1.x, y = sec.lines[i].v1.y }) -- Put these values in a table.
+				--print("Vertex #"..(i+1).." indexed! (X: ".. vtx[i+1].x/FRACUNIT ..", Y: ".. vtx[i+1].y/FRACUNIT ..")")
+			end
+			
+			local boundary = {}
+			-- Get our leftmost and rightmost x
+			for k,v in spairs(vtx, function(t,a,b) return t[b].x > t[a].x end) do
+				if k == 1 then -- Leftmost
+					boundary.left = v.x/FRACUNIT
+				elseif k == #vtx then -- Rightmost
+					boundary.right = v.x/FRACUNIT
+				end
+			end
+
+			-- Get our topmost and bottommost y
+			for k,v in spairs(vtx, function(t,a,b) return t[b].y < t[a].y end) do
+				if k == 1 then -- Topmost
+					boundary.top = v.y/FRACUNIT
+				elseif k == #vtx then -- Bottommost
+					boundary.bottom = v.y/FRACUNIT
+				end
+			end
+			
+			-- Spawn the FX!
+			local xrand, yrand
+			xrand = P_RandomRange(boundary.left, boundary.right)<<FRACBITS
+			yrand = P_RandomRange(boundary.top, boundary.bottom)<<FRACBITS
+			if (R_PointInSubsector(xrand, yrand).sector ~= sec) then continue end
+			
+			local fx = P_SpawnMobj(xrand, yrand, sec.floorheight + 1, MT_DUMMYFX)
+			if P_RandomChance(FRACUNIT/16) then
+				fx.state = S_FX_ELECUP1
+			else
+				fx.state = S_FX_ELECUP2
+			end
+			--fx.fuse = states[fx.state].tics
+		elseif IsSectorFire then
+			continue
+		end
+	end
+end)
+
 addHook("PlayerSpawn", function(p)
 	if not valid(p) then return false end
 	if not valid(p.mo) then return false end
@@ -77,14 +131,14 @@ addHook("ThinkFrame", do
 		or (p.playerstate == PST_DEAD) then continue end
 		local mo = p.mo
 		if not mo.target then
-			mo.target = Lib.look4ClosestMo(mo, 1024*FRACUNIT, MT_PLAYER)
+			mo.target = Lib.look4ClosestMo(mo, FixedMul(1024*FRACUNIT, mo.scale), MT_PLAYER)
 		else
 			local target = mo.target
 			local sight = P_CheckSight(mo, target)
 			local dist = FixedHypot(mo.x - target.x, mo.y - target.y)
 			local zdiff = ((target.z+(target.height/2)) - (mo.z+(mo.height/2)))
 			
-			if not sight or (dist > 1024*FRACUNIT)
+			if not sight or (dist > FixedMul(1024*FRACUNIT, mo.scale))
 			or (valid(target.player) and target.player.playerstate == PST_DEAD)
 			or (valid(target.player) and target.player.spectator) then 
 				mo.target = nil

@@ -101,7 +101,7 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 		local fx = P_SpawnMobjFromMobj(target, 0, 0, 0, MT_DUMMYFX)
 		if (damagetype == DMG_ELECTRIC) then
 			fx.scale = 2*FRACUNIT
-			fx.state = S_FX_ELECUP
+			fx.state = S_FX_ELECUP1
 		end
 		
 		-- Get thrust angle... and thrust!

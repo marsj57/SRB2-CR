@@ -16,21 +16,6 @@ rawset(_G, "valid", function(th)
 	return th and th.valid
 end)
 
-rawset(_G, "createFlags", function(tname, t)
-    for i = 1,#t do
-		rawset(_G, t[i], 2^(i-1))
-		table.insert(tname, {string = t[i], value = 2^(i-1)} )
-    end
-end)
-
-rawset(_G, "createEnum", function(tname, t, from)
-    if from == nil then from = 0 end
-    for i = 1,#t do
-		rawset(_G, t[i], from+(i-1))
-		table.insert(tname, {string = t[i], value = from+(i-1)} )
-    end
-end)
-
 -- Lach
 -- Freeslots something without making duplicates
 local function CheckSlot(item) -- this function deliberately errors when a freeslot does not exist
@@ -49,6 +34,46 @@ rawset(_G, "SafeFreeslot", function(...)
 	end
 end)
 -- End Lach
+
+rawset(_G, "createFlags", function(tname, t)
+    for i = 1,#t do
+		rawset(_G, t[i], 2^(i-1))
+		table.insert(tname, {string = t[i], value = 2^(i-1)} )
+    end
+end)
+
+rawset(_G, "createEnum", function(tname, t, from)
+    if from == nil then from = 0 end
+    for i = 1,#t do
+		rawset(_G, t[i], from+(i-1))
+		table.insert(tname, {string = t[i], value = from+(i-1)} )
+    end
+end)
+
+-- Table sorting
+-- Flame, 5-16-21
+rawset(_G, "spairs", function(t, order)
+    -- collect the keys
+    local keys = {}
+    for k in pairs(t) do keys[#keys+1] = k end
+
+    -- if order function given, sort by it by passing the table and keys a, b,
+    -- otherwise just sort the keys 
+    if order then
+        table.sort(keys, function(a,b) return order(t, a, b) end)
+    else
+        table.sort(keys)
+    end
+
+    -- return the iterator function
+    local i = 0
+    return function()
+        i = i + 1
+        if keys[i] then
+            return keys[i], t[keys[i]]
+        end
+    end
+end)
 
 /*-- Tatsuru
 local function FixedPow(a, b)

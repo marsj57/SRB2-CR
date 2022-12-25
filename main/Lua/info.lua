@@ -67,6 +67,10 @@ states[S_FX_ELECUP1] = { SPR_ELEA, A|FF_FULLBRIGHT|FF_ANIMATE, 15, nil, 15, 1, S
 SafeFreeslot("SPR_ELEB", "S_FX_ELECUP2")
 states[S_FX_ELECUP2] = { SPR_ELEB, A|FF_FULLBRIGHT|FF_ANIMATE, 12, nil, 12, 1, S_NULL }
 
+-- Fire / Lava Hit FX - Floor up
+SafeFreeslot("SPR_FIRA", "S_FX_FIREUP1")
+states[S_FX_FIREUP1] = { SPR_FIRA, A|FF_FULLBRIGHT|FF_ANIMATE, 17, nil, 17, 1, S_NULL }
+
 -- Sounds
 SafeFreeslot("sfx_pplode")
 sfxinfo[sfx_pplode].caption = "Player Explode"

@@ -314,7 +314,7 @@ FLCR.AddWeapon({
 	desc = "Flies in an arc toward target. It's large blast radius makes aiming and multiple blows a snap.",
 	mo = MT_REDRING,
 	usesound = sfx_s3k81,
-	parttype = CRPT_BOMB,	
+	parttype = CRPT_BOMB,
 	attack = 7,
 	speed = 5,
 	size = 5,

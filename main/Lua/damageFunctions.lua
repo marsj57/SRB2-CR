@@ -60,7 +60,7 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 			CRPD.statetics = 0
 		end
 
-		P_PlayerRingBurst(p, damage/10) -- Visual effect to shoy "You got hit!" (1/10th of damage received) 
+		Lib.doRingBurst(p, damage/10) -- Visual effect to shoy "You got hit!" (1/10th of damage received) 
 		S_StartSound(target, sfx_s3kb9) -- [Ring Loss]
 		
 		-- Extra small visual effect to show "You got hit!"
@@ -88,20 +88,24 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 		P_SetObjectMomZ(target, zthrust, true)
 		return true -- Override default behavior
 	elseif not valid(inflictor)
-	and ((damagetype == DMG_FIRE) or (damagetype == DMG_ELECTRIC)) then
+	and ((damagetype == DMG_FIRE)
+	or (damagetype == DMG_ELECTRIC)) then
 		-- Default damage
 		damage = 50
 		local knockdown = 100 -- Immediately get knocked down
 		-- Do the damage, set the state
-		Lib.doDamage(p, damage, knockdown)
+		Lib.doDamage(p, damage, knockdown, false)
 		CRPD.state = CRPS_DOWN
 		CRPD.statetics = TICRATE
 		
 		-- Extra small visual effect to show "You got hit!"
-		local fx = P_SpawnMobjFromMobj(target, 0, 0, 0, MT_DUMMYFX)
+		local fx = P_SpawnMobjFromMobj(target, 0, 0, 1, MT_DUMMYFX)
 		if (damagetype == DMG_ELECTRIC) then
 			fx.scale = 2*FRACUNIT
 			fx.state = S_FX_ELECUP1
+		elseif (damagetype == DMG_FIRE) then
+			fx.scale = 2*FRACUNIT
+			fx.state = S_FX_FIREUP1
 		end
 		
 		-- Get thrust angle... and thrust!

@@ -37,7 +37,7 @@ addHook("PlayerSpawn", function(p)
 	-- Teamswitch called before PlayerSpawn, that's why we can do this!
 	if not p.crplayerdata then return end
 	local CRPD = FLCR.PlayerData[p.crplayerdata.id]
-	p.rings = 20
+	--p.rings = 20
 	CRPD.health = 1000
 	CRPD.state = CRPS_NORMAL
 	mo.scale = 4*FRACUNIT/3
@@ -68,14 +68,6 @@ addHook("PreThinkFrame", do
 			CRPD.prevstate = CRPD.state
 			CRPD.statetics = 0
 		end
-		
-		-- State specific timers
-		if (CRPD.state == CRPS_DOWN) then
-			CRPD.knockdowntics = min(INT32_MAX, $ + 1) -- Counts up instead of down
-		else
-			CRPD.knockdowntics = 0
-		end
-		
 	end
 end)
 
@@ -128,9 +120,8 @@ addHook("ThinkFrame", do
 				p.powers[pw_nocontrol] = TICRATE -- No movement, short time
 				if ((mo.eflags & MFE_JUSTHITFLOOR)
 				and (CRPD.curknockdown >= 200))
-				or (CRPD.knockdowntics > 3*TICRATE) then
+				or (CRPD.statetics > 3*TICRATE) then
 					CRPD.curknockdown = 0
-					CRPD.knockdowntics = 0
 					p.powers[pw_flashing] = 2*TICRATE
 					local fx = P_SpawnMobjFromMobj(mo, 0, 0, 0, MT_DUMMY)
 					fx.state = S_FX_LINEUP

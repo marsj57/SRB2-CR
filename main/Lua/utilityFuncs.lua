@@ -204,3 +204,62 @@ Lib.look4ClosestMo = function(mo, dist, mtype)
 	
 	return closestmo
 end
+
+-- doRingBurst: Spills an injured player's rings - Copied from the source
+-- 
+-- player (player_t)		- player who is losing rings.
+-- num_rings (int)			- Number of rings lost. A maximum of 32 rings will be spawned.
+Lib.doRingBurst = function(player, num_rings)
+	if not valid(player) then return end -- Better safe than sorry
+	local p = player -- Simplify
+	if not valid(p.mo) then return end
+	local mo = p.mo
+	
+	if (num_rings > 32) then num_rings = 32 end -- Hard cap
+	
+	local va -- Variable angle
+	if (abs(mo.momx) > mo.scale) or (abs(mo.momy) > mo.scale) then
+		va = R_PointToAngle2(mo.momx, mo.momy, 0, 0)
+	else
+		va = mo.angle
+	end
+	
+	local ns
+	for i = 0, num_rings-1, 1 do
+		local objType = mobjinfo[MT_RING].reactiontime
+		local z = mo.z
+		if (mo.eflags & MFE_VERTICALFLIP) then z = $ + mo.height - mobjinfo[objType].height end
+		
+		local ring = P_SpawnMobj(mo.x, mo.y, z, objType)
+		
+		ring.fuse = 8*TICRATE
+		Lib.SetTarget(ring, mo)
+		
+		-- Funny math
+		local fa = ((i*ANGLE_22h) + va - (num_rings-1)*ANGLE_11hh)
+		local momxy, momz -- Base horizontal / vertical thrusts
+		if (i > 15) then
+			momxy = 3*FRACUNIT
+			momz = 4*FRACUNIT
+		else
+			momxy = 2*FRACUNIT
+			momz = 3*FRACUNIT
+		end
+		
+		ns = FixedMul(FixedMul(momxy, FRACUNIT + FixedDiv(p.losstime<<FRACBITS, 10*TICRATE<<FRACBITS)), mo.scale)
+		ring.momx = FixedMul(cos(fa),ns)
+		
+		if not (twodlevel or (mo.flags2 & MF2_TWOD)) then
+			ring.momy = FixedMul(sin(fa),ns)
+		end
+		
+		ns = FixedMul(momz, FRACUNIT + FixedDiv(p.losstime<<FRACBITS, 10*TICRATE<<FRACBITS))
+		P_SetObjectMomZ(ring, ns, false)
+		
+		if (i&1) then P_SetObjectMomZ(ring, ns, true) end
+		ring.momz = $ * P_MobjFlip(mo)
+		-- CR Specific
+		ring.flags = $ | MF_NOCLIPTHING
+	end
+	player.losstime = $ + 10*TICRATE
+end

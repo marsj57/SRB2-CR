@@ -36,8 +36,41 @@ rawset(_G, "spawnArrow", function(mo, target)
 	return arw
 end)
 
+Lib.getSectorBounds = function(sec)
+	if not valid(sec) then return end -- Sanity check
+	local numlines = #sec.lines
+	local vtx = {} -- Vertex collection table.
+	for i = 0, numlines - 1 do
+		table.insert(vtx, { x = sec.lines[i].v1.x, y = sec.lines[i].v1.y }) -- Put these values in a table.
+		--print("Vertex #"..(i+1).." indexed! (X: ".. vtx[i+1].x/FRACUNIT ..", Y: ".. vtx[i+1].y/FRACUNIT ..")")
+	end
+	
+	local boundary = {}
+	-- Get our leftmost and rightmost x
+	for k,v in spairs(vtx, function(t,a,b) return t[b].x > t[a].x end) do
+		if k == 1 then -- Leftmost
+			boundary.left = v.x/FRACUNIT
+		elseif k == #vtx then -- Rightmost
+			boundary.right = v.x/FRACUNIT
+		end
+	end
+
+	-- Get our topmost and bottommost y
+	for k,v in spairs(vtx, function(t,a,b) return t[b].y > t[a].y end) do
+		if k == 1 then -- Topmost
+			boundary.top = v.y/FRACUNIT
+		elseif k == #vtx then -- Bottommost
+			boundary.bottom = v.y/FRACUNIT
+		end
+	end
+	return boundary.top,
+			boundary.bottom,
+			boundary.left, 
+			boundary.right
+end
+
 addHook("ThinkFrame", do
-	if (leveltime%3) then return end -- Don't trigger every tic
+	if (leveltime%5) then return end -- Don't trigger every tic
 	for sector in sectors.iterate
 		if not valid(sector) then continue end
 		local sec = sector
@@ -45,36 +78,12 @@ addHook("ThinkFrame", do
 		local IsSectorElectric = (GetSecSpecial(sec.special, 1) == 4) and true or false
 		local IsSectorFire = (GetSecSpecial(sec.special, 1) == 3) and true or false
 		if IsSectorElectric then
-			local numlines = #sec.lines
-			local vtx = {} -- Vertex collection table.
-			for i = 0, numlines - 1 do
-				table.insert(vtx, { x = sec.lines[i].v1.x, y = sec.lines[i].v1.y }) -- Put these values in a table.
-				--print("Vertex #"..(i+1).." indexed! (X: ".. vtx[i+1].x/FRACUNIT ..", Y: ".. vtx[i+1].y/FRACUNIT ..")")
-			end
-			
-			local boundary = {}
-			-- Get our leftmost and rightmost x
-			for k,v in spairs(vtx, function(t,a,b) return t[b].x > t[a].x end) do
-				if k == 1 then -- Leftmost
-					boundary.left = v.x/FRACUNIT
-				elseif k == #vtx then -- Rightmost
-					boundary.right = v.x/FRACUNIT
-				end
-			end
-
-			-- Get our topmost and bottommost y
-			for k,v in spairs(vtx, function(t,a,b) return t[b].y < t[a].y end) do
-				if k == 1 then -- Topmost
-					boundary.top = v.y/FRACUNIT
-				elseif k == #vtx then -- Bottommost
-					boundary.bottom = v.y/FRACUNIT
-				end
-			end
+			local top, bottom, left, right = Lib.getSectorBounds(sec)
 			
 			-- Spawn the FX!
 			local xrand, yrand
-			xrand = P_RandomRange(boundary.left, boundary.right)<<FRACBITS
-			yrand = P_RandomRange(boundary.top, boundary.bottom)<<FRACBITS
+			xrand = P_RandomRange(left, right)<<FRACBITS
+			yrand = P_RandomRange(top, bottom)<<FRACBITS
 			if (R_PointInSubsector(xrand, yrand).sector ~= sec) then continue end
 			
 			local fx = P_SpawnMobj(xrand, yrand, sec.floorheight + 1, MT_DUMMYFX)
@@ -83,9 +92,16 @@ addHook("ThinkFrame", do
 			else
 				fx.state = S_FX_ELECUP2
 			end
-			--fx.fuse = states[fx.state].tics
 		elseif IsSectorFire then
-			continue
+			local top, bottom, left, right = Lib.getSectorBounds(sec)
+			-- Spawn the FX!
+			local xrand, yrand
+			xrand = P_RandomRange(left, right)<<FRACBITS
+			yrand = P_RandomRange(top, bottom)<<FRACBITS
+			if (R_PointInSubsector(xrand, yrand).sector ~= sec) then continue end
+			
+			local fx = P_SpawnMobj(xrand, yrand, sec.floorheight + 1, MT_DUMMYFX)
+			fx.state = S_FX_FIREUP1		
 		end
 	end
 end)
@@ -106,12 +122,6 @@ addHook("PlayerSpawn", function(p)
 		mo.outline = o
 	end
 end)
-
--- Spilled rings thinker
-addHook("MobjSpawn", function(mo)
-	if not valid(mo) then return false end
-	mo.flags = $ | MF_NOCLIPTHING
-end, MT_FLINGRING)
 
 addHook("MobjThinker",function(mo)
 	if not valid(mo) then return false end

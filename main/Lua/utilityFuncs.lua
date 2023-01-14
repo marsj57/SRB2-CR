@@ -172,37 +172,51 @@ Lib.doDamage = function(plyr, atk, dwn, variance)
 	end
 end
 
--- look4ClosestMo: Looks for the closest mobj around 'mo'
+-- Look4ClosestPlayer
 -- Flame
 --
 -- mo (mobj_t)			- source mobj
 -- dist (fixed_t)		- distance to search (Defaults to 1024*FRACUNITS if not specified)
--- mtype (MT_* type)		- Look for a specific MT_* object?
-Lib.look4ClosestMo = function(mo, dist, mtype)
-	if not valid(mo) then return nil end
-	if not dist then dist = FixedMul(1024*FRACUNIT, mo.scale) end
+Lib.Look4ClosestPlayer = function(mo, dist)
+	if not valid(mo) then return end -- Sanity check
+	if not dist then dist = 1024<<FRACBITS end -- Searching distance
 	
-	local closestmo
-	local closestdist = dist
+	local lastmo, fdist
+	local lastdist = 0
 	searchBlockmap("objects", function(refmo, found)
 		if (found == refmo) then return nil end
-		if mtype and (found.type ~= mtype) then return nil end
+		if not (found.player) then return nil end
 		if (found.health <= 0) then return nil end
-		--if found.player and found.player.spectator then return nil end
-		
-		local idist = FixedMul(FixedHypot(FixedHypot(found.x - refmo.x, found.y - refmo.y), (found.z - refmo.z)), refmo.scale)
-		if (idist > dist) then return nil end -- Ignore objects outside of 'dist' range.
-		
-		if (idist < closestdist) then
-			closestmo = found
-			closestdist = idist
+		if not P_CheckSight(refmo, found) then return nil end
+		local p = found.player
+		if not valid(p) -- Not a valid player	
+		or p.spectator then -- Player is a spectator?
+			return nil
 		end
+
+		-- Team check
+		if (gametype == GT_CTF) 
+		and (not p.ctfteam
+		or (p.ctfteam == refmo.player.ctfteam)) then
+			return nil
+		elseif (gametype == GT_TEAMMATCH) and (found.color == refmo.color) then
+			return nil
+		end
+
+		fdist = FixedHypot(FixedHypot(found.x - refmo.x, found.y - refmo.y), (found.z - refmo.z))
+		
+		-- Last mobj is closer?
+		if (lastmo and (fdist > lastdist)) then return nil end
+
+		-- Found a target
+		lastmo = found
+		lastdist = fdist
 	end,
 	mo,
 	mo.x-dist,mo.x+dist,
 	mo.y-dist,mo.y+dist)
 	
-	return closestmo
+	return lastmo
 end
 
 -- doRingBurst: Spills an injured player's rings - Copied from the source

@@ -50,7 +50,7 @@ addHook("PreThinkFrame", do
 		local CRPD = FLCR.PlayerData[player.crplayerdata.id]
 		if not valid(CRPD.player) then continue end
 		local p = CRPD.player
-				
+
 		p.weapondelay = 1 -- Do not fire weapon rings ever
 		
 		-- Firing tics

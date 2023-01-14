@@ -47,7 +47,7 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 	local CRPD = FLCR.PlayerData[player.crplayerdata.id]
 	if not valid(CRPD.player) then return nil end
 	local p = CRPD.player -- Simplify
-	
+
 	if valid(inflictor) then
 		-- Default damage if damage / knockback isn't specified
 		damage = inflictor.damage or 5
@@ -55,9 +55,11 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 		
 		-- Do the damage, set the state
 		Lib.doDamage(p, damage, knockdown, true)
+		if (CRPD.health <= 0) then return false end -- Process default behavior
 		if (CRPD.state ~= CRPS_DOWN)
 			CRPD.state = CRPS_HIT
 			CRPD.statetics = 0
+			p.powers[pw_nocontrol] = knockdown
 		end
 
 		Lib.doRingBurst(p, damage/10) -- Visual effect to shoy "You got hit!" (1/10th of damage received) 
@@ -85,7 +87,7 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 		target.momy = $ - ythrust/factor
 		--zthrust = ($ > 0) and min($, 40*FRACUNIT) or max($, -40*FRACUNIT)
 		zthrust = min(abs($), 20*FRACUNIT)
-		P_SetObjectMomZ(target, zthrust, true)
+		P_SetObjectMomZ(target, zthrust, false)
 		return true -- Override default behavior
 	elseif not valid(inflictor)
 	and ((damagetype == DMG_FIRE)
@@ -95,8 +97,10 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 		local knockdown = 100 -- Immediately get knocked down
 		-- Do the damage, set the state
 		Lib.doDamage(p, damage, knockdown, false)
+		if (CRPD.health <= 0) then return false end -- Process default behavior
 		CRPD.state = CRPS_DOWN
 		CRPD.statetics = TICRATE
+		p.powers[pw_nocontrol] = knockdown
 		
 		-- Extra small visual effect to show "You got hit!"
 		local fx = P_SpawnMobjFromMobj(target, 0, 0, 1, MT_DUMMYFX)

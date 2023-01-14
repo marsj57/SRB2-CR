@@ -260,7 +260,7 @@ addHook("PreThinkFrame", do
 		p.awayviewtics = 3*TICRATE
 		p.awayviewmobj.tics = p.awayviewtics
 		
-		p.cmd.angleturn = FLCR.CameraBattleAngle>>16
+		p.cmd.angleturn = FLCR.CameraBattleAngle>>FRACBITS
 	end
 end)
 
@@ -296,7 +296,7 @@ end)
 
 addHook("PostThinkFrame", do
 	if (gametype ~= GT_MATCH) then return end
-	FLCR.CameraBattleAngle = $+ANG1/2
+	FLCR.CameraBattleAngle = $+ANG1/4
 	local totalPlayers = {} -- Self explainitory
 	for p in players.iterate
 		if not valid(p.mo) or p.spectator then continue end
@@ -374,7 +374,7 @@ addHook("PostThinkFrame", do
 	debug.centeroffs.destscale = FRACUNIT/16*/
 
 	-- And move!
-	local factor = 8
+	local factor = 10
 	local zoomMax = 3*RING_DIST
 	local zoomPercent = (furthest.d[2] >= zoomMax) and FRACUNIT or FixedDiv(furthest.d[2] + furthest.z[2]*3, zoomMax)
 	local zoom = ease.linear(zoomPercent, 10, 100)<<FRACBITS

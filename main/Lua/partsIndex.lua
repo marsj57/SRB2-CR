@@ -36,7 +36,7 @@ FLCR.AddWeapon({
 		end
 
 		-- Let's spawn the bullet!
-		local xyangle, zangle = mo.angle, p.aiming
+		local xyangle, zangle = p.drawangle, p.aiming
 		local th = P_SpawnPlayerMissile(mo, w.mo)
 		if valid(th) 
 		and P_TryMove(th, th.x + FixedMul(cos(xyangle), FixedMul(2*th.radius,mo.scale)), 
@@ -65,6 +65,11 @@ FLCR.AddWeapon({
 	
 	thinkfunc = function(mo)
 		if not valid(mo) then return end
+		local fx = P_SpawnMobjFromMobj(mo, 0,0,-(mobjinfo[mo.type].height/3), MT_THOK)
+		fx.color = mo.color
+		fx.destscale = 1
+		fx.scalespeed = FRACUNIT/5
+		
 		local factor = 64
 		mo.momx = $ - $/factor
 		mo.momy = $ - $/factor
@@ -154,7 +159,7 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "Gatling", 
 	desc = "Fires multiple small rounds straight ahead. Stay close to the enemy for better shots.",
-	mo = MT_REDRING,
+	mo = MT_DUMMY,
 	usesound = sfx_gtlng,
 	parttype = CRPT_GUN,
 	spawnfunc = function(p, w)
@@ -177,7 +182,7 @@ FLCR.AddWeapon({
 		end
 		
 		-- Let's spawn the bullet!
-		local xyangle, zangle = mo.angle, p.aiming
+		local xyangle, zangle = p.drawangle, p.aiming
 		local th = P_SpawnPlayerMissile(mo, w.mo)
 		if valid(th) 
 		and P_TryMove(th, th.x + FixedMul(cos(xyangle), FixedMul(2*th.radius,mo.scale)), 
@@ -194,7 +199,7 @@ FLCR.AddWeapon({
 			end
 			th.thinkfunc = w.thinkfunc
 			th.damage = w.attack * 8 -- 32
-			th.knockdown = 24 -- Getting hit with all 3 shots applies 74 knockdown
+			th.knockdown = 9 -- Getting hit with all 9 shots applies 72 knockdown
 			th.angle = xyangle
 			th.state = S_RRNG1
 			th.color = SKINCOLOR_YELLOW
@@ -206,6 +211,11 @@ FLCR.AddWeapon({
 
 	thinkfunc = function(mo)
 		if not valid(mo) then return end
+		local fx = P_SpawnMobjFromMobj(mo, 0,0,-(mobjinfo[mo.type].height/3), MT_THOK)
+		fx.color = mo.color
+		fx.destscale = 1
+		fx.scalespeed = FRACUNIT/5
+		
 		local factor = 64
 		mo.momx = $ - $/factor
 		mo.momy = $ - $/factor

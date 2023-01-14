@@ -10,7 +10,7 @@
 local Lib = FLCRLib
 
 -- From Rollout Knockout
-rawset(_G, "spawnArrow", function(mo, target)
+Lib.spawnArrow = function(mo, target)
 	-- Need both a source 'mo' and a target 'mo'
 	if not (valid(mo) and valid(target)) then return end
 	
@@ -34,7 +34,7 @@ rawset(_G, "spawnArrow", function(mo, target)
 
 	arw.rollangle = zangle
 	return arw
-end)
+end
 
 Lib.getSectorBounds = function(sec)
 	if not valid(sec) then return end -- Sanity check
@@ -141,7 +141,7 @@ addHook("ThinkFrame", do
 		or (p.playerstate == PST_DEAD) then continue end
 		local mo = p.mo
 		if not mo.target then
-			mo.target = Lib.look4ClosestMo(mo, FixedMul(1024*FRACUNIT, mo.scale), MT_PLAYER)
+			mo.target = Lib.Look4ClosestPlayer(mo, FixedMul(1024*FRACUNIT, mo.scale))
 		else
 			local target = mo.target
 			local sight = P_CheckSight(mo, target)
@@ -154,7 +154,7 @@ addHook("ThinkFrame", do
 				mo.target = nil
 				p.aiming = 0
 			else
-				spawnArrow(mo, target)
+				Lib.spawnArrow(mo, target)
 				if not p.climbing
 				--and not (p.pflags & PF_SPINNING)
 				and not (p.pflags & PF_STARTDASH)

@@ -50,7 +50,7 @@ end
 
 -- Lactozilla
 local MINZ = (FRACUNIT*4)
-local FEETADJUST = -(15<<FRACBITS)
+local FEETADJUST = -(10<<FRACBITS)
 rawset(_G, "R_ProjectSprite", function(v, thing, cam)
 	if (not v) then return end
 	if (not (thing and thing.valid)) then return end

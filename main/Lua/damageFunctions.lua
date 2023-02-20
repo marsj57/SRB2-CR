@@ -89,7 +89,7 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 		zthrust = min(abs($), 20*FRACUNIT)
 		P_SetObjectMomZ(target, zthrust, false)
 		return true -- Override default behavior
-	elseif not valid(inflictor)
+	elseif not valid(inflictor) -- Floor damage
 	and ((damagetype == DMG_FIRE)
 	or (damagetype == DMG_ELECTRIC)) then
 		-- Default damage

@@ -26,7 +26,7 @@ end
 
 rawset(_G, "SafeFreeslot", function(...)
 	for _, item in ipairs({...})
-		if pcall(CheckSlot, item)
+		if pcall(CheckSlot, item) then
 			print("\131NOTICE:\128 " .. item .. " was not allocated, as it already exists.")
 		else
 			freeslot(item)

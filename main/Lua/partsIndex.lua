@@ -13,8 +13,8 @@ local Lib = FLCRLib
 FLCR.AddWeapon({
 	name = "Basic",
 	desc = "A training gun that fires 3 rounds straight ahead. It's for absolute beginners. The rounds are weaker at greater distances.",
-	mo = MT_DUMMY,
-	usesound = sfx_basic,
+	mt = MT_DUMMYMISSILE,
+	spawnsound = sfx_basic,
 	parttype = CRPT_GUN,
 	spawnfunc = function(p, w)
 		if not valid(p) then return end
@@ -37,28 +37,14 @@ FLCR.AddWeapon({
 
 		-- Let's spawn the bullet!
 		local xyangle, zangle = p.drawangle, p.aiming
-		local th = P_SpawnPlayerMissile(mo, w.mo)
-		if valid(th) 
-		and P_TryMove(th, th.x + FixedMul(cos(xyangle), FixedMul(2*th.radius,mo.scale)), 
-							th.y + FixedMul(sin(xyangle), FixedMul(2*th.radius,mo.scale)), true) then
-			th.target = mo -- Host
-			if mo.target then -- Host has a target?
-				xyangle, zangle = Lib.getXYZangle(mo, mo.target)
-				th.tracer = mo.target -- Set your tracer to your host's target for later
-			end
-			S_StartSoundAtVolume(th, w.usesound, 192)
-			if not (mobjinfo[w.mo].flags & MF_MISSILE) then -- Some weird behavior with non-native missles
-				th.flags = MF_NOGRAVITY|MF_MISSILE
-				P_SetObjectMomZ(th, (zangle/(4*ANG1/3))*FRACUNIT, false)
-			end
+		local th = Lib.spawnCRMissile(mo, w, xyangle, zangle)
+		if valid(th) then
 			th.thinkfunc = w.thinkfunc
 			th.damage = w.attack * 8 -- 32
 			th.knockdown = 24 -- Getting hit with all 3 shots applies 74 knockdown
-			th.angle = xyangle
 			th.state = S_RRNG1
 			th.color = SKINCOLOR_YELLOW
 			th.fuse = 3*TICRATE
-			P_InstaThrust(th,th.angle,(10*FRACUNIT)*w.speed)
 		end
 		CRPD.firemaxrounds = $ + 1
 	end,
@@ -82,7 +68,7 @@ FLCR.AddWeapon({
 	end,
 
 	attack = 4,
-	speed = 5,
+	speed = 50*FRACUNIT,
 	homing = 2,
 	reload = 4,
 	down = 6,
@@ -91,7 +77,7 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "3way", 
 	desc = "Fires 3 straight rounds in 3 rows. The farther you are from the enemy, the better its homing.",
-	usesound = sfx_3way,
+	spawnsound = sfx_3way,
 	parttype = CRPT_GUN,
 	spawnfunc = function(p, w)
 		if not valid(p) then return end
@@ -117,7 +103,7 @@ FLCR.AddWeapon({
 			local xyangle, zangle = mo.angle, p.aiming
 			local fa = i*ANGLE_45
 			mo.extravalue1 = i
-			local th = P_SpawnMobjFromMobj(mo, 0, 0, mo.height/2, MT_DUMMY)
+			local th = P_SpawnMobjFromMobj(mo, 0, 0, mo.height/2, MT_DUMMYMISSILE)
 			if valid(th) 
 			and P_TryMove(th, th.x + FixedMul(cos(mo.angle + fa), FixedMul(2*th.radius,mo.scale)), 
 							th.y + FixedMul(sin(mo.angle + fa), FixedMul(2*th.radius,mo.scale)), true) then
@@ -126,7 +112,7 @@ FLCR.AddWeapon({
 					xyangle, zangle = Lib.getXYZangle(mo, mo.target)
 					th.tracer = mo.target -- Set your tracer to your host's target for later
 				end
-				if not i then S_StartSoundAtVolume(th, w.usesound, 192) end -- Only spawn one sound.
+				if not i then S_StartSoundAtVolume(th, w.spawnsound, 192) end -- Only spawn one sound.
 				-- TODO: Z AIMING
 				th.thinkfunc = w.thinkfunc
 				th.damage = w.attack * 8 -- 32
@@ -150,7 +136,7 @@ FLCR.AddWeapon({
 	end,
 	
 	attack = 5,
-	speed = 5,
+	speed = 50*FRACUNIT,
 	homing = 4,
 	reload = 5,
 	down = 6,
@@ -159,8 +145,8 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "Gatling", 
 	desc = "Fires multiple small rounds straight ahead. Stay close to the enemy for better shots.",
-	mo = MT_DUMMY,
-	usesound = sfx_gtlng,
+	mt = MT_DUMMYMISSILE,
+	spawnsound = sfx_gtlng,
 	parttype = CRPT_GUN,
 	spawnfunc = function(p, w)
 		if not valid(p) then return end
@@ -171,7 +157,7 @@ FLCR.AddWeapon({
 		local mo = p.mo
 
 		local multifireinterval = TICRATE/9 -- Multishot interval
-		local maxrounds = 9 -- How many rounds can your weapon fire per-clip?
+		local maxrounds = 8 -- How many rounds can your weapon fire per-clip?
 		if (CRPD.firetics%multifireinterval) -- Modulo by your weapon's firedelay, a non zero number?
 		or (CRPD.firemaxrounds >= maxrounds)
 			return
@@ -183,28 +169,14 @@ FLCR.AddWeapon({
 		
 		-- Let's spawn the bullet!
 		local xyangle, zangle = p.drawangle, p.aiming
-		local th = P_SpawnPlayerMissile(mo, w.mo)
-		if valid(th) 
-		and P_TryMove(th, th.x + FixedMul(cos(xyangle), FixedMul(2*th.radius,mo.scale)), 
-							th.y + FixedMul(sin(xyangle), FixedMul(2*th.radius,mo.scale)), true) then
-			th.target = mo -- Host
-			if mo.target then -- Host has a target?
-				xyangle, zangle = Lib.getXYZangle(mo, mo.target)
-				th.tracer = mo.target -- Set your tracer to your host's target for later
-			end
-			S_StartSoundAtVolume(th, w.usesound, 192)
-			if not (mobjinfo[w.mo].flags & MF_MISSILE) then -- Some weird behavior with non-native missles
-				th.flags = MF_NOGRAVITY|MF_MISSILE
-				P_SetObjectMomZ(th, (zangle/(4*ANG1/3))*FRACUNIT, false)
-			end
+		local th = Lib.spawnCRMissile(mo, w, xyangle, zangle)
+		if valid(th) then
 			th.thinkfunc = w.thinkfunc
-			th.damage = w.attack * 8 -- 32
-			th.knockdown = 9 -- Getting hit with all 9 shots applies 72 knockdown
-			th.angle = xyangle
+			th.damage = w.attack * 3 -- 12, getting hit with all 8 shots is 96 damage
+			th.knockdown = 9 -- Getting hit with all 8 shots applies 72 knockdown
 			th.state = S_RRNG1
 			th.color = SKINCOLOR_YELLOW
 			th.fuse = 3*TICRATE
-			P_InstaThrust(th,th.angle,(10*FRACUNIT)*w.speed)
 		end
 		CRPD.firemaxrounds = $ + 1
 	end,
@@ -228,7 +200,7 @@ FLCR.AddWeapon({
 	end,
 
 	attack = 4,
-	speed = 7,
+	speed = 70*FRACUNIT,
 	homing = 2,
 	reload = 3,
 	down = 6,
@@ -237,7 +209,7 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "Vertical", 
 	desc = "Fires 2 rounds that ascend diagonally, clearing walls. Use them as you hide behind walls.",
-	usesound = sfx_vrtcl,
+	spawnsound = sfx_vrtcl,
 	parttype = CRPT_GUN,
 	attack = 4,
 	speed = 5,
@@ -249,11 +221,47 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "Sniper",
 	desc = "Fires one quick, straight round. While the round flies fast, it leaves you in danger for a time.",
-	usesound = sfx_snip,
+	spawnsound = sfx_snip,
 	parttype = CRPT_GUN,
+	spawnfunc = function(p, w)
+		if not valid(p) then return end
+		if not p.crplayerdata then return end
+		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
+		if not valid(CRPD.player) then return end
+		if not valid(p.mo) then return end
+		local mo = p.mo
+		
+		if CRPD.firetics then return end
+		CRPD.firetype = w.parttype
+		CRPD.firetics = 4*TICRATE/3
+		p.powers[pw_nocontrol] = CRPD.firetics - w.reload
+		
+		-- Let's spawn the bullet!
+		local xyangle, zangle = p.drawangle, p.aiming
+		local th = Lib.spawnCRMissile(mo, w, xyangle, zangle)
+		if valid(th) then
+			th.thinkfunc = w.thinkfunc
+			th.damage = 137
+			th.knockdown = th.damage/2
+			th.state = S_RRNG1
+			th.color = SKINCOLOR_WHITE
+			th.fuse = 3*TICRATE
+		end
+		CRPD.firemaxrounds = $ + 1
+	end,
+	
+	thinkfunc = function(mo)
+		if not valid(mo) then return end
+		local fx = P_SpawnMobjFromMobj(mo, 0,0,-(mobjinfo[mo.type].height/3), MT_THOK)
+		fx.color = mo.color
+		fx.destscale = 1
+		fx.tics = 28
+		fx.scalespeed = FRACUNIT/10
+		
+	end,
 	attack = 7,
-	speed = 9,
-	homing = 1,
+	speed = 90*FRACUNIT,
+	homing = 1, -- Literally no homing LMAO
 	reload = 2,
 	down = 7,
 })
@@ -261,7 +269,7 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "Stun", 
 	desc = "Fires continuous short-ranged electric shots that paralyze foes. Use at close range.",
-	usesound = 0,
+	spawnsound = 0,
 	parttype = CRPT_GUN,
 	attack = 2,
 	speed = 7,
@@ -273,7 +281,7 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "Hornet", 
 	desc = "Spreads five bee-shaped rounds that chase its target.",
-	usesound = 0,
+	spawnsound = 0,
 	parttype = CRPT_GUN,
 	attack = 6,
 	speed = 3,
@@ -285,7 +293,7 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "Flame", 
 	desc = "Fires flame-shaped rounds straight ahead. Its power increases with distance.",
-	usesound = 0,
+	spawnsound = 0,
 	parttype = CRPT_GUN,
 	attack = 5,
 	speed = 4,
@@ -297,7 +305,7 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "Dragon", 
 	desc = "Fires one dragon-shaped round that zeroes in on foes. Stay on your guard after firing.",
-	usesound = 0,
+	spawnsound = 0,
 	parttype = CRPT_GUN,
 	attack = 7,
 	speed = 4,
@@ -309,7 +317,7 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "splash", 
 	desc = "Fires 3 large yet weak rounds straight ahead. Briefly immobolizes foes.",
-	usesound = 0,
+	spawnsound = 0,
 	parttype = CRPT_GUN,
 	attack = 1,
 	speed = 4,
@@ -322,8 +330,7 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "standard", 
 	desc = "Flies in an arc toward target. It's large blast radius makes aiming and multiple blows a snap.",
-	mo = MT_REDRING,
-	usesound = sfx_s3k81,
+	spawnsound = sfx_s3k81,
 	parttype = CRPT_BOMB,
 	attack = 7,
 	speed = 5,
@@ -335,7 +342,7 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "standard f", 
 	desc = "Flies in an arc toward target. Knocks target sideways on impact, flushing out hidden foes.",
-	usesound = sfx_s3k81,
+	spawnsound = sfx_s3k81,
 	parttype = CRPT_BOMB,
 	special = CRL_F,
 	attack = 6,
@@ -348,7 +355,7 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "standard s", 
 	desc = "Flies in an arc toward target. Immobilizes target upon impact for a short time.",
-	usesound = sfx_s3k81,
+	spawnsound = sfx_s3k81,
 	parttype = CRPT_BOMB,
 	special = CRL_S,
 	attack = 4,
@@ -361,7 +368,7 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "standard k", 
 	desc = "Flies in an arc toward target. Knocks target down on impact.",
-	usesound = sfx_s3k81,
+	spawnsound = sfx_s3k81,
 	parttype = CRPT_BOMB,
 	special = CRL_K,
 	attack = 6,
@@ -374,7 +381,7 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "standard x", 
 	desc = "Flies in an arc toward target. Explosion sends target high into the air.",
-	usesound = sfx_s3k81,
+	spawnsound = sfx_s3k81,
 	parttype = CRPT_BOMB,
 	special = CRL_X,
 	attack = 4,
@@ -399,7 +406,7 @@ end
 FLCR.AddWeapon({
 	name = "standard", 
 	desc = "Flies straight ahead. Blows target diagonally upward.",
-	usesound = sfx_s3k82,
+	spawnsound = sfx_s3k82,
 	parttype = CRPT_POD,
 	special = CRL_INVALID,
 	attack = 4,

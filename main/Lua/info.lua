@@ -7,7 +7,7 @@
 --
 -- Flame
 
-SafeFreeslot("MT_DUMMY", "MT_DUMMYFX")
+SafeFreeslot("MT_DUMMY", "MT_DUMMYMISSILE", "MT_DUMMYFX")
 
 local dummy_t = {
 	doomednum = -1,
@@ -19,6 +19,9 @@ local dummy_t = {
 }
 
 mobjinfo[MT_DUMMY] = dummy_t
+mobjinfo[MT_DUMMYMISSILE] = dummy_t
+mobjinfo[MT_DUMMYMISSILE].speed = (60*FRACUNIT)
+mobjinfo[MT_DUMMYMISSILE].flags = mobjinfo[MT_REDRING].flags --MF_NOBLOCKMAP|MF_MISSILE|MF_NOGRAVITY
 mobjinfo[MT_DUMMYFX] = dummy_t
 
 -- Arrows!

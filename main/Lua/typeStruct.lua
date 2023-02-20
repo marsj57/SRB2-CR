@@ -123,8 +123,8 @@ end
 local defaultWeaponStruct = {
 	name = "Invalid", -- Name of weapon to rawset (CRWEP_ (Part Type below) _Name)
 	desc = "This weapon is missing a description. Please give this weapon a description!", -- Self explainitory
-	mo = MT_DUMMY,
-	usesound = 0, -- Use sound for spawning
+	mt = MT_DUMMYMISSILE,
+	spawnsound = 0, -- Use sound for spawning
 	parttype = CRPT_INVALID, -- Gun, Bomb, or Pod
 	special = CRL_INVALID, -- Special letter, see above table
 	spawnfunc = nil, -- Function for when the bullet spawns

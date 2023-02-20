@@ -22,6 +22,69 @@ Lib.weaponFire = function(p, id)
 	end
 end
 
+-- spawnMissile: Spawns a missile. A Variation of P_SPMAngle
+-- Flame
+--
+-- source (mobj_t)		- Source to spawn the object at
+-- wep (table)			- Weapon table containing properties, etc
+-- angle (angle)		- Angle to spawn the object at
+-- zangle (angle)		- Vertical angle to spawn the object at
+-- flags2				- Extra flags to add to the missile
+Lib.spawnCRMissile = function(source, wep, angle, zangle, flags2)
+	if not valid(source) and not valid(source.player) then return end
+	assert(wep, "ERROR! No weapon provided in spawnCRMissile!")
+
+	local x,y,z
+	x = source.x
+	y = source.y
+	if (source.eflags & MFE_VERTICALFLIP) then
+		z = source.z + 2*source.height/3 - FixedMul(mobjinfo[type].height, source.scale)
+	else
+		z = source.z + source.height/3
+	end
+
+	local th = P_SpawnMobj(x, y, z, wep.mt)
+	
+	if (source.eflags & MFE_VERTICALFLIP) then
+		th.flags2 = $ | MF2_OBJECTFLIP
+	end
+	
+	th.destscale = source.scale
+	P_SetScale(th, source.scale)
+	
+	if flags2 then th.flags2 = $ | flags2 end
+	if wep.spawnsound then S_StartSoundAtVolume(th, wep.spawnsound, 192) end
+	
+	th.target = source
+	
+	th.angle = angle
+	th.momx = FixedMul(wep.speed, cos(angle))
+	th.momy = FixedMul(wep.speed, sin(angle))
+	
+	if zangle then
+		th.momx = FixedMul($, cos(zangle))
+		th.momy = FixedMul($, cos(zangle))
+	end
+
+	th.momz = FixedMul(wep.speed, sin(zangle))
+
+	-- Scale stuff
+	th.momx = FixedMul($, th.scale)
+	th.momy = FixedMul($, th.scale)
+	th.momz = FixedMul($, th.scale)
+	
+	-- P_CheckMissileSpawn
+	-- Moves the missile forward a bit and possibly explodes it right there.
+	local tx = (th.x + th.momx/2)
+	local ty = (th.y + th.momy/2)
+	if not P_TryMove(th, tx, ty, true) then
+		P_ExplodeMissile(th)
+		return false
+	end
+	
+	return th
+end
+
 -- SetTarget: Sets a target and returns the mobj if valid.
 -- Returns a nil value if no target. Can be used in if statements to check conditionals.
 -- Flame
@@ -129,11 +192,39 @@ Lib.getThrust = function(mo1, mo2, minimal)
 		local momz = mo1.momz - mo2.momz
 		speed = R_PointToDist2(0, 0, R_PointToDist2(0, 0, momx, momy), momz)
 	end
-	local thrust = P_ReturnThrustX(mo1, zangle, speed)
-	local zthrust = P_ReturnThrustY(mo1, zangle, speed)
-	local xthrust = P_ReturnThrustX(mo1, xyangle, thrust)
-	local ythrust = P_ReturnThrustY(mo1, xyangle, thrust)
+	local thrust = FixedMul(cos(zangle), speed) --P_ReturnThrustX(mo1, zangle, speed)
+	local zthrust = FixedMul(sin(zangle), speed) --P_ReturnThrustY(mo1, zangle, speed)
+	local xthrust = FixedMul(cos(xyangle), thrust) --P_ReturnThrustX(mo1, xyangle, thrust)
+	local ythrust = FixedMul(sin(xyangle), thrust) --P_ReturnThrustY(mo1, xyangle, thrust)
 	return xthrust, ythrust, zthrust
+end
+
+Lib.skinEndurance = {
+	["sonic"] = 100,
+	["tails"] = 90,
+	["knuckles"] = 110,
+	["amy"] = 95,
+	["fang"] = 100,
+	["metalsonic"] = 120
+}
+
+-- addEndurance: Adds a skin string to the skinEndurance table.
+-- Flame
+--
+Lib.addEndurance = function(skin, val)
+	if not valid(skins[skin]) then return end
+	local sn = skins[skin].name
+	if Lib.skinEndurance[sn] ~= nil then
+		print("\131NOTICE:\128 Skin " .. sn .. " was not allocated, as it already exists.")
+		return
+	end
+
+	if val then
+		val = min(max(1, $), 200) -- Min of 1, max of 200
+	else
+		val = 100 -- Default
+	end
+	table.insert(Lib.skinEndurance, sn, val)
 end
 
 -- doDamage: Deals damage do a player if CR data is present
@@ -151,9 +242,10 @@ Lib.doDamage = function(plyr, atk, dwn, variance)
 	if not variance then variance = false end -- Default value
 	
 	-- Just to spice things up, damage has variance!
+	local endurance = Lib.skinEndurance[skins[plyr.skin].name] or 100
 	if (CRPD.state == CRPS_DOWN) then
 		-- While downed, you only take 50% dmg. Knockdown applies, but it speeds up recovery.
-		local v = variance and (atk*P_RandomRange(80,120))/200 or atk
+		local v = variance and (atk*P_RandomRange(80,120))/(2*endurance) or atk
 		CRPD.health = $ - v
 		if not dwn then return end
 		CRPD.curknockdown = $ + dwn
@@ -162,7 +254,7 @@ Lib.doDamage = function(plyr, atk, dwn, variance)
 		end
 	else
 		-- Damage can have either a -20% or 20% multiplier.
-		local v = variance and (atk*P_RandomRange(80,120))/100 or atk
+		local v = variance and (atk*P_RandomRange(80,120))/endurance or atk
 		CRPD.health = $ - v
 		if not dwn then return end
 		CRPD.curknockdown = $ + dwn

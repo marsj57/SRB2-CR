@@ -126,6 +126,7 @@ end)
 addHook("MobjThinker",function(mo)
 	if not valid(mo) then return false end
 	mo.fuse = min($,TICRATE)
+	return false
 end, MT_FLINGRING)
 
 addHook("ThinkFrame", do

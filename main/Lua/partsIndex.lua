@@ -36,7 +36,8 @@ FLCR.AddWeapon({
 		end
 
 		-- Let's spawn the bullet!
-		local xyangle, zangle = p.drawangle, p.aiming
+		local xyangle = mo.target and R_PointToAngle2(mo.x, mo.y, mo.target.x, mo.target.y) or p.drawangle
+		local zangle = p.aiming
 		local th = Lib.spawnCRMissile(mo, w, xyangle, zangle)
 		if valid(th) then
 			th.thinkfunc = w.thinkfunc
@@ -51,10 +52,23 @@ FLCR.AddWeapon({
 	
 	thinkfunc = function(mo)
 		if not valid(mo) then return end
-		local fx = P_SpawnMobjFromMobj(mo, 0,0,-(mobjinfo[mo.type].height/3), MT_THOK)
-		fx.color = mo.color
-		fx.destscale = 1
-		fx.scalespeed = FRACUNIT/5
+		if (mo.state == mo.info.deathstate) then return end
+		-- Interpolate fx graphics towards prev position
+		if mo.prev then
+			for i = 1, 5 do
+				local x = ease.linear(i*FRACUNIT/5, mo.prev.x, mo.x)
+				local y = ease.linear(i*FRACUNIT/5, mo.prev.y, mo.y)
+				local z = ease.linear(i*FRACUNIT/5, mo.prev.z, mo.z)
+				
+				local fx = P_SpawnMobj(x,y,z-(mobjinfo[mo.type].height/3),MT_DUMMYFX)
+				fx.state = S_THOK
+				fx.scale = mo.scale
+				fx.destscale = 1
+				fx.scalespeed = FRACUNIT/5
+				fx.color = mo.color
+				fx.blendmode = AST_ADD
+			end
+		end
 		
 		local factor = 64
 		mo.momx = $ - $/factor
@@ -65,10 +79,16 @@ FLCR.AddWeapon({
 			local angle = R_PointToAngle2(mo.x, mo.y, t.x, t.y)
 			P_Thrust(mo, angle, FRACUNIT/factor)
 		end
+		
+		mo.prev = {
+			x = mo.x,
+			y = mo.y,
+			z = mo.z,
+		}
 	end,
 
 	attack = 4,
-	speed = 50*FRACUNIT,
+	speed = 5,
 	homing = 2,
 	reload = 4,
 	down = 6,
@@ -87,56 +107,91 @@ FLCR.AddWeapon({
 		if not valid(p.mo) then return end
 		local mo = p.mo
 
-		local multifireinterval = TICRATE/9 -- Multishot interval
+		local multifireinterval = TICRATE/7 -- Multishot interval
 		local maxrounds = 3 -- How many rounds can your weapon fire per-clip?
 		if (CRPD.firetics%multifireinterval) -- Modulo by your weapon's firedelay, a non zero number?
 		or (CRPD.firemaxrounds >= maxrounds)
 			return
 		elseif not CRPD.firetics then
 			CRPD.firetype = w.parttype
-			CRPD.firetics = (multifireinterval * maxrounds)*2 -- 48
-			p.powers[pw_nocontrol] = CRPD.firetics - 5*(w.reload)
+			CRPD.firetics = (multifireinterval * maxrounds)*3
+			p.powers[pw_nocontrol] = CRPD.firetics - 2*(w.reload)
 		end
 		
 		-- Let's spawn the bullets!
-		/*for i = -1, 1, 1 do
-			local xyangle, zangle = mo.angle, p.aiming
-			local fa = i*ANGLE_45
-			mo.extravalue1 = i
-			local th = P_SpawnMobjFromMobj(mo, 0, 0, mo.height/2, MT_DUMMYMISSILE)
-			if valid(th) 
-			and P_TryMove(th, th.x + FixedMul(cos(mo.angle + fa), FixedMul(2*th.radius,mo.scale)), 
-							th.y + FixedMul(sin(mo.angle + fa), FixedMul(2*th.radius,mo.scale)), true) then
-				th.target = mo -- Host
-				if mo.target then -- Host has a target?
-					xyangle, zangle = Lib.getXYZangle(mo, mo.target)
-					th.tracer = mo.target -- Set your tracer to your host's target for later
-				end
-				if not i then S_StartSoundAtVolume(th, w.spawnsound, 192) end -- Only spawn one sound.
-				-- TODO: Z AIMING
+		for i = -1, 1, 1 do
+			local xyangle = mo.target and R_PointToAngle2(mo.x, mo.y, mo.target.x, mo.target.y) or p.drawangle
+			local zangle = p.aiming
+			local offset = i*(70*FRACUNIT) -- XY offset
+			-- Spawn the reference x,y,z object.
+			local ref = P_SpawnMobjFromMobj(mo, FixedMul(cos(xyangle), FixedMul(cos(zangle), 4*mo.radius/2)) 
+												+ FixedMul(cos(xyangle+ANGLE_90), offset)
+												- FixedMul(cos(xyangle), FixedMul(cos(zangle), i*offset/2)),
+												FixedMul(sin(xyangle), FixedMul(cos(zangle), 4*mo.radius/2)) 
+												+ FixedMul(sin(xyangle+ANGLE_90), offset)
+												- FixedMul(sin(xyangle), FixedMul(cos(zangle), i*offset/2)),
+												FixedMul(sin(zangle), mo.height)
+												- FixedMul(sin(zangle), abs(i)*(mo.height/2)),
+												MT_DUMMY)
+			-- Spawn the missile from the reference object
+			local th = Lib.spawnCRMissile(ref, w, xyangle, zangle, MF_NOCLIPTHING)
+			P_RemoveMobj(ref) -- We're done with our reference object here
+			S_StartSoundAtVolume(mo, w.spawnsound, 192) -- Because our ref object disappears
+			if valid(th) then
+				th.target = mo
+				th.extravalue1 = i
 				th.thinkfunc = w.thinkfunc
 				th.damage = w.attack * 8 -- 32
 				th.knockdown = 24 -- Getting hit with all 3 shots applies 74 knockdown
-				th.angle = xyangle
 				th.state = S_RRNG1
 				th.color = SKINCOLOR_YELLOW
 				th.fuse = 3*TICRATE
-				P_InstaThrust(th,th.angle,(10*FRACUNIT)*w.speed)
 			end
-		end*/
+		end
 		CRPD.firemaxrounds = $ + 1
 	end,
 	
 	thinkfunc = function(mo)
 		if not valid(mo) then return end
-		-- Bullet Lifetime equals 1/7th of a second?
-		-- Stop heading in an angle and straighten out
-		if mo.extravalue1 then return end
+		if (mo.state == mo.info.deathstate) then return end
+		-- Interpolate fx graphics towards prev position
+		if mo.prev then
+			for i = 1, 5 do
+				local x = ease.linear(i*FRACUNIT/5, mo.prev.x, mo.x)
+				local y = ease.linear(i*FRACUNIT/5, mo.prev.y, mo.y)
+				local z = ease.linear(i*FRACUNIT/5, mo.prev.z, mo.z)
+				
+				local fx = P_SpawnMobj(x,y,z-(mobjinfo[mo.type].height/3),MT_DUMMYFX)
+				fx.state = S_THOK
+				fx.scale = mo.scale
+				fx.destscale = 1
+				fx.scalespeed = FRACUNIT/5
+				fx.color = mo.color
+				fx.blendmode = AST_ADD
+			end
+		end
+		mo.prev = {
+			x = mo.x,
+			y = mo.y,
+			z = mo.z,
+			scale = mo.scale,
+		}
+		
 		-- Middle bullet has a little bit of homing
+		local factor = 50
+		mo.momx = $ - $/factor
+		mo.momy = $ - $/factor
+		mo.momz = $ - $/factor
+		if mo.tracer
+		and not mo.extravalue1 then
+			local t = mo.tracer
+			local angle = R_PointToAngle2(mo.x, mo.y, t.x, t.y)
+			P_Thrust(mo, angle, FRACUNIT/factor)
+		end
 	end,
 	
 	attack = 5,
-	speed = 50*FRACUNIT,
+	speed = 5,
 	homing = 4,
 	reload = 5,
 	down = 6,
@@ -164,11 +219,12 @@ FLCR.AddWeapon({
 		elseif not CRPD.firetics then
 			CRPD.firetype = w.parttype
 			CRPD.firetics = (multifireinterval * maxrounds)*2 -- 54
-			p.powers[pw_nocontrol] = CRPD.firetics - 5*(w.reload)
+			p.powers[pw_nocontrol] = CRPD.firetics - 6*(w.reload)
 		end
 		
 		-- Let's spawn the bullet!
-		local xyangle, zangle = p.drawangle, p.aiming
+		local xyangle = mo.target and R_PointToAngle2(mo.x, mo.y, mo.target.x, mo.target.y) or p.drawangle
+		local zangle = p.aiming
 		local th = Lib.spawnCRMissile(mo, w, xyangle, zangle)
 		if valid(th) then
 			th.thinkfunc = w.thinkfunc
@@ -183,10 +239,23 @@ FLCR.AddWeapon({
 
 	thinkfunc = function(mo)
 		if not valid(mo) then return end
-		local fx = P_SpawnMobjFromMobj(mo, 0,0,-(mobjinfo[mo.type].height/3), MT_THOK)
-		fx.color = mo.color
-		fx.destscale = 1
-		fx.scalespeed = FRACUNIT/5
+		if (mo.state == mo.info.deathstate) then return end		
+		-- Interpolate fx graphics towards prev position
+		if mo.prev then
+			for i = 1, 5 do
+				local x = ease.linear(i*FRACUNIT/5, mo.prev.x, mo.x)
+				local y = ease.linear(i*FRACUNIT/5, mo.prev.y, mo.y)
+				local z = ease.linear(i*FRACUNIT/5, mo.prev.z, mo.z)
+				
+				local fx = P_SpawnMobj(x,y,z-(mobjinfo[mo.type].height/3),MT_DUMMYFX)
+				fx.state = S_THOK
+				fx.scale = mo.scale
+				fx.destscale = 1
+				fx.scalespeed = FRACUNIT/5
+				fx.color = mo.color
+				fx.blendmode = AST_ADD
+			end
+		end
 		
 		local factor = 64
 		mo.momx = $ - $/factor
@@ -197,10 +266,17 @@ FLCR.AddWeapon({
 			local angle = R_PointToAngle2(mo.x, mo.y, t.x, t.y)
 			P_Thrust(mo, angle, FRACUNIT/factor)
 		end
+		
+		mo.prev = {
+			x = mo.x,
+			y = mo.y,
+			z = mo.z,
+			scale = mo.scale,
+		}
 	end,
 
 	attack = 4,
-	speed = 70*FRACUNIT,
+	speed = 7,
 	homing = 2,
 	reload = 3,
 	down = 6,
@@ -208,9 +284,58 @@ FLCR.AddWeapon({
 
 FLCR.AddWeapon({
 	name = "Vertical", 
-	desc = "Fires 2 rounds that ascend diagonally, clearing walls. Use them as you hide behind walls.",
+	desc = "Fires 2 rounds. One ascends diagonally, clearing walls. Use this as you hide behind walls.",
 	spawnsound = sfx_vrtcl,
 	parttype = CRPT_GUN,
+	spawnfunc = function(p, w)
+		if not valid(p) then return end
+		if not p.crplayerdata then return end
+		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
+		if not valid(CRPD.player) then return end
+		if not valid(p.mo) then return end
+		local mo = p.mo
+		
+		local multifireinterval = TICRATE/4 -- Multishot interval
+		local maxrounds = 2 -- How many rounds can your weapon fire per-clip?
+		if (CRPD.firetics%multifireinterval) -- Modulo by your weapon's firedelay, a non zero number?
+		or (CRPD.firemaxrounds >= maxrounds)
+			return
+		elseif not CRPD.firetics then
+			CRPD.firetype = w.parttype
+			CRPD.firetics = (multifireinterval * maxrounds)*2 -- 54
+			p.powers[pw_nocontrol] = CRPD.firetics - 6*(w.reload)
+		end
+		
+		CRPD.firemaxrounds = $ + 1
+	end,
+	
+	thinkfunc = function(mo)
+		if not valid(mo) then return end
+		if (mo.state == mo.info.deathstate) then return end
+		-- Interpolate fx graphics towards prev position
+		if mo.prev then
+			for i = 1, 5 do
+				local x = ease.linear(i*FRACUNIT/5, mo.prev.x, mo.x)
+				local y = ease.linear(i*FRACUNIT/5, mo.prev.y, mo.y)
+				local z = ease.linear(i*FRACUNIT/5, mo.prev.z, mo.z)
+				
+				local fx = P_SpawnMobj(x,y,z-(mobjinfo[mo.type].height/3),MT_DUMMYFX)
+				fx.state = S_THOK
+				fx.scale = mo.scale
+				fx.destscale = 1
+				fx.scalespeed = FRACUNIT/5
+				fx.color = mo.color
+				fx.blendmode = AST_ADD
+			end
+		end
+		
+		mo.prev = {
+			x = mo.x,
+			y = mo.y,
+			z = mo.z,
+			scale = mo.scale,
+		}
+	end,
 	attack = 4,
 	speed = 5,
 	homing = 3,
@@ -237,11 +362,12 @@ FLCR.AddWeapon({
 		p.powers[pw_nocontrol] = CRPD.firetics - w.reload
 		
 		-- Let's spawn the bullet!
-		local xyangle, zangle = p.drawangle, p.aiming
+		local xyangle = mo.target and R_PointToAngle2(mo.x, mo.y, mo.target.x, mo.target.y) or p.drawangle
+		local zangle = p.aiming
 		local th = Lib.spawnCRMissile(mo, w, xyangle, zangle)
 		if valid(th) then
 			th.thinkfunc = w.thinkfunc
-			th.damage = 137
+			th.damage = 120
 			th.knockdown = th.damage/2
 			th.state = S_RRNG1
 			th.color = SKINCOLOR_WHITE
@@ -252,15 +378,50 @@ FLCR.AddWeapon({
 	
 	thinkfunc = function(mo)
 		if not valid(mo) then return end
-		local fx = P_SpawnMobjFromMobj(mo, 0,0,-(mobjinfo[mo.type].height/3), MT_THOK)
-		fx.color = mo.color
-		fx.destscale = 1
-		fx.tics = 28
-		fx.scalespeed = FRACUNIT/10
+		if (mo.state == mo.info.deathstate) then return end
+		if mo.prev then
+			-- Interpolate fx graphics towards prev position
+			for i = 1, 5 do
+				local x = ease.linear(i*FRACUNIT/5, mo.prev.x, mo.x)
+				local y = ease.linear(i*FRACUNIT/5, mo.prev.y, mo.y)
+				local z = ease.linear(i*FRACUNIT/5, mo.prev.z, mo.z)
+				
+				local fx = P_SpawnMobj(x,y,z-(mobjinfo[mo.type].height/3),MT_DUMMYFX)
+				fx.state = S_THOK
+				fx.tics = 28
+				fx.scale = mo.scale
+				fx.destscale = 1
+				fx.scalespeed = FRACUNIT/10
+				fx.color = mo.color
+				fx.blendmode = AST_ADD
+			end
+		end
 		
+		if (mo.fuse > (3*TICRATE)-3) then
+			local inc = 3*TICRATE - mo.fuse
+			local fx2 = P_SpawnMobjFromMobj(mo, 0,0,0, MT_DUMMYFX)
+			fx2.state = S_FX_WIND
+			fx2.angle = mo.angle - ANGLE_90
+			if mo.momz then
+				P_CreateFloorSpriteSlope(fx2)
+				fx2.flags2 = $ | MF2_SPLAT
+				fx2.renderflags = $ | RF_FLOORSPRITE | RF_SLOPESPLAT | RF_NOSPLATBILLBOARD
+				fx2.floorspriteslope.o = { x = mo.x, y = mo.y, z = mo.z }
+				fx2.floorspriteslope.xydirection = mo.angle
+				fx2.floorspriteslope.zangle = FixedAngle(mo.momz/2) + ANGLE_90
+				fx2.spritexscale = FixedMul(sin(abs(FixedAngle(mo.momz/2))), FRACUNIT)
+			end
+		end
+		
+		mo.prev = {
+			x = mo.x,
+			y = mo.y,
+			z = mo.z,
+			scale = mo.scale,
+		}
 	end,
 	attack = 7,
-	speed = 90*FRACUNIT,
+	speed = 9,
 	homing = 1, -- Literally no homing LMAO
 	reload = 2,
 	down = 7,

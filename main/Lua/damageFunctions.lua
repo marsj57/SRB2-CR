@@ -56,7 +56,7 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 		-- Do the damage, set the state
 		Lib.doDamage(p, damage, knockdown, true)
 		if (CRPD.health <= 0) then return false end -- Process default behavior
-		if (CRPD.state ~= CRPS_DOWN)
+		if (CRPD.state ~= CRPS_DOWN) then
 			CRPD.state = CRPS_HIT
 			CRPD.statetics = 0
 			p.powers[pw_nocontrol] = knockdown
@@ -70,6 +70,7 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 		fx.angle = inflictor.angle or R_PointToAngle2(inflictor.x, inflictor.y, target.x, target.y)
 		--fx.angle = $ - ANGLE_90
 		fx.state = S_FX_HIT1 + P_RandomRange(0,2)
+		fx.spriteyscale = 3*FRACUNIT
 		local xyangle, zangle = Lib.getXYZangle(inflictor, target)
 		-- FX Rollangle stuff. This is purely visual
 		local camangle = R_PointToAngle(inflictor.x, inflictor.y)
@@ -81,13 +82,25 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 		-- Get thrust angle... and thrust!
 		target.z = $ + 1
 		target.state = S_PLAY_PAIN
+		-- Partially from P_SuperDamage
+		-- Static, non-variable Z knockback
+		if (target.eflags & MFE_UNDERWATER)
+			P_SetObjectMomZ(target, FixedDiv(10511*FRACUNIT,2600*FRACUNIT), false)
+		else
+			P_SetObjectMomZ(target, FixedDiv(69*FRACUNIT,10*FRACUNIT), false)
+		end
+		
+		/*-- This may seem backwards, but it's not.
+		local fallbackangle = R_PointToAngle2(inflictor.x, inflictor.y, target.x, target.y)
+		local fallbackspeed = FixedMul(4*FRACUNIT, inflictor.scale)
+		P_InstaThrust(target, fallbackangle, fallbackspeed)*/
+		
 		local xthrust, ythrust, zthrust = Lib.getThrust(target, inflictor)
-		local factor = 10
-		target.momx = $ - xthrust/factor
-		target.momy = $ - ythrust/factor
+		target.momx = $ - xthrust/3
+		target.momy = $ - ythrust/3
 		--zthrust = ($ > 0) and min($, 40*FRACUNIT) or max($, -40*FRACUNIT)
-		zthrust = min(abs($), 20*FRACUNIT)
-		P_SetObjectMomZ(target, zthrust, false)
+		--zthrust = min(abs($), factor*FRACUNIT)
+		--P_SetObjectMomZ(target, zthrust, false)
 		return true -- Override default behavior
 	elseif not valid(inflictor) -- Floor damage
 	and ((damagetype == DMG_FIRE)
@@ -98,8 +111,8 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 		-- Do the damage, set the state
 		Lib.doDamage(p, damage, knockdown, false)
 		if (CRPD.health <= 0) then return false end -- Process default behavior
-		CRPD.state = CRPS_DOWN
 		CRPD.statetics = TICRATE
+		CRPD.state = CRPS_DOWN
 		p.powers[pw_nocontrol] = knockdown
 		
 		-- Extra small visual effect to show "You got hit!"

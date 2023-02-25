@@ -53,20 +53,20 @@ Lib.spawnCRMissile = function(source, wep, angle, zangle, flags2)
 	P_SetScale(th, source.scale)
 	
 	if flags2 then th.flags2 = $ | flags2 end
-	if wep.spawnsound then S_StartSoundAtVolume(th, wep.spawnsound, 192) end
+	if wep.spawnsound then S_StartSoundAtVolume(source, wep.spawnsound, 192) end
 	
 	th.target = source
 	
 	th.angle = angle
-	th.momx = FixedMul(wep.speed, cos(angle))
-	th.momy = FixedMul(wep.speed, sin(angle))
+	th.momx = FixedMul(wep.speed*(10*FRACUNIT), cos(angle))
+	th.momy = FixedMul(wep.speed*(10*FRACUNIT), sin(angle))
 	
 	if zangle then
 		th.momx = FixedMul($, cos(zangle))
 		th.momy = FixedMul($, cos(zangle))
 	end
 
-	th.momz = FixedMul(wep.speed, sin(zangle))
+	th.momz = FixedMul(wep.speed*(10*FRACUNIT), sin(zangle))
 
 	-- Scale stuff
 	th.momx = FixedMul($, th.scale)
@@ -184,13 +184,13 @@ Lib.getThrust = function(mo1, mo2, minimal)
 	local xyangle, zangle = Lib.getXYZangle(mo1, mo2) -- Get thrust direction based on collision angle
 	local speed
 	if minimal
-		speed = mo1.scale/2 -- "Shove" knockback
+		speed = (mo1.scale/2) -- "Shove" knockback
 	else
 		 -- Momentum-influenced knockback
 		local momx = mo1.momx - mo2.momx
 		local momy = mo1.momy - mo2.momy
 		local momz = mo1.momz - mo2.momz
-		speed = R_PointToDist2(0, 0, R_PointToDist2(0, 0, momx, momy), momz)
+		speed = R_PointToDist2(0, 0, R_PointToDist2(0, 0, momx, momy), momz)>>2
 	end
 	local thrust = FixedMul(cos(zangle), speed) --P_ReturnThrustX(mo1, zangle, speed)
 	local zthrust = FixedMul(sin(zangle), speed) --P_ReturnThrustY(mo1, zangle, speed)

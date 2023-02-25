@@ -12,6 +12,7 @@ SafeFreeslot("MT_DUMMY", "MT_DUMMYMISSILE", "MT_DUMMYFX")
 local dummy_t = {
 	doomednum = -1,
 	spawnstate = S_INVISIBLE,
+	deathstate = S_SPRK2,
 	spawnhealth = 1000,
 	radius = 16*FRACUNIT,
 	height = 32*FRACUNIT,
@@ -20,7 +21,6 @@ local dummy_t = {
 
 mobjinfo[MT_DUMMY] = dummy_t
 mobjinfo[MT_DUMMYMISSILE] = dummy_t
-mobjinfo[MT_DUMMYMISSILE].speed = (60*FRACUNIT)
 mobjinfo[MT_DUMMYMISSILE].flags = mobjinfo[MT_REDRING].flags --MF_NOBLOCKMAP|MF_MISSILE|MF_NOGRAVITY
 mobjinfo[MT_DUMMYFX] = dummy_t
 
@@ -38,7 +38,7 @@ end
 
 -- Recovery Line FX - "Lines up"
 SafeFreeslot("SPR_LINU", "S_FX_LINEUP")
-states[S_FX_LINEUP] = {SPR_LINU, A|FF_FULLBRIGHT|FF_ANIMATE , 19, nil, 19, 1, S_NULL}
+states[S_FX_LINEUP] = {SPR_LINU, A|FF_FULLBRIGHT|FF_ANIMATE, 19, nil, 19, 1, S_NULL}
 
 -- Wind dissapate FX - "B/W Fire center"
 SafeFreeslot("SPR_WFX1", "S_FX_WIND")

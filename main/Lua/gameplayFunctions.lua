@@ -37,7 +37,6 @@ addHook("PlayerSpawn", function(p)
 	-- Teamswitch called before PlayerSpawn, that's why we can do this!
 	if not p.crplayerdata then return end
 	local CRPD = FLCR.PlayerData[p.crplayerdata.id]
-	--p.rings = 20
 	CRPD.health = 1000
 	CRPD.state = CRPS_NORMAL
 	mo.scale = 4*FRACUNIT/3
@@ -54,12 +53,12 @@ addHook("PreThinkFrame", do
 		p.weapondelay = 1 -- Do not fire weapon rings ever
 		
 		-- Firing tics
-		if (CRPD.firetics <= 0) then
+		if (CRPD.firetics > 0) then
+			CRPD.firetics = $ - 1
+		else
 			CRPD.firetype = CRPT_INVALID
 			CRPD.firetics = 0
 			CRPD.firemaxrounds = 0
-		else
-			CRPD.firetics = $ - 1
 		end
 		
 		-- State Change
@@ -109,8 +108,9 @@ addHook("ThinkFrame", do
 		end
 
 		-- State thinker
-		if (p.playerstate == PST_DEAD)
-		or (CRPD.state ~= CRPS_NORMAL) then
+		if (p.playerstate == PST_DEAD) then
+			continue
+		elseif (CRPD.state ~= CRPS_NORMAL) then
 			if (CRPD.state == CRPS_HIT)
 			and ((mo.eflags & MFE_JUSTHITFLOOR)
 			or (CRPD.statetics > TICRATE)) then
@@ -118,6 +118,8 @@ addHook("ThinkFrame", do
 			elseif (CRPD.state == CRPS_DOWN) then
 				mo.state = S_PLAY_PAIN
 				p.powers[pw_nocontrol] = TICRATE -- No movement, short time
+				-- TODO: Keep an eye on this code in particular.
+				-- Supposedly a reason for players able to "instantly" recover out of a downed state.
 				if ((mo.eflags & MFE_JUSTHITFLOOR)
 				and (CRPD.curknockdown >= 200))
 				or (CRPD.statetics > 3*TICRATE) then

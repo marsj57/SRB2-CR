@@ -5,6 +5,7 @@ if not FLCR then
 		"global.lua",
 		"info.lua",
 		"utilityFuncs.lua",
+		"gametype.lua",
 		"typeStruct.lua", -- Also calls "partsIndex.lua"
 		--"partsIndex.lua",
 		"gameplayFunctions.lua",
@@ -15,5 +16,5 @@ if not FLCR then
 		dofile(filename)
 	end
 else
-	print("Another instance of Custom Robo already loaded! Duplicate script loading aborted!")
+	print("Another instance of Sonic Skirmish already loaded! Duplicate script loading aborted!")
 end

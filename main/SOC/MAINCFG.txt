@@ -1,0 +1,16 @@
+#Wipes
+#Level_ToBlack = 50
+#Level_Final = 50
+#MultInter_ToBlack = 52
+#MultInter_Final = 51
+
+#Level R1
+#NextLevel = R2
+#Levelname = Basic Arena
+#Subtitle = By Flame
+#Music = MAPC1M
+#SkyNum = 6
+#TypeOfLevel = SKIRMISH
+#SelectHeading = Big Maps
+#NextLevel = R3
+

@@ -72,7 +72,13 @@ states[S_FX_ELECUP2] = { SPR_ELEB, A|FF_FULLBRIGHT|FF_ANIMATE, 12, nil, 12, 1, S
 
 -- Fire / Lava Hit FX - Floor up
 SafeFreeslot("SPR_FIRA", "S_FX_FIREUP1")
-states[S_FX_FIREUP1] = { SPR_FIRA, A|FF_FULLBRIGHT|FF_ANIMATE, 17, nil, 17, 1, S_NULL }
+states[S_FX_FIREUP1] = { SPR_FIRA, A|FF_FULLBRIGHT|FF_ANIMATE, 18, nil, 18, 1, S_NULL }
+-- Fire / Fireball Radial
+SafeFreeslot("SPR_FIRB", "S_FX_FIREBALL")
+states[S_FX_FIREBALL] = { SPR_FIRB, A|FF_FULLBRIGHT|FF_ANIMATE, 23, nil, 23, 1, S_NULL }
+-- Fire / Hit FX Up
+SafeFreeslot("SPR_FIRC", "S_FX_FIREUP2")
+states[S_FX_FIREUP2] = { SPR_FIRC, A|FF_FULLBRIGHT|FF_ANIMATE, 24, nil, 24, 1, S_NULL }
 
 -- Sounds
 SafeFreeslot("sfx_pplode")
@@ -98,3 +104,7 @@ sfxinfo[sfx_vrtcl].flags = SF_X2AWAYSOUND|SF_X4AWAYSOUND|SF_X8AWAYSOUND
 SafeFreeslot("sfx_snip")
 sfxinfo[sfx_snip].caption = "Sniper fire"
 sfxinfo[sfx_snip].flags = SF_X2AWAYSOUND|SF_X4AWAYSOUND|SF_X8AWAYSOUND
+
+SafeFreeslot("sfx_frame")
+sfxinfo[sfx_frame].caption = "Flame fire"
+sfxinfo[sfx_frame].flags = SF_X2AWAYSOUND|SF_X4AWAYSOUND|SF_X8AWAYSOUND

@@ -32,10 +32,11 @@ addHook("ShouldDamage", function(target, inflictor, source, damage, damagetype)
 	local p = CRPD.player -- Simplify
 	
 	if CRPD.state 
-	and (CRPD.state ~= CRPD_REBIRTH) then
-		return true -- Can be hit
-	else
+	and (CRPD.state == CRPS_REBIRTH) 
+	or (CRPD.state == CRPS_ACTION) then
 		return false -- Invulnerable
+	else
+		return true -- Can be hit
 	end
 end, MT_PLAYER)
 
@@ -49,6 +50,9 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 	local p = CRPD.player -- Simplify
 
 	if valid(inflictor) then
+		-- Let's get our most important values.
+		local xyangle, zangle = Lib.getXYZangle(inflictor, target)
+	
 		-- Default damage if damage / knockback isn't specified
 		damage = inflictor.damage or 5
 		local knockdown = inflictor.knockdown or 10
@@ -56,22 +60,15 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 		-- Do the damage, set the state
 		Lib.doDamage(p, damage, knockdown, true)
 		if (CRPD.health <= 0) then return false end -- Process default behavior
-		if (CRPD.state ~= CRPS_DOWN) then
-			CRPD.state = CRPS_HIT
-			CRPD.statetics = 0
-			p.powers[pw_nocontrol] = knockdown
-		end
 
 		Lib.doRingBurst(p, damage/10) -- Visual effect to shoy "You got hit!" (1/10th of damage received) 
 		S_StartSound(target, sfx_s3kb9) -- [Ring Loss]
 		
 		-- Extra small visual effect to show "You got hit!"
 		local fx = P_SpawnMobjFromMobj(target, 0, 0, 0, MT_DUMMYFX)
-		fx.angle = inflictor.angle or R_PointToAngle2(inflictor.x, inflictor.y, target.x, target.y)
-		--fx.angle = $ - ANGLE_90
+		fx.angle = R_PointToAngle2(inflictor.x, inflictor.y, target.x, target.y) or inflictor.angle
 		fx.state = S_FX_HIT1 + P_RandomRange(0,2)
-		fx.spriteyscale = 3*FRACUNIT
-		local xyangle, zangle = Lib.getXYZangle(inflictor, target)
+		fx.scale = 2*FRACUNIT
 		-- FX Rollangle stuff. This is purely visual
 		local camangle = R_PointToAngle(inflictor.x, inflictor.y)
 		if ((camangle - inflictor.angle) < 0) then 
@@ -87,7 +84,7 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 		if (target.eflags & MFE_UNDERWATER)
 			P_SetObjectMomZ(target, FixedDiv(10511*FRACUNIT,2600*FRACUNIT), false)
 		else
-			P_SetObjectMomZ(target, FixedDiv(69*FRACUNIT,10*FRACUNIT), false)
+			P_SetObjectMomZ(target, 5*FRACUNIT, false)
 		end
 		
 		/*-- This may seem backwards, but it's not.

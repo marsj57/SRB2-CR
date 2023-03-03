@@ -7,8 +7,16 @@
 --
 -- Flame
 
-rawset(_G, "FLCRLib", {})
 local Lib = FLCRLib
+
+Lib.skinEndurance = {
+	["sonic"] = 100,
+	["tails"] = 90,
+	["knuckles"] = 110,
+	["amy"] = 95,
+	["fang"] = 100,
+	["metalsonic"] = 120
+}
 
 -- weaponFire: Fires your CR weapon, calling the weapon's spawn function
 -- Flame
@@ -106,9 +114,42 @@ Lib.SetTracer = function(mo, tracer)
 	return tracer
 end
 
-Lib.FixedLerp = function(val1,val2,amt)
-	local p = FixedMul(FRACUNIT-amt,val1) + FixedMul(amt,val2)
-	return p
+-- SetTracer: Same as above, but sets a tracer instead
+-- Flame
+--
+-- source (mobj_t)		- source mobj
+-- enemy (mobj_t)		- target mobj
+-- speed (fixed_t)		- Speed to travel at. If not provided, uses the source's mobjinfo speed.
+Lib.homingAttack = function(source, enemy, speed)
+	local zdist, dist
+	local ns = 0
+	
+	if not enemy or not enemy.valid then return false end
+	
+	if (enemy.flags & MF_NOCLIPTHING)
+	or (enemy.health <= 0)
+	or (enemy.flags2 & MF2_FRET) then
+		return false
+	end
+	
+	-- Set Angle
+	source.angle = R_PointToAngle2(source.x, source.y, enemy.x, enemy.y)
+	-- Set Slope
+	zdist = (P_MobjFlip(source) == -1) and ((enemy.z + enemy.height) - (source.z + source.height)) or (enemy.z - source.z)
+	dist = FixedHypot(FixedHypot(enemy.x - source.x, enemy.y - source.y), zdist)
+	dist = max($, 1) -- Prevent Div by Zero error
+	
+	if (speed == nil) then speed = source.info.speed end
+	if (source.threshold == 32000) then
+		ns = FixedMul(speed/2, source.scale)
+	else
+		ns = FixedMul(speed, source.scale)
+	end
+	
+	source.momx = FixedMul(FixedDiv(enemy.x - source.x, dist), ns)
+	source.momy = FixedMul(FixedDiv(enemy.y - source.y, dist), ns)
+	source.momz = FixedMul(FixedDiv(zdist, dist), ns)
+	return true
 end
 
 -- Tatsuru
@@ -199,15 +240,6 @@ Lib.getThrust = function(mo1, mo2, minimal)
 	return xthrust, ythrust, zthrust
 end
 
-Lib.skinEndurance = {
-	["sonic"] = 100,
-	["tails"] = 90,
-	["knuckles"] = 110,
-	["amy"] = 95,
-	["fang"] = 100,
-	["metalsonic"] = 120
-}
-
 -- addEndurance: Adds a skin string to the skinEndurance table.
 -- Flame
 --
@@ -249,16 +281,28 @@ Lib.doDamage = function(plyr, atk, dwn, variance)
 		CRPD.health = $ - v
 		if not dwn then return end
 		CRPD.curknockdown = $ + dwn
-		if (CRPD.curknockdown >= 200) then
+		if (CRPD.curknockdown >= 200) then -- THAT'S ENOUGH DAMAGE
 			CRPD.curknockdown = 200
+			-- Special conditions for specific behavior below.
+			-- Refer to the state thinker in gameplayFunctions.lua
+			CRPD.statetics = TICRATE/2
+			plyr.powers[pw_nocontrol] = TICRATE/2
 		end
 	else
 		-- Damage can have either a -20% or 20% multiplier.
 		local v = variance and (atk*P_RandomRange(80,120))/endurance or atk
 		CRPD.health = $ - v
-		if not dwn then return end
+		CRPD.state = CRPS_HIT
+		CRPD.statetics = 0
+		if not dwn then
+			plyr.powers[pw_nocontrol] = 10
+			return 
+		else
+			plyr.powers[pw_nocontrol] = dwn
+		end
 		CRPD.curknockdown = $ + dwn
-		if (CRPD.curknockdown >= 100) then
+		if (CRPD.curknockdown >= 100) 
+		and (CRPD.state ~= CRPS_DOWN) then 
 			CRPD.state = CRPS_DOWN
 		end
 	end

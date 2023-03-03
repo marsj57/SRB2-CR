@@ -8,8 +8,9 @@
 -- Flame
 
 rawset(_G, "FLCR", {}) -- Flame's Custom Robo
-FLCR.PlayerData = {}
-FLCR.Weapons = {} -- Weapons table
+rawset(_G, "FLCRLib", {}) -- Flame's Custom Robo Library
+FLCR.PlayerData = {} -- Player Data table
+FLCR.Weapons = {} -- Weapons Table
 FLCR.CameraBattleAngle = 0
 
 rawset(_G, "valid", function(th)
@@ -35,6 +36,8 @@ rawset(_G, "SafeFreeslot", function(...)
 end)
 -- End Lach
 
+-- Flame
+-- Creates 'flags' in powers of 2^n
 rawset(_G, "createFlags", function(tname, t)
     for i = 1,#t do
 		rawset(_G, t[i], 2^(i-1))
@@ -42,6 +45,8 @@ rawset(_G, "createFlags", function(tname, t)
     end
 end)
 
+-- Flame
+-- Creates an enum from 1 - max size of provided table
 rawset(_G, "createEnum", function(tname, t, from)
     if from == nil then from = 0 end
     for i = 1,#t do
@@ -73,6 +78,12 @@ rawset(_G, "spairs", function(t, order)
             return keys[i], t[keys[i]]
         end
     end
+end)
+
+-- Linear Interpolation
+rawset(_G, "FixedLerp", function(val1,val2,amt)
+	local p = FixedMul(FRACUNIT-amt,val1) + FixedMul(amt,val2)
+	return p
 end)
 
 /*-- Tatsuru

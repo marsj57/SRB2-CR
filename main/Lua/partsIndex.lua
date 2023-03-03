@@ -42,10 +42,11 @@ FLCR.AddWeapon({
 		if valid(th) then
 			th.thinkfunc = w.thinkfunc
 			th.damage = w.attack * 8 -- 32
-			th.knockdown = 24 -- Getting hit with all 3 shots applies 74 knockdown
+			th.knockdown = 24
 			th.state = S_RRNG1
 			th.color = SKINCOLOR_YELLOW
 			th.fuse = 3*TICRATE
+			if mo.target then th.tracer = mo.target end
 		end
 		CRPD.firemaxrounds = $ + 1
 	end,
@@ -62,15 +63,17 @@ FLCR.AddWeapon({
 				
 				local fx = P_SpawnMobj(x,y,z-(mobjinfo[mo.type].height/3),MT_DUMMYFX)
 				fx.state = S_THOK
-				fx.scale = mo.scale
+				--fx.scale = mo.scale
+				fx.scale = ease.linear(i*FRACUNIT/5, mo.prev.scale, mo.scale)
 				fx.destscale = 1
 				fx.scalespeed = FRACUNIT/5
 				fx.color = mo.color
+				fx.frame = $|FF_TRANS70
 				fx.blendmode = AST_ADD
 			end
 		end
 		
-		local factor = 64
+		local factor = 80
 		mo.momx = $ - $/factor
 		mo.momy = $ - $/factor
 		mo.momz = $ - $/factor
@@ -84,6 +87,7 @@ FLCR.AddWeapon({
 			x = mo.x,
 			y = mo.y,
 			z = mo.z,
+			scale = mo.scale - FRACUNIT/5 -- scalespeed
 		}
 	end,
 
@@ -97,6 +101,7 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "3way", 
 	desc = "Fires 3 straight rounds in 3 rows. The farther you are from the enemy, the better its homing.",
+	mt = MT_DUMMYMISSILE,
 	spawnsound = sfx_3way,
 	parttype = CRPT_GUN,
 	spawnfunc = function(p, w)
@@ -142,7 +147,7 @@ FLCR.AddWeapon({
 				th.extravalue1 = i
 				th.thinkfunc = w.thinkfunc
 				th.damage = w.attack * 8 -- 32
-				th.knockdown = 24 -- Getting hit with all 3 shots applies 74 knockdown
+				th.knockdown = 24
 				th.state = S_RRNG1
 				th.color = SKINCOLOR_YELLOW
 				th.fuse = 3*TICRATE
@@ -163,10 +168,12 @@ FLCR.AddWeapon({
 				
 				local fx = P_SpawnMobj(x,y,z-(mobjinfo[mo.type].height/3),MT_DUMMYFX)
 				fx.state = S_THOK
-				fx.scale = mo.scale
+				--fx.scale = mo.scale
+				fx.scale = ease.linear(i*FRACUNIT/5, mo.prev.scale, mo.scale)
 				fx.destscale = 1
 				fx.scalespeed = FRACUNIT/5
 				fx.color = mo.color
+				fx.frame = $|FF_TRANS70
 				fx.blendmode = AST_ADD
 			end
 		end
@@ -174,11 +181,11 @@ FLCR.AddWeapon({
 			x = mo.x,
 			y = mo.y,
 			z = mo.z,
-			scale = mo.scale,
+			scale = mo.scale - FRACUNIT/5 -- scalespeed
 		}
 		
 		-- Middle bullet has a little bit of homing
-		local factor = 50
+		local factor = 60
 		mo.momx = $ - $/factor
 		mo.momy = $ - $/factor
 		mo.momz = $ - $/factor
@@ -218,7 +225,7 @@ FLCR.AddWeapon({
 			return
 		elseif not CRPD.firetics then
 			CRPD.firetype = w.parttype
-			CRPD.firetics = (multifireinterval * maxrounds)*2 -- 54
+			CRPD.firetics = (multifireinterval * maxrounds)*2
 			p.powers[pw_nocontrol] = CRPD.firetics - 6*(w.reload)
 		end
 		
@@ -228,11 +235,12 @@ FLCR.AddWeapon({
 		local th = Lib.spawnCRMissile(mo, w, xyangle, zangle)
 		if valid(th) then
 			th.thinkfunc = w.thinkfunc
-			th.damage = w.attack * 3 -- 12, getting hit with all 8 shots is 96 damage
-			th.knockdown = 9 -- Getting hit with all 8 shots applies 72 knockdown
+			th.damage = w.attack * 3
+			th.knockdown = 9
 			th.state = S_RRNG1
 			th.color = SKINCOLOR_YELLOW
 			th.fuse = 3*TICRATE
+			if mo.target then th.tracer = mo.target end
 		end
 		CRPD.firemaxrounds = $ + 1
 	end,
@@ -249,15 +257,17 @@ FLCR.AddWeapon({
 				
 				local fx = P_SpawnMobj(x,y,z-(mobjinfo[mo.type].height/3),MT_DUMMYFX)
 				fx.state = S_THOK
-				fx.scale = mo.scale
+				--fx.scale = mo.scale
+				fx.scale = ease.linear(i*FRACUNIT/5, mo.prev.scale, mo.scale)
 				fx.destscale = 1
 				fx.scalespeed = FRACUNIT/5
 				fx.color = mo.color
+				fx.frame = $|FF_TRANS70
 				fx.blendmode = AST_ADD
 			end
 		end
 		
-		local factor = 64
+		local factor = 80
 		mo.momx = $ - $/factor
 		mo.momy = $ - $/factor
 		mo.momz = $ - $/factor
@@ -271,7 +281,7 @@ FLCR.AddWeapon({
 			x = mo.x,
 			y = mo.y,
 			z = mo.z,
-			scale = mo.scale,
+			scale = mo.scale - FRACUNIT/5 -- scalespeed
 		}
 	end,
 
@@ -285,6 +295,7 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "Vertical", 
 	desc = "Fires 2 rounds. One ascends diagonally, clearing walls. Use this as you hide behind walls.",
+	mt = MT_DUMMYMISSILE,
 	spawnsound = sfx_vrtcl,
 	parttype = CRPT_GUN,
 	spawnfunc = function(p, w)
@@ -302,10 +313,39 @@ FLCR.AddWeapon({
 			return
 		elseif not CRPD.firetics then
 			CRPD.firetype = w.parttype
-			CRPD.firetics = (multifireinterval * maxrounds)*2 -- 54
-			p.powers[pw_nocontrol] = CRPD.firetics - 6*(w.reload)
+			CRPD.firetics = (multifireinterval * maxrounds)*2
+			p.powers[pw_nocontrol] = CRPD.firetics - (w.reload)
 		end
 		
+		-- Let's spawn the bullet(s)!
+		local xyangle = mo.target and R_PointToAngle2(mo.x, mo.y, mo.target.x, mo.target.y) or p.drawangle
+		local zangle = p.aiming
+		local rt -- Reference thing for targeting
+		for i = 0, 1, 1 do
+			local fa = i*FixedAngle(50*FRACUNIT)
+			local th = Lib.spawnCRMissile(mo, w, xyangle, zangle+fa)
+			if valid(th) then
+				if not (i&1) then
+					rt = P_SpawnMobj(th.x, th.y, th.z, MT_DUMMY)
+
+					rt.flags = $ & ~MF_NOCLIPTHING|MF_NOBLOCKMAP -- For homing.
+					rt.momx = th.momx
+					rt.momy = th.momy
+					rt.momz = th.momz
+					rt.fuse = 3*TICRATE
+				else
+					th.bbullet = rt
+				end
+				th.extravalue1 = i
+				th.thinkfunc = w.thinkfunc
+				th.damage = w.attack * 6
+				th.knockdown = 30
+				th.state = S_RRNG1
+				th.color = SKINCOLOR_WHITE
+				th.fuse = 3*TICRATE
+				if mo.target then th.tracer = mo.target end
+			end
+		end
 		CRPD.firemaxrounds = $ + 1
 	end,
 	
@@ -321,19 +361,37 @@ FLCR.AddWeapon({
 				
 				local fx = P_SpawnMobj(x,y,z-(mobjinfo[mo.type].height/3),MT_DUMMYFX)
 				fx.state = S_THOK
-				fx.scale = mo.scale
+				--fx.scale = mo.scale
+				fx.scale = ease.linear(i*FRACUNIT/5, mo.prev.scale, mo.scale)
 				fx.destscale = 1
 				fx.scalespeed = FRACUNIT/5
 				fx.color = mo.color
+				fx.frame = $|FF_TRANS70
 				fx.blendmode = AST_ADD
 			end
+		end
+		
+		if mo.extravalue1
+		and (mo.fuse < (3*TICRATE)-4)
+		and valid(mo.bbullet) then
+			Lib.homingAttack(mo, mo.bbullet, 50*FRACUNIT)
+		end
+		
+		local factor = 70
+		mo.momx = $ - $/factor
+		mo.momy = $ - $/factor
+		mo.momz = $ - $/factor
+		if mo.tracer then
+			local t = mo.tracer
+			local angle = R_PointToAngle2(mo.x, mo.y, t.x, t.y)
+			P_Thrust(mo, angle, FRACUNIT/factor)
 		end
 		
 		mo.prev = {
 			x = mo.x,
 			y = mo.y,
 			z = mo.z,
-			scale = mo.scale,
+			scale = mo.scale - FRACUNIT/5 -- scalespeed
 		}
 	end,
 	attack = 4,
@@ -346,6 +404,7 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "Sniper",
 	desc = "Fires one quick, straight round. While the round flies fast, it leaves you in danger for a time.",
+	mt = MT_DUMMYMISSILE,
 	spawnsound = sfx_snip,
 	parttype = CRPT_GUN,
 	spawnfunc = function(p, w)
@@ -367,7 +426,7 @@ FLCR.AddWeapon({
 		local th = Lib.spawnCRMissile(mo, w, xyangle, zangle)
 		if valid(th) then
 			th.thinkfunc = w.thinkfunc
-			th.damage = 120
+			th.damage = 109
 			th.knockdown = th.damage/2
 			th.state = S_RRNG1
 			th.color = SKINCOLOR_WHITE
@@ -389,10 +448,12 @@ FLCR.AddWeapon({
 				local fx = P_SpawnMobj(x,y,z-(mobjinfo[mo.type].height/3),MT_DUMMYFX)
 				fx.state = S_THOK
 				fx.tics = 28
-				fx.scale = mo.scale
+				--fx.scale = mo.scale
+				fx.scale = ease.linear(i*FRACUNIT/5, mo.prev.scale, mo.scale)
 				fx.destscale = 1
 				fx.scalespeed = FRACUNIT/10
 				fx.color = mo.color
+				fx.frame = $|FF_TRANS70
 				fx.blendmode = AST_ADD
 			end
 		end
@@ -417,7 +478,7 @@ FLCR.AddWeapon({
 			x = mo.x,
 			y = mo.y,
 			z = mo.z,
-			scale = mo.scale,
+			scale = mo.scale - FRACUNIT/5 -- scalespeed
 		}
 	end,
 	attack = 7,
@@ -429,7 +490,7 @@ FLCR.AddWeapon({
 
 FLCR.AddWeapon({
 	name = "Stun", 
-	desc = "Fires continuous short-ranged electric shots that paralyze foes. Use at close range.",
+	desc = "Fire continuous short-ranged electric shots that paralyze foes. Use at close range.",
 	spawnsound = 0,
 	parttype = CRPT_GUN,
 	attack = 2,
@@ -437,6 +498,19 @@ FLCR.AddWeapon({
 	homing = 3,
 	reload = 9,
 	down = 7,
+})
+
+FLCR.AddWeapon({
+	name = "Ion", 
+	desc = "Fires two rounds that turn mid-flight.",
+	-- Instant down if hit. Between 35-40 dmg
+	spawnsound = 0,
+	parttype = CRPT_GUN,
+	attack = 2,
+	speed = 2,
+	homing = 5,
+	reload = 4,
+	down = 2,
 })
 
 FLCR.AddWeapon({
@@ -454,8 +528,85 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "Flame", 
 	desc = "Fires flame-shaped rounds straight ahead. Its power increases with distance.",
-	spawnsound = 0,
+	mt = MT_DUMMYMISSILE,
+	spawnsound = sfx_frame,
 	parttype = CRPT_GUN,
+	spawnfunc = function(p, w)
+		if not valid(p) then return end
+		if not p.crplayerdata then return end
+		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
+		if not valid(CRPD.player) then return end
+		if not valid(p.mo) then return end
+		local mo = p.mo
+		
+		local multifireinterval = TICRATE/12 -- Multishot interval
+		local maxrounds = 9 -- How many rounds can your weapon fire per-clip?
+		if (CRPD.firetics%multifireinterval) -- Modulo by your weapon's firedelay, a non zero number?
+		or (CRPD.firemaxrounds >= maxrounds)
+			return
+		elseif not CRPD.firetics then
+			CRPD.firetype = w.parttype
+			CRPD.firetics = (multifireinterval * maxrounds)*2
+			p.powers[pw_nocontrol] = CRPD.firetics - (w.reload)
+		end
+		
+		-- Let's spawn the bullet!
+		local xyangle = mo.target and R_PointToAngle2(mo.x, mo.y, mo.target.x, mo.target.y) or p.drawangle
+		local zangle = p.aiming
+		local th = Lib.spawnCRMissile(mo, w, xyangle, zangle)
+		if valid(th)
+			if mo.target then th.tracer = mo.target end
+			th.thinkfunc = w.thinkfunc
+			th.damage = 15
+			th.knockdown = th.damage/2
+			--th.state = S_RRNG1
+			--th.frame = $|FF_TRANS50
+			--th.blendmode = AST_ADD
+			th.scale = FRACUNIT/2
+			th.color = SKINCOLOR_RED
+			th.fuse = TICRATE
+			th.destscale = 8*FRACUNIT
+			th.scalespeed = FRACUNIT/(TICRATE/4)
+		end
+		CRPD.firemaxrounds = $ + 1
+	end,
+	
+	thinkfunc = function(mo)
+		if not valid(mo) then return end
+		if (mo.state == mo.info.deathstate) then return end
+		
+		local factor = 9
+		mo.momx = $ - $/factor
+		mo.momy = $ - $/factor
+		mo.momz = $ - $/factor
+		if mo.tracer then
+			local t = mo.tracer
+			local angle = R_PointToAngle2(mo.x, mo.y, t.x, t.y)
+			P_Thrust(mo, angle, FRACUNIT/factor)
+		end
+		
+		for i = 0, 1 do
+			local r = mo.radius>>FRACBITS
+			local e = P_SpawnMobj(mo.x + (P_RandomRange(r, -r)<<FRACBITS),
+								mo.y + (P_RandomRange(r, -r)<<FRACBITS),
+								mo.z - 16*FRACUNIT
+								+ P_MobjFlip(mo)*(P_RandomKey(mo.height>>FRACBITS)<<FRACBITS),
+								MT_DUMMYFX)
+			e.state = S_FX_FIREUP2
+			e.frame = $|FF_PAPERSPRITE
+			local camangle, ra = R_PointToAngle(mo.x, mo.y), -FixedAngle(90*FRACUNIT) + FixedAngle(mo.momz)
+			e.angle = mo.angle
+			if ((camangle - mo.angle) < 0) then 
+				ra = InvAngle($)
+			end
+			e.rollangle = ra
+			
+			-- Max Speed can be 40*FRACUNIT
+			local speed = abs(FixedHypot(FixedHypot(mo.momz, mo.momy), mo.momz))
+			local momz = ease.linear(speed/40, 3*FRACUNIT, 1)
+			P_SetObjectMomZ(e, momz, false)
+		end
+	end,
 	attack = 5,
 	speed = 4,
 	homing = 3,

@@ -39,7 +39,9 @@ addHook("PlayerSpawn", function(p)
 	local CRPD = FLCR.PlayerData[p.crplayerdata.id]
 	CRPD.health = 1000
 	CRPD.state = CRPS_NORMAL
+	CRPD.curknockdown = 0
 	mo.scale = 4*FRACUNIT/3
+	p.powers[pw_shield] = 0
 end)
 
 addHook("PreThinkFrame", do 
@@ -120,13 +122,22 @@ addHook("ThinkFrame", do
 				p.powers[pw_nocontrol] = TICRATE -- No movement, short time
 				-- TODO: Keep an eye on this code in particular.
 				-- Supposedly a reason for players able to "instantly" recover out of a downed state.
-				if ((mo.eflags & MFE_JUSTHITFLOOR)
-				and (CRPD.curknockdown >= 200))
-				or (CRPD.statetics > 3*TICRATE) then
+				if (CRPD.statetics > TICRATE)
+				and (CRPD.curknockdown >= 200) then
 					CRPD.curknockdown = 0
 					p.powers[pw_flashing] = 2*TICRATE
 					local fx = P_SpawnMobjFromMobj(mo, 0, 0, 0, MT_DUMMY)
 					fx.state = S_FX_LINEUP
+					fx.fuse = TICRATE
+					CRPD.state = CRPS_REBIRTH -- Force rebirth state
+				elseif (((mo.eflags & MFE_JUSTHITFLOOR)
+				or P_IsObjectOnGround(mo))
+				and (CRPD.statetics > 3*TICRATE)) then
+					CRPD.curknockdown = 0
+					p.powers[pw_flashing] = 2*TICRATE
+					local fx = P_SpawnMobjFromMobj(mo, 0, 0, 0, MT_DUMMY)
+					fx.state = S_FX_LINEUP
+					fx.fuse = TICRATE
 					CRPD.state = CRPS_REBIRTH -- Force rebirth state
 				end
 			elseif (CRPD.state == CRPS_REBIRTH) then
@@ -140,6 +151,12 @@ addHook("ThinkFrame", do
 				end
 			end
 			continue -- Don't process aything else for this player, move to the next player.
+		end
+
+		-- Knockdown timer
+		if not (CRPD.statetics%TICRATE) 
+		and (CRPD.curknockdown > 0) then 
+			CRPD.curknockdown = $ - 10
 		end
 
 		-- Weapon firing.

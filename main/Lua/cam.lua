@@ -296,7 +296,7 @@ end)
 
 addHook("PostThinkFrame", do
 	if (gametype ~= GT_MATCH) then return end
-	FLCR.CameraBattleAngle = $+ANG1/4
+	FLCR.CameraBattleAngle = $+ANG1/6
 	local totalPlayers = {} -- Self explainitory
 	for p in players.iterate
 		if not valid(p.mo) or p.spectator then continue end

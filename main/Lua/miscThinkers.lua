@@ -142,14 +142,14 @@ addHook("ThinkFrame", do
 		or (p.playerstate == PST_DEAD) then continue end
 		local mo = p.mo
 		if not mo.target then
-			mo.target = Lib.Look4ClosestPlayer(mo, FixedMul(1024*FRACUNIT, mo.scale))
+			mo.target = Lib.Look4ClosestPlayer(mo, FixedMul(2048*FRACUNIT, mo.scale))
 		else
 			local target = mo.target
 			local sight = P_CheckSight(mo, target)
 			local dist = FixedHypot(mo.x - target.x, mo.y - target.y)
 			local zdiff = ((target.z+(target.height/2)) - (mo.z+(mo.height/2)))
 			
-			if not sight or (dist > FixedMul(1024*FRACUNIT, mo.scale))
+			if not sight or (dist > FixedMul(2048*FRACUNIT, mo.scale))
 			or (valid(target.player) and target.player.playerstate == PST_DEAD)
 			or (valid(target.player) and target.player.spectator) then 
 				mo.target = nil

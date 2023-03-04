@@ -156,7 +156,7 @@ addHook("ThinkFrame", do
 		-- Knockdown timer
 		if not (CRPD.statetics%TICRATE) 
 		and (CRPD.curknockdown > 0) then 
-			CRPD.curknockdown = $ - 10
+			CRPD.curknockdown = max(0, $ - 10)
 		end
 
 		-- Weapon firing.

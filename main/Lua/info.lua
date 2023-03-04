@@ -24,6 +24,10 @@ mobjinfo[MT_DUMMYMISSILE] = dummy_t
 mobjinfo[MT_DUMMYMISSILE].flags = mobjinfo[MT_REDRING].flags --MF_NOBLOCKMAP|MF_MISSILE|MF_NOGRAVITY
 mobjinfo[MT_DUMMYFX] = dummy_t
 
+-- Custom Bee!
+SafeFreeslot("S_BUMBLEBORE_BULLET")
+states[S_BUMBLEBORE_BULLET] = { SPR_BUMB, A|FF_FULLBRIGHT|FF_ANIMATE, -1, nil, 1, 2, S_NULL }
+
 -- Arrows!
 SafeFreeslot("SPR_RKAW", "S_RKAW1")
 states[S_RKAW1] = {SPR_RKAW, A|FF_FULLBRIGHT|FF_PAPERSPRITE, 1, nil, 0, 0, S_NULL}
@@ -81,6 +85,7 @@ SafeFreeslot("SPR_FIRC", "S_FX_FIREUP2")
 states[S_FX_FIREUP2] = { SPR_FIRC, A|FF_FULLBRIGHT|FF_ANIMATE, 24, nil, 24, 1, S_NULL }
 
 -- Sounds
+-- Sounds may not be in order of addition, or time of when the weapon was worked on.
 SafeFreeslot("sfx_pplode")
 sfxinfo[sfx_pplode].caption = "Player Explode"
 sfxinfo[sfx_pplode].flags = SF_X2AWAYSOUND|SF_X4AWAYSOUND|SF_X8AWAYSOUND
@@ -107,4 +112,8 @@ sfxinfo[sfx_snip].flags = SF_X2AWAYSOUND|SF_X4AWAYSOUND|SF_X8AWAYSOUND
 
 SafeFreeslot("sfx_frame")
 sfxinfo[sfx_frame].caption = "Flame fire"
+sfxinfo[sfx_frame].flags = SF_X2AWAYSOUND|SF_X4AWAYSOUND|SF_X8AWAYSOUND
+
+SafeFreeslot("sfx_hnet")
+sfxinfo[sfx_frame].caption = "Hornet Fire"
 sfxinfo[sfx_frame].flags = SF_X2AWAYSOUND|SF_X4AWAYSOUND|SF_X8AWAYSOUND

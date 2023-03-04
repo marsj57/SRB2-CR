@@ -11,7 +11,7 @@ local Lib = FLCRLib
 
 -- Guns
 FLCR.AddWeapon({
-	name = "Basic",
+	name = "basic",
 	desc = "A training gun that fires 3 rounds straight ahead. It's for absolute beginners. The rounds are weaker at greater distances.",
 	mt = MT_DUMMYMISSILE,
 	spawnsound = sfx_basic,
@@ -77,7 +77,7 @@ FLCR.AddWeapon({
 		mo.momx = $ - $/factor
 		mo.momy = $ - $/factor
 		mo.momz = $ - $/factor
-		if mo.tracer then
+		if valid(mo.tracer) then
 			local t = mo.tracer
 			local angle = R_PointToAngle2(mo.x, mo.y, t.x, t.y)
 			P_Thrust(mo, angle, FRACUNIT/factor)
@@ -189,7 +189,7 @@ FLCR.AddWeapon({
 		mo.momx = $ - $/factor
 		mo.momy = $ - $/factor
 		mo.momz = $ - $/factor
-		if mo.tracer
+		if valid(mo.tracer)
 		and not mo.extravalue1 then
 			local t = mo.tracer
 			local angle = R_PointToAngle2(mo.x, mo.y, t.x, t.y)
@@ -205,7 +205,7 @@ FLCR.AddWeapon({
 })
 
 FLCR.AddWeapon({
-	name = "Gatling", 
+	name = "gatling", 
 	desc = "Fires multiple small rounds straight ahead. Stay close to the enemy for better shots.",
 	mt = MT_DUMMYMISSILE,
 	spawnsound = sfx_gtlng,
@@ -271,7 +271,7 @@ FLCR.AddWeapon({
 		mo.momx = $ - $/factor
 		mo.momy = $ - $/factor
 		mo.momz = $ - $/factor
-		if mo.tracer then
+		if valid(mo.tracer) then
 			local t = mo.tracer
 			local angle = R_PointToAngle2(mo.x, mo.y, t.x, t.y)
 			P_Thrust(mo, angle, FRACUNIT/factor)
@@ -293,7 +293,7 @@ FLCR.AddWeapon({
 })
 
 FLCR.AddWeapon({
-	name = "Vertical", 
+	name = "vertical", 
 	desc = "Fires 2 rounds. One ascends diagonally, clearing walls. Use this as you hide behind walls.",
 	mt = MT_DUMMYMISSILE,
 	spawnsound = sfx_vrtcl,
@@ -381,7 +381,7 @@ FLCR.AddWeapon({
 		mo.momx = $ - $/factor
 		mo.momy = $ - $/factor
 		mo.momz = $ - $/factor
-		if mo.tracer then
+		if valid(mo.tracer) then
 			local t = mo.tracer
 			local angle = R_PointToAngle2(mo.x, mo.y, t.x, t.y)
 			P_Thrust(mo, angle, FRACUNIT/factor)
@@ -402,7 +402,7 @@ FLCR.AddWeapon({
 })
 
 FLCR.AddWeapon({
-	name = "Sniper",
+	name = "sniper",
 	desc = "Fires one quick, straight round. While the round flies fast, it leaves you in danger for a time.",
 	mt = MT_DUMMYMISSILE,
 	spawnsound = sfx_snip,
@@ -489,7 +489,7 @@ FLCR.AddWeapon({
 })
 
 FLCR.AddWeapon({
-	name = "Stun", 
+	name = "stun", 
 	desc = "Fire continuous short-ranged electric shots that paralyze foes. Use at close range.",
 	spawnsound = 0,
 	parttype = CRPT_GUN,
@@ -501,7 +501,7 @@ FLCR.AddWeapon({
 })
 
 FLCR.AddWeapon({
-	name = "Ion", 
+	name = "ion", 
 	desc = "Fires two rounds that turn mid-flight.",
 	-- Instant down if hit. Between 35-40 dmg
 	spawnsound = 0,
@@ -514,10 +514,69 @@ FLCR.AddWeapon({
 })
 
 FLCR.AddWeapon({
-	name = "Hornet", 
+	name = "hornet", 
 	desc = "Spreads five bee-shaped rounds that chase its target.",
-	spawnsound = 0,
+	mt = MT_DUMMYMISSILE,
+	spawnsound = sfx_hnet,
 	parttype = CRPT_GUN,
+	spawnfunc = function(p, w)
+		if not valid(p) then return end
+		if not p.crplayerdata then return end
+		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
+		if not valid(CRPD.player) then return end
+		if not valid(p.mo) then return end
+		local mo = p.mo
+
+		if CRPD.firetics then return end
+		CRPD.firetype = w.parttype
+		CRPD.firetics = 4*TICRATE/3
+		p.powers[pw_nocontrol] = CRPD.firetics - w.reload
+		
+		-- Let's spawn the bullet!
+		for i = -2, 2, 1 do 
+			local xyangle = mo.target and R_PointToAngle2(mo.x, mo.y, mo.target.x, mo.target.y) or p.drawangle
+			local fa = i*ANGLE_22h
+			xyangle = $ + fa
+			local zangle = ease.linear(AngleFixed(p.aiming+ANGLE_90) / 180, -ANGLE_45, ANGLE_45)
+			local th = Lib.spawnCRMissile(mo, w, xyangle, zangle)
+			if valid(th) then
+				th.extravalue1 = i
+				th.tracer = mo.target
+				th.thinkfunc = w.thinkfunc
+				th.damage = 12
+				th.knockdown = th.damage/2
+				th.state = S_BUMBLEBORE_BULLET
+				th.color = SKINCOLOR_YELLOW
+				th.fuse = 3*TICRATE
+			end
+		end
+
+		CRPD.firemaxrounds = $ + 1
+	end,
+	
+	thinkfunc = function(mo)
+		if not valid(mo) then return end
+		if (mo.state == mo.info.deathstate) then return end
+		
+		if not (leveltime%(TICRATE/3)) then
+			local fx = P_SpawnMobjFromMobj(mo, 0,0,0, MT_SPARK)
+		end
+		
+		local timethreshold = 3*TICRATE-7
+		if (mo.fuse <= timethreshold) then
+			if not valid(mo.tracer)
+			and (mo.fuse == timethreshold) then
+				mo.angle = $ - mo.extravalue1*ANGLE_22h
+				local speed = FixedHypot(mo.momx, mo.momy)
+				P_InstaThrust(mo, mo.angle, speed)
+			elseif valid(mo.tracer)
+			and (mo.fuse >= TICRATE) then -- Don't home in forever
+				local angle = R_PointToAngle2(mo.x, mo.y, mo.tracer.x, mo.tracer.y) or FixedHypot(mo.momx, mo.momy)
+				mo.angle = angle
+				Lib.homingAttack(mo, mo.tracer, 25*FRACUNIT)
+			end
+		end
+	end,
 	attack = 6,
 	speed = 3,
 	homing = 6,
@@ -526,7 +585,7 @@ FLCR.AddWeapon({
 })
 
 FLCR.AddWeapon({
-	name = "Flame", 
+	name = "flame", 
 	desc = "Fires flame-shaped rounds straight ahead. Its power increases with distance.",
 	mt = MT_DUMMYMISSILE,
 	spawnsound = sfx_frame,
@@ -557,7 +616,7 @@ FLCR.AddWeapon({
 		if valid(th)
 			if mo.target then th.tracer = mo.target end
 			th.thinkfunc = w.thinkfunc
-			th.damage = 15
+			th.damage = 12
 			th.knockdown = th.damage/2
 			--th.state = S_RRNG1
 			--th.frame = $|FF_TRANS50
@@ -579,7 +638,7 @@ FLCR.AddWeapon({
 		mo.momx = $ - $/factor
 		mo.momy = $ - $/factor
 		mo.momz = $ - $/factor
-		if mo.tracer then
+		if valid(mo.tracer) then
 			local t = mo.tracer
 			local angle = R_PointToAngle2(mo.x, mo.y, t.x, t.y)
 			P_Thrust(mo, angle, FRACUNIT/factor)
@@ -589,13 +648,14 @@ FLCR.AddWeapon({
 			local r = mo.radius>>FRACBITS
 			local e = P_SpawnMobj(mo.x + (P_RandomRange(r, -r)<<FRACBITS),
 								mo.y + (P_RandomRange(r, -r)<<FRACBITS),
-								mo.z - 16*FRACUNIT
+								mo.z - mo.height/2
 								+ P_MobjFlip(mo)*(P_RandomKey(mo.height>>FRACBITS)<<FRACBITS),
 								MT_DUMMYFX)
 			e.state = S_FX_FIREUP2
 			e.frame = $|FF_PAPERSPRITE
 			local camangle, ra = R_PointToAngle(mo.x, mo.y), -FixedAngle(90*FRACUNIT) + FixedAngle(mo.momz)
 			e.angle = mo.angle
+			--e.angle = R_PointToAngle(mo.target.x, mo.target.y, mo.x, mo.y) + ANGLE_90
 			if ((camangle - mo.angle) < 0) then 
 				ra = InvAngle($)
 			end
@@ -615,7 +675,7 @@ FLCR.AddWeapon({
 })
 
 FLCR.AddWeapon({
-	name = "Dragon", 
+	name = "dragon", 
 	desc = "Fires one dragon-shaped round that zeroes in on foes. Stay on your guard after firing.",
 	spawnsound = 0,
 	parttype = CRPT_GUN,

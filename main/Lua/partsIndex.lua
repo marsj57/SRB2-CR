@@ -426,7 +426,7 @@ FLCR.AddWeapon({
 		local th = Lib.spawnCRMissile(mo, w, xyangle, zangle)
 		if valid(th) then
 			th.thinkfunc = w.thinkfunc
-			th.damage = 109
+			th.damage = w.damage * 15
 			th.knockdown = th.damage/2
 			th.state = S_RRNG1
 			th.color = SKINCOLOR_WHITE
@@ -491,12 +491,68 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "stun", 
 	desc = "Fire continuous short-ranged electric shots that paralyze foes. Use at close range.",
-	spawnsound = 0,
+	mt = MT_DUMMYMISSILE,
+	spawnsound = sfx_stun,
 	parttype = CRPT_GUN,
+	spawnfunc = function(p, w)
+		if not valid(p) then return end
+		if not p.crplayerdata then return end
+		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
+		if not valid(CRPD.player) then return end
+		if not valid(p.mo) then return end
+		local mo = p.mo
+
+		if CRPD.firetics then return end
+		CRPD.firetype = w.parttype
+		CRPD.firetics = TICRATE/3
+		p.powers[pw_nocontrol] = CRPD.firetics - w.reload
+		
+		-- Let's spawn the bullet!
+		local xyangle = mo.target and R_PointToAngle2(mo.x, mo.y, mo.target.x, mo.target.y) or p.drawangle
+		local zangle = p.aiming
+		local th = Lib.spawnCRMissile(mo, w, xyangle, zangle)
+		if valid(th) then
+			th.momx = 1
+			th.momy = 1
+			th.momz = 1
+			th.damage = w.attack * 15
+			th.knockdown = th.damage/2
+			th.state = S_FX_ELECEXPLODE
+			th.color = SKINCOLOR_COBALT
+			--th.scale = 2*FRACUNIT
+			th.fuse = TICRATE/3
+			
+			-- Below is purely cosmetic
+			for i = -2, 2, 1 do
+				if not i then continue end
+				local j = (i<0) and -1 or 1
+				local fa = j*ANGLE_45
+				local fxangle = xyangle + fa
+
+				local fx = P_SpawnMobjFromMobj(th, FixedMul(cos(fxangle), th.radius),
+													FixedMul(sin(fxangle), th.radius),
+													0,
+													MT_DUMMYFX)
+				fx.state = S_FX_ELECDIAG
+				fx.angle = fxangle + ANGLE_180
+				--fx.scale = 2*FRACUNIT
+				local camangle, ra = R_PointToAngle(mo.x, mo.y)
+				if abs(i) > 1 then
+					fx.rollangle = $ - ANGLE_90
+					fx.z = $ - th.height
+				end
+				if ((camangle - mo.angle) < 0) then 
+					fx.rollangle = InvAngle($)
+				end
+			end
+		end
+		CRPD.firemaxrounds = $ + 1
+	end,
+	
 	attack = 2,
 	speed = 7,
 	homing = 3,
-	reload = 9,
+	reload = 8,
 	down = 7,
 })
 
@@ -540,11 +596,12 @@ FLCR.AddWeapon({
 			local zangle = ease.linear(AngleFixed(p.aiming+ANGLE_90) / 180, -ANGLE_45, ANGLE_45)
 			local th = Lib.spawnCRMissile(mo, w, xyangle, zangle)
 			if valid(th) then
+				th.scale = 2*FRACUNIT
 				th.extravalue1 = i
 				th.tracer = mo.target
 				th.thinkfunc = w.thinkfunc
-				th.damage = 12
-				th.knockdown = th.damage/2
+				th.damage = w.attack * 4
+				th.knockdown = th.damage - 10
 				th.state = S_BUMBLEBORE_BULLET
 				th.color = SKINCOLOR_YELLOW
 				th.fuse = 3*TICRATE

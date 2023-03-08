@@ -68,11 +68,17 @@ states[S_FX_FSPARK] = { SPR_FSPK, A|FF_FULLBRIGHT|FF_ANIMATE, -1, nil, 3, 1, S_F
 SafeFreeslot("SPR_NRGU", "S_FX_ENERGYUP")
 states[S_FX_ENERGYUP] = { SPR_NRGU, A|FF_FULLBRIGHT|FF_ANIMATE, 31, nil, 31, 1, S_NULL }
 
--- Electricity Hit FX - Floor up
+-- Electricity / Hit FX - Floor up
 SafeFreeslot("SPR_ELEA", "S_FX_ELECUP1")
 states[S_FX_ELECUP1] = { SPR_ELEA, A|FF_FULLBRIGHT|FF_ANIMATE, 15, nil, 15, 1, S_NULL }
 SafeFreeslot("SPR_ELEB", "S_FX_ELECUP2")
-states[S_FX_ELECUP2] = { SPR_ELEB, A|FF_FULLBRIGHT|FF_ANIMATE, 12, nil, 12, 1, S_NULL }
+states[S_FX_ELECUP2] = { SPR_ELEB, A|FF_FULLBRIGHT|FF_ANIMATE, 11, nil, 11, 1, S_NULL }
+-- Electricity / Hit Explosion Radial
+SafeFreeslot("SPR_ELEC", "S_FX_ELECEXPLODE")
+states[S_FX_ELECEXPLODE] = { SPR_ELEC, A|FF_FULLBRIGHT|FF_ANIMATE, 10, nil, 10, 1, S_NULL }
+-- Electricity / Charge Right
+SafeFreeslot("SPR_ELED", "S_FX_ELECDIAG")
+states[S_FX_ELECDIAG] = { SPR_ELED, A|FF_FULLBRIGHT|FF_ANIMATE|FF_PAPERSPRITE|FF_TRANS20, 20, nil, 20, 1, S_NULL }
 
 -- Fire / Lava Hit FX - Floor up
 SafeFreeslot("SPR_FIRA", "S_FX_FIREUP1")
@@ -116,4 +122,8 @@ sfxinfo[sfx_frame].flags = SF_X2AWAYSOUND|SF_X4AWAYSOUND|SF_X8AWAYSOUND
 
 SafeFreeslot("sfx_hnet")
 sfxinfo[sfx_frame].caption = "Hornet Fire"
+sfxinfo[sfx_frame].flags = SF_X2AWAYSOUND|SF_X4AWAYSOUND|SF_X8AWAYSOUND
+
+SafeFreeslot("sfx_stun")
+sfxinfo[sfx_frame].caption = "Stun Fire"
 sfxinfo[sfx_frame].flags = SF_X2AWAYSOUND|SF_X4AWAYSOUND|SF_X8AWAYSOUND

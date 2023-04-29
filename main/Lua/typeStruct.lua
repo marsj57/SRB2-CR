@@ -129,6 +129,7 @@ local defaultWeaponStruct = {
 	special = CRL_INVALID, -- Special letter, see above table
 	spawnfunc = nil, -- Function for when the bullet spawns
 	thinkfunc = nil, -- Does this bullet have a special thinker (Eg. Homing) while in flight?
+	knockfunc = nil, -- Does this bullet have custom knockback?
 	
 	-- Hud Display stuff
 	attack = 0,
@@ -160,7 +161,7 @@ local defaultPlayerStruct = {
 	__index = {
 		id = 0,
 		player = nil,
-		loadout = {CRWEP_GUN_STUN, CRWEP_BOMB_STANDARD, CRWEP_POD_STANDARD}, -- Noob Pack
+		loadout = {CRWEP_GUN_SPLASH, CRWEP_BOMB_STANDARD, CRWEP_POD_STANDARD}, -- Noob Pack
 		/*-- Noob pack
 		gunwep = CRWEP_GUN_BASIC,
 		bombwep = CRWEP_BOMB_STANDARD,

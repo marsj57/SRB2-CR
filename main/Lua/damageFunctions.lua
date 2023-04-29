@@ -77,6 +77,8 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 		fx.rollangle = zangle
 
 		-- Get thrust angle... and thrust!
+		-- TODO: CUSTOMIZED KNOCKBACK OPTIONS
+		-- Possibly needs a inflictor/source .knockfunc
 		target.z = $ + 1
 		target.state = S_PLAY_PAIN
 		-- Partially from P_SuperDamage

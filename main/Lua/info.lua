@@ -121,9 +121,21 @@ sfxinfo[sfx_frame].caption = "Flame fire"
 sfxinfo[sfx_frame].flags = SF_X2AWAYSOUND|SF_X4AWAYSOUND|SF_X8AWAYSOUND
 
 SafeFreeslot("sfx_hnet")
-sfxinfo[sfx_frame].caption = "Hornet Fire"
+sfxinfo[sfx_frame].caption = "Hornet fire"
 sfxinfo[sfx_frame].flags = SF_X2AWAYSOUND|SF_X4AWAYSOUND|SF_X8AWAYSOUND
 
 SafeFreeslot("sfx_stun")
-sfxinfo[sfx_frame].caption = "Stun Fire"
+sfxinfo[sfx_frame].caption = "Stun fire"
+sfxinfo[sfx_frame].flags = SF_X2AWAYSOUND|SF_X4AWAYSOUND|SF_X8AWAYSOUND
+
+SafeFreeslot("sfx_drag01")
+sfxinfo[sfx_frame].caption = "Dragon fire"
+sfxinfo[sfx_frame].flags = SF_X2AWAYSOUND|SF_X4AWAYSOUND|SF_X8AWAYSOUND
+
+SafeFreeslot("sfx_drag02")
+sfxinfo[sfx_frame].caption = "Dragon bullet"
+sfxinfo[sfx_frame].flags = SF_X2AWAYSOUND|SF_X4AWAYSOUND|SF_X8AWAYSOUND
+
+SafeFreeslot("sfx_splash")
+sfxinfo[sfx_frame].caption = "Splash fire"
 sfxinfo[sfx_frame].flags = SF_X2AWAYSOUND|SF_X4AWAYSOUND|SF_X8AWAYSOUND

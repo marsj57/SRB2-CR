@@ -21,14 +21,6 @@ addHook("TeamSwitch", function(p, _, fromspectators)
 	end
 end)
 
--- Bullet thinker code
-addHook("MobjThinker", function(mo)
-	if not valid(mo.target) then return false end
-	if not mo.thinkfunc then return false end
-	mo.thinkfunc(mo)
-	return false
-end)
-
 addHook("PlayerSpawn", function(p)
 	if not valid(p) then return false end
 	if not valid(p.mo) then return false end

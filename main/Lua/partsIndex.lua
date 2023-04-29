@@ -9,6 +9,15 @@
 
 local Lib = FLCRLib
 
+-- Bullet thinker code
+addHook("MobjThinker", function(mo)
+	if not valid(mo.target) then return false end
+	if not mo.thinkfunc then return false end
+	mo.thinkfunc(mo)
+	return false
+end)
+
+
 -- Guns
 FLCR.AddWeapon({
 	name = "basic",
@@ -478,7 +487,7 @@ FLCR.AddWeapon({
 			x = mo.x,
 			y = mo.y,
 			z = mo.z,
-			scale = mo.scale - FRACUNIT/5 -- scalespeed
+			scale = mo.scale - FRACUNIT/10 -- scalespeed
 		}
 	end,
 	attack = 7,
@@ -607,8 +616,7 @@ FLCR.AddWeapon({
 				th.fuse = 3*TICRATE
 			end
 		end
-
-		CRPD.firemaxrounds = $ + 1
+		--CRPD.firemaxrounds = $ + 1
 	end,
 	
 	thinkfunc = function(mo)
@@ -673,7 +681,7 @@ FLCR.AddWeapon({
 		if valid(th)
 			if mo.target then th.tracer = mo.target end
 			th.thinkfunc = w.thinkfunc
-			th.damage = 12
+			th.damage = w.attack * 2
 			th.knockdown = th.damage/2
 			--th.state = S_RRNG1
 			--th.frame = $|FF_TRANS50
@@ -734,8 +742,83 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "dragon", 
 	desc = "Fires one dragon-shaped round that zeroes in on foes. Stay on your guard after firing.",
-	spawnsound = 0,
+	spawnsound = sfx_drag01,
 	parttype = CRPT_GUN,
+	spawnfunc = function(p, w)
+		if not valid(p) then return end
+		if not p.crplayerdata then return end
+		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
+		if not valid(CRPD.player) then return end
+		if not valid(p.mo) then return end
+		local mo = p.mo
+		
+		if CRPD.firetics then return end
+		CRPD.firetype = w.parttype
+		CRPD.firetics = 2*TICRATE
+		p.powers[pw_nocontrol] = CRPD.firetics - w.reload
+		
+		-- Let's spawn the bullet!
+		local xyangle = mo.target and R_PointToAngle2(mo.x, mo.y, mo.target.x, mo.target.y) or p.drawangle
+		local zangle = p.aiming
+		local th = Lib.spawnCRMissile(mo, w, xyangle, zangle)
+		if valid(th) then
+			th.thinkfunc = w.thinkfunc
+			if P_IsObjectOnGround(mo) then -- Stronger on the ground
+				th.damage = w.attack * 20
+			else -- Weaker in the air
+				th.damage = w.attack * 15
+			end
+			th.knockdown = th.damage/2
+			th.state = S_RRNG2
+			th.color = SKINCOLOR_ORANGE
+			th.fuse = 3*TICRATE
+			S_StartSound(mo, sfx_drag02, consoleplayer)
+		end
+		CRPD.firemaxrounds = $ + 1
+	end,
+	
+	thinkfunc = function(mo)
+		if not valid(mo) then return end
+		if (mo.state == mo.info.deathstate) then 
+			if valid(consoleplayer.mo) and S_SoundPlaying(consoleplayer.mo, sfx_drag02) then 
+				S_StopSound(consoleplayer.mo) 
+			end
+			return 
+		end
+		if mo.prev then
+			-- Interpolate fx graphics towards prev position
+			for i = 1, 5 do
+				local x = ease.linear(i*FRACUNIT/5, mo.prev.x, mo.x)
+				local y = ease.linear(i*FRACUNIT/5, mo.prev.y, mo.y)
+				local z = ease.linear(i*FRACUNIT/5, mo.prev.z, mo.z)
+				
+				local fx = P_SpawnMobj(x,y,z-(mobjinfo[mo.type].height/3),MT_DUMMYFX)
+				fx.state = S_THOK
+				fx.tics = 28
+				--fx.scale = mo.scale
+				fx.scale = ease.linear(i*FRACUNIT/5, mo.prev.scale, mo.scale)
+				fx.destscale = 1
+				fx.scalespeed = FRACUNIT/10
+				fx.color = mo.color
+				fx.frame = $|FF_TRANS70
+				fx.blendmode = AST_ADD
+			end
+		end
+		
+		if valid(mo.tracer)
+		and (mo.fuse >= TICRATE) then -- Don't home in forever
+			local angle = R_PointToAngle2(mo.x, mo.y, mo.tracer.x, mo.tracer.y) or FixedHypot(mo.momx, mo.momy)
+			mo.angle = angle
+			Lib.homingAttack(mo, mo.tracer, 35*FRACUNIT)
+		end
+		
+		mo.prev = {
+			x = mo.x,
+			y = mo.y,
+			z = mo.z,
+			scale = mo.scale - FRACUNIT/10 -- scalespeed
+		}
+	end,
 	attack = 7,
 	speed = 4,
 	homing = 7,
@@ -746,8 +829,73 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "splash", 
 	desc = "Fires 3 large yet weak rounds straight ahead. Briefly immobolizes foes.",
-	spawnsound = 0,
+	spawnsound = sfx_splash,
 	parttype = CRPT_GUN,
+	spawnfunc = function(p, w)
+		if not valid(p) then return end
+		if not p.crplayerdata then return end
+		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
+		if not valid(CRPD.player) then return end
+		if not valid(p.mo) then return end
+		local mo = p.mo
+
+		if CRPD.firetics then return end
+		CRPD.firetype = w.parttype
+		CRPD.firetics = TICRATE/4
+		p.powers[pw_nocontrol] = CRPD.firetics
+		
+		-- Let's spawn the bullet!
+		for i = -1, 1, 1 do 
+			local xyangle = mo.target and R_PointToAngle2(mo.x, mo.y, mo.target.x, mo.target.y) or p.drawangle
+			local fa = i*ANGLE_22h
+			xyangle = $ + fa
+			local zangle = ease.linear(AngleFixed(p.aiming+ANGLE_90) / 180, -ANGLE_45, ANGLE_45)
+			local th = Lib.spawnCRMissile(mo, w, xyangle, zangle)
+			if valid(th) then
+				th.scale = 3*FRACUNIT/2
+				th.extravalue1 = i
+				th.tracer = mo.target
+				th.thinkfunc = w.thinkfunc
+				th.damage = w.attack * 15
+				th.knockdown = th.damage/2
+				th.state = S_RRNG1
+				th.color = SKINCOLOR_SKY
+				th.fuse = 2*TICRATE
+			end
+		end
+		--CRPD.firemaxrounds = $ + 1
+	end,
+	
+	thinkfunc = function(mo)
+		if not valid(mo) then return end
+		if (mo.state == mo.info.deathstate) then return end
+
+		for i = 0, 1 do
+			local r = mo.radius>>FRACBITS
+			local e = P_SpawnMobj(mo.x + (P_RandomRange(r, -r)<<FRACBITS),
+								mo.y + (P_RandomRange(r, -r)<<FRACBITS),
+								mo.z - mo.height/2
+								+ P_MobjFlip(mo)*(P_RandomKey(mo.height>>FRACBITS)<<FRACBITS),
+								MT_DUMMYFX)
+			e.state = P_RandomRange(S_SMALLBUBBLE, S_MEDIUMBUBBLE)
+			e.fuse = TICRATE
+			P_SetObjectMomZ(e, 3*FRACUNIT, false)
+		end
+
+		local timethreshold = 2*TICRATE-7
+		if (mo.fuse <= timethreshold) then
+			if not valid(mo.tracer)
+			and (mo.fuse == timethreshold) then
+				mo.angle = $ - mo.extravalue1*ANGLE_22h
+				P_InstaThrust(mo, mo.angle, 5*FRACUNIT)
+			elseif valid(mo.tracer)
+			and (mo.fuse >= TICRATE) then -- Don't home in forever
+				local angle = R_PointToAngle2(mo.x, mo.y, mo.tracer.x, mo.tracer.y) or FixedHypot(mo.momx, mo.momy)
+				mo.angle = angle
+				Lib.homingAttack(mo, mo.tracer, 5*FRACUNIT)
+			end
+		end
+	end,
 	attack = 1,
 	speed = 4,
 	homing = 3,

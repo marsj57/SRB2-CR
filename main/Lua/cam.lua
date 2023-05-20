@@ -383,7 +383,7 @@ addHook("PostThinkFrame", do
 		local cam = p.awayviewmobj -- Not using the exposed camera_t because the exposed camera_t likes to angle itself to the consoleplayer.
 
 		-- Ease towards destination
-		P_TeleportMove(cam,
+		P_MoveOrigin(cam,
 						cam.x + (new.x - cam.x)/factor - FixedMul(cos(FLCR.CameraBattleAngle), zoom),
 						cam.y + (new.y - cam.y)/factor - FixedMul(sin(FLCR.CameraBattleAngle), zoom),
 						cam.z + (new.z - cam.z)/factor + zoom)

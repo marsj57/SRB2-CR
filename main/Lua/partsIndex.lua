@@ -55,7 +55,7 @@ FLCR.AddWeapon({
 			th.state = S_RRNG1
 			th.color = SKINCOLOR_YELLOW
 			th.fuse = 3*TICRATE
-			if mo.target then th.tracer = mo.target end
+			th.tracer = mo.target
 		end
 		CRPD.firemaxrounds = $ + 1
 	end,
@@ -153,6 +153,7 @@ FLCR.AddWeapon({
 			S_StartSoundAtVolume(mo, w.spawnsound, 192) -- Because our ref object disappears
 			if valid(th) then
 				th.target = mo
+				th.tracer = mo.target
 				th.extravalue1 = i
 				th.thinkfunc = w.thinkfunc
 				th.damage = w.attack * 8 -- 32
@@ -249,7 +250,7 @@ FLCR.AddWeapon({
 			th.state = S_RRNG1
 			th.color = SKINCOLOR_YELLOW
 			th.fuse = 3*TICRATE
-			if mo.target then th.tracer = mo.target end
+			th.tracer = mo.target
 		end
 		CRPD.firemaxrounds = $ + 1
 	end,
@@ -352,7 +353,7 @@ FLCR.AddWeapon({
 				th.state = S_RRNG1
 				th.color = SKINCOLOR_WHITE
 				th.fuse = 3*TICRATE
-				if mo.target then th.tracer = mo.target end
+				th.tracer = mo.target
 			end
 		end
 		CRPD.firemaxrounds = $ + 1
@@ -627,7 +628,7 @@ FLCR.AddWeapon({
 			local fx = P_SpawnMobjFromMobj(mo, 0,0,0, MT_SPARK)
 		end
 		
-		local timethreshold = 3*TICRATE-7
+		local timethreshold = 3*TICRATE-6
 		if (mo.fuse <= timethreshold) then
 			if not valid(mo.tracer)
 			and (mo.fuse == timethreshold) then
@@ -679,7 +680,7 @@ FLCR.AddWeapon({
 		local zangle = p.aiming
 		local th = Lib.spawnCRMissile(mo, w, xyangle, zangle)
 		if valid(th)
-			if mo.target then th.tracer = mo.target end
+			th.tracer = mo.target
 			th.thinkfunc = w.thinkfunc
 			th.damage = w.attack * 2
 			th.knockdown = th.damage/2
@@ -856,9 +857,9 @@ FLCR.AddWeapon({
 				th.extravalue1 = i
 				th.tracer = mo.target
 				th.thinkfunc = w.thinkfunc
-				th.damage = w.attack * 15
+				th.damage = w.attack * 7
 				th.knockdown = th.damage/2
-				th.state = S_RRNG1
+				th.state = S_SHELL
 				th.color = SKINCOLOR_SKY
 				th.fuse = 2*TICRATE
 			end
@@ -870,24 +871,23 @@ FLCR.AddWeapon({
 		if not valid(mo) then return end
 		if (mo.state == mo.info.deathstate) then return end
 
-		for i = 0, 1 do
-			local r = mo.radius>>FRACBITS
-			local e = P_SpawnMobj(mo.x + (P_RandomRange(r, -r)<<FRACBITS),
-								mo.y + (P_RandomRange(r, -r)<<FRACBITS),
-								mo.z - mo.height/2
-								+ P_MobjFlip(mo)*(P_RandomKey(mo.height>>FRACBITS)<<FRACBITS),
-								MT_DUMMYFX)
-			e.state = P_RandomRange(S_SMALLBUBBLE, S_MEDIUMBUBBLE)
-			e.fuse = TICRATE
-			P_SetObjectMomZ(e, 3*FRACUNIT, false)
-		end
+		local r = mo.radius>>FRACBITS
+		local e = P_SpawnMobj(mo.x + (P_RandomRange(r, -r)<<FRACBITS),
+							mo.y + (P_RandomRange(r, -r)<<FRACBITS),
+							mo.z - mo.height/2
+							+ P_MobjFlip(mo)*(P_RandomKey(mo.height>>FRACBITS)<<FRACBITS),
+							MT_DUMMYFX)
+		e.state = P_RandomRange(S_SMALLBUBBLE, S_MEDIUMBUBBLE)
+		e.fuse = TICRATE
+		P_SetObjectMomZ(e, 3*FRACUNIT, false)
 
-		local timethreshold = 2*TICRATE-7
+		local timethreshold = 2*TICRATE-4
 		if (mo.fuse <= timethreshold) then
 			if not valid(mo.tracer)
 			and (mo.fuse == timethreshold) then
 				mo.angle = $ - mo.extravalue1*ANGLE_22h
 				P_InstaThrust(mo, mo.angle, 5*FRACUNIT)
+				P_SetObjectMomZ(mo, FixedMul(sin(FixedAngle(mo.momz)), 5*FRACUNIT), false)
 			elseif valid(mo.tracer)
 			and (mo.fuse >= TICRATE) then -- Don't home in forever
 				local angle = R_PointToAngle2(mo.x, mo.y, mo.tracer.x, mo.tracer.y) or FixedHypot(mo.momx, mo.momy)

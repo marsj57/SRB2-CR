@@ -22,7 +22,7 @@ Lib.spawnArrow = function(mo, target)
 	arw.color = target.color or SKINCOLOR_GREEN -- Opponent's color
 	-- Fancy maths. Ensure your papersprite angle points towards your opponent.
 	--local ft = FixedAngle((leveltime%45)*(8*FRACUNIT))
-	P_TeleportMove(arw, mo.x,-- + FixedMul(cos(arw.angle), 3*mo.radius + FixedMul(sin(ft), 4*FRACUNIT)),
+	P_MoveOrigin(arw, mo.x,-- + FixedMul(cos(arw.angle), 3*mo.radius + FixedMul(sin(ft), 4*FRACUNIT)),
 						mo.y,-- + FixedMul(sin(arw.angle), 3*mo.radius + FixedMul(sin(ft), 4*FRACUNIT)),
 						mo.z + 3*mobjinfo[mo.type].height)
 
@@ -192,7 +192,7 @@ addHook("ThinkFrame", do
 		o.blendmode = AST_ADD
 		local bga = R_PointToAngle(target.x, target.y) -- Background angle
 		-- Place this object "behind" the player
-		P_TeleportMove(o, target.x + FixedMul(cos(bga), FRACUNIT), 
+		P_MoveOrigin(o, target.x + FixedMul(cos(bga), FRACUNIT), 
 							target.y + FixedMul(sin(bga), FRACUNIT), 
 							target.z - FixedMul(o.scale, 4*FRACUNIT))
 	end

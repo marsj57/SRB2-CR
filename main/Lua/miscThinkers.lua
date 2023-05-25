@@ -36,6 +36,7 @@ Lib.spawnArrow = function(mo, target)
 	return arw
 end
 
+if FLCRDebug then
 Lib.getSectorBounds = function(sec)
 	if not valid(sec) then return end -- Sanity check
 	local numlines = #sec.lines
@@ -105,6 +106,7 @@ addHook("ThinkFrame", do
 		end
 	end
 end)
+end
 
 addHook("PlayerSpawn", function(p)
 	if not valid(p) then return false end
@@ -185,7 +187,13 @@ addHook("ThinkFrame", do
 		else
 			o.flags2 = $ & ~MF2_DONTDRAW
 		end
-		o.color = target.color
+		
+		local r = skincolors[target.color].ramp[7] -- ramp is 0 indexed
+		if skincolors[SKINCOLOR_P1_OUTLINE + #p].ramp[7] ~= r then -- Avoid setting repeatedly
+			skincolors[SKINCOLOR_P1_OUTLINE + #p].ramp = {r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r}
+		end
+		o.color = 114 + #p --(SKINCOLOR_P#_OUTLINE), #p is 0 indexed
+		
 		o.colorized = true
 		o.scale = 115*target.scale/100
 		--o.spritexscale = 115*target.scale/100

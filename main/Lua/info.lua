@@ -9,6 +9,17 @@
 
 SafeFreeslot("MT_DUMMY", "MT_DUMMYMISSILE", "MT_DUMMYFX")
 
+for i = 1, #players do
+	skincolors[freeslot("SKINCOLOR_P" + i + "_OUTLINE")] = {
+		name = "Custom Robo P" + i + " Outline",
+		ramp = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+		invcolor = SKINCOLOR_BLACK,
+		invshade = 0,
+		chatcolor = V_INVERTMAP,
+		accessible = false
+	}
+end
+
 local dummy_t = {
 	doomednum = -1,
 	spawnstate = S_INVISIBLE,
@@ -73,12 +84,15 @@ SafeFreeslot("SPR_ELEA", "S_FX_ELECUP1")
 states[S_FX_ELECUP1] = { SPR_ELEA, A|FF_FULLBRIGHT|FF_ANIMATE, 15, nil, 15, 1, S_NULL }
 SafeFreeslot("SPR_ELEB", "S_FX_ELECUP2")
 states[S_FX_ELECUP2] = { SPR_ELEB, A|FF_FULLBRIGHT|FF_ANIMATE, 11, nil, 11, 1, S_NULL }
--- Electricity / Hit Explosion Radial
-SafeFreeslot("SPR_ELEC", "S_FX_ELECEXPLODE")
-states[S_FX_ELECEXPLODE] = { SPR_ELEC, A|FF_FULLBRIGHT|FF_ANIMATE, 10, nil, 10, 1, S_NULL }
+
+-- SPR_ELEC is already occupied!
+
 -- Electricity / Charge Right
 SafeFreeslot("SPR_ELED", "S_FX_ELECDIAG")
 states[S_FX_ELECDIAG] = { SPR_ELED, A|FF_FULLBRIGHT|FF_ANIMATE|FF_PAPERSPRITE|FF_TRANS20, 20, nil, 20, 1, S_NULL }
+-- Electricity / Hit Explosion Radial
+SafeFreeslot("SPR_ELEE", "S_FX_ELECEXPLODE")
+states[S_FX_ELECEXPLODE] = { SPR_ELEE, A|FF_FULLBRIGHT|FF_ANIMATE, 10, nil, 10, 1, S_NULL }
 
 -- Fire / Lava Hit FX - Floor up
 SafeFreeslot("SPR_FIRA", "S_FX_FIREUP1")
@@ -136,6 +150,7 @@ SafeFreeslot("sfx_drag02")
 sfxinfo[sfx_frame].caption = "Dragon bullet"
 sfxinfo[sfx_frame].flags = SF_X2AWAYSOUND|SF_X4AWAYSOUND|SF_X8AWAYSOUND
 
-SafeFreeslot("sfx_splash")
+-- sfx_splash already occupied!
+SafeFreeslot("sfx_splasf")
 sfxinfo[sfx_frame].caption = "Splash fire"
 sfxinfo[sfx_frame].flags = SF_X2AWAYSOUND|SF_X4AWAYSOUND|SF_X8AWAYSOUND

@@ -7,7 +7,7 @@
 --
 -- Flame
 
-freeslot("TOL_CUSTOMROBO")
+freeslot("TOL_SKIRMISH")
 
 -- To the user, this is a "Skirmish" gametype.
 -- Internally, we are Custom Robo.

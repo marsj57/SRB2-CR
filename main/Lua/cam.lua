@@ -413,19 +413,19 @@ hud.add(function(v,p,c)
 	c.aiming = p.awayviewaiming
 	--if not valid(p.mo) then return end
 	--if not valid(c) then return end
-	for m in mobjs.iterate()
-		if not valid(m) then continue end
-		if (FixedHypot(FixedHypot(avm.x - m.x, avm.y - m.y), 
-									avm.z - m.z) > 8*RING_DIST) then
+	for p in players.iterate
+		local mo = p.mo
+		if not valid(mo) then continue end
+		if (FixedHypot(FixedHypot(avm.x - mo.x, avm.y - mo.y), 
+									avm.z - mo.z) > 8*RING_DIST) then
 			continue -- Out of range
 		end
-		if (m.health <= 0)
-		or (m.player and (m.player.playerstate == PST_DEAD)) then continue end
-		if (m.flags2 & MF2_DONTDRAW) -- Base player, or object mobj
-		or (m.tracer and m.tracer.player and (m.tracer.flags2 & MF2_DONTDRAW)) then continue end -- Followmobj
-		if P_CheckSight(avm, m) then continue end
+		if (mo.health <= 0)
+		or (p.playerstate == PST_DEAD) then continue end
+		if (mo.flags2 & MF2_DONTDRAW) then continue end
+		if P_CheckSight(avm, mo) then continue end
 
-		R_ProjectSprite(v, m, c)
+		R_ProjectSprite(v, mo, c)
 	end
 end, "game")
 
@@ -467,6 +467,11 @@ hud.add(function(v,p,c)
 		-- Health NUMBER
 		v.drawNum((x>>FRACBITS + 96*(bgpatch.width*dxint)/100),
 					(y>>FRACBITS + 44*(bgpatch.height*dxint)/100), CRPD.health, flags)
+		-- Current knockdown ammount, DEBUG ONLY
+		if FLCRDebug then 
+			v.drawNum((x>>FRACBITS + 96*(bgpatch.width*dxint)/100),
+						(y>>FRACBITS - 24*(bgpatch.height*dxint)/100), CRPD.curknockdown, flags)
+		end
 		
 		-- Health Bar
 		-- For visual, ( 75*(bgpatch.width*dxint)/100 ) is 100% of the health bar

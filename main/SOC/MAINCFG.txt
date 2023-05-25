@@ -4,7 +4,7 @@
 #MultInter_ToBlack = 52
 #MultInter_Final = 51
 
-#Level R1
+#Level c1
 #NextLevel = R2
 #Levelname = Basic Arena
 #Subtitle = By Flame
@@ -12,5 +12,5 @@
 #SkyNum = 6
 #TypeOfLevel = SKIRMISH
 #SelectHeading = Big Maps
-#NextLevel = R3
+#NextLevel = c1
 

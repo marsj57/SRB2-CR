@@ -830,7 +830,7 @@ FLCR.AddWeapon({
 FLCR.AddWeapon({
 	name = "splash", 
 	desc = "Fires 3 large yet weak rounds straight ahead. Briefly immobolizes foes.",
-	spawnsound = sfx_splash,
+	spawnsound = sfx_splasf,
 	parttype = CRPT_GUN,
 	spawnfunc = function(p, w)
 		if not valid(p) then return end
@@ -871,16 +871,18 @@ FLCR.AddWeapon({
 		if not valid(mo) then return end
 		if (mo.state == mo.info.deathstate) then return end
 
-		local r = mo.radius>>FRACBITS
-		local e = P_SpawnMobj(mo.x + (P_RandomRange(r, -r)<<FRACBITS),
-							mo.y + (P_RandomRange(r, -r)<<FRACBITS),
-							mo.z - mo.height/2
-							+ P_MobjFlip(mo)*(P_RandomKey(mo.height>>FRACBITS)<<FRACBITS),
-							MT_DUMMYFX)
-		e.state = P_RandomRange(S_SMALLBUBBLE, S_MEDIUMBUBBLE)
-		e.fuse = TICRATE
-		P_SetObjectMomZ(e, 3*FRACUNIT, false)
-
+		if not (leveltime&1) then
+			local r = mo.radius>>FRACBITS
+			local e = P_SpawnMobj(mo.x + (P_RandomRange(r, -r)<<FRACBITS),
+								mo.y + (P_RandomRange(r, -r)<<FRACBITS),
+								mo.z - mo.height/2
+								+ P_MobjFlip(mo)*(P_RandomKey(mo.height>>FRACBITS)<<FRACBITS),
+								MT_DUMMYFX)
+			e.state = P_RandomRange(S_SMALLBUBBLE, S_MEDIUMBUBBLE)
+			e.fuse = 2*TICRATE/3
+			P_SetObjectMomZ(e, 2*FRACUNIT, false)
+		end
+		
 		local timethreshold = 2*TICRATE-4
 		if (mo.fuse <= timethreshold) then
 			if not valid(mo.tracer)

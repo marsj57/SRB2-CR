@@ -10,8 +10,8 @@
 local Lib = FLCRLib
 
 addHook("TeamSwitch", function(p, _, fromspectators)
-	if not valid(p) then return end
-	--if true return end
+	if not G_IsFLCRGametype() then return nil end
+	if not valid(p) then return nil end
 	if fromspectators then
 		Lib.assignPlayerToSlot(p, #p+1)
 		return true
@@ -22,6 +22,7 @@ addHook("TeamSwitch", function(p, _, fromspectators)
 end)
 
 addHook("PlayerSpawn", function(p)
+	if not G_IsFLCRGametype() then return false end
 	if not valid(p) then return false end
 	if not valid(p.mo) then return false end
 	local mo = p.mo

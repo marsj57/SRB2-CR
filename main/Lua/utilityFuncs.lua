@@ -355,6 +355,17 @@ Lib.Look4ClosestPlayer = function(mo, dist)
 	return lastmo
 end
 
+-- SetNextTarget
+-- Flame
+--
+-- mo (mobj_t)			- source mobj
+Lib.SetNextTarget = function(p)
+	if not valid(mo) then return end -- Sanity check
+	
+	-- Start from current player (#player) index
+	-- Iterate through all players
+end
+
 -- doRingBurst: Spills an injured player's rings - Copied from the source
 -- 
 -- player (player_t)		- player who is losing rings.

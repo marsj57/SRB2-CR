@@ -23,12 +23,12 @@ G_AddGametype({
 	description = "Use various weapon combinations at your disposal and come out on top in this mix-n-match frenzy!"
 })
 
--- Check to see if we are in a Custom Robo Gametype Gametype
+-- Check to see if we are in a Custom Robo Gametype
 rawset(_G, "G_IsFLCRGametype", function()
 	return (gametype == GT_ROBO)
 end)
 
--- Check to see if we are in a Rollout Gametype
+-- Check to see if the map is a Custom Robo Type of Level
 rawset(_G, "G_IsFLCRTOL", function(mapnum)
 	return (mapheaderinfo[mapmum].typeoflevel & TOL_SKIRMISH)
 end)

@@ -8,6 +8,7 @@ if not FLCR then
 		"gametype.lua",
 		"typeStruct.lua", -- Also calls "partsIndex.lua"
 		--"partsIndex.lua",
+		"console.lua",
 		"gameplayFunctions.lua",
 		"damageFunctions.lua",
 		"miscThinkers.lua",

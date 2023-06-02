@@ -546,14 +546,14 @@ FLCR.AddWeapon({
 				fx.state = S_FX_ELECDIAG
 				fx.angle = fxangle + ANGLE_180
 				--fx.scale = 2*FRACUNIT
-				local camangle, ra = R_PointToAngle(mo.x, mo.y)
+				--local camangle, ra = R_PointToAngle(mo.x, mo.y)
 				if abs(i) > 1 then
 					fx.rollangle = $ - ANGLE_90
 					fx.z = $ - th.height
 				end
-				if ((camangle - mo.angle) < 0) then 
+				/*if ((camangle - mo.angle) < 0) then 
 					fx.rollangle = InvAngle($)
-				end
+				end*/
 			end
 		end
 		CRPD.firemaxrounds = $ + 1
@@ -719,12 +719,12 @@ FLCR.AddWeapon({
 								MT_DUMMYFX)
 			e.state = S_FX_FIREUP2
 			e.frame = $|FF_PAPERSPRITE
-			local camangle, ra = R_PointToAngle(mo.x, mo.y), -FixedAngle(90*FRACUNIT) + FixedAngle(mo.momz)
+			--local camangle, ra = R_PointToAngle(mo.x, mo.y), -FixedAngle(90*FRACUNIT) + FixedAngle(mo.momz)
 			e.angle = mo.angle
 			--e.angle = R_PointToAngle(mo.target.x, mo.target.y, mo.x, mo.y) + ANGLE_90
-			if ((camangle - mo.angle) < 0) then 
+			/*if ((camangle - mo.angle) < 0) then 
 				ra = InvAngle($)
-			end
+			end*/
 			e.rollangle = ra
 			
 			-- Max Speed can be 40*FRACUNIT

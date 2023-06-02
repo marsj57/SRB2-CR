@@ -161,7 +161,7 @@ local defaultPlayerStruct = {
 	__index = {
 		id = 0,
 		player = nil,
-		loadout = {CRWEP_GUN_SPLASH, CRWEP_BOMB_STANDARD, CRWEP_POD_STANDARD}, -- Noob Pack
+		loadout = {CRWEP_GUN_BASIC, CRWEP_BOMB_STANDARD, CRWEP_POD_STANDARD}, -- Noob Pack
 		/*-- Noob pack
 		gunwep = CRWEP_GUN_BASIC,
 		bombwep = CRWEP_BOMB_STANDARD,

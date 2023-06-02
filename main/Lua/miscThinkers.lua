@@ -27,10 +27,11 @@ Lib.spawnArrow = function(mo, target)
 						mo.z + 3*mobjinfo[mo.type].height)
 
 	-- Rollangle stuff, this is purely visual
-	local camangle = R_PointToAngle(arw.x, arw.y)
+	-- Not needed as of SRB2 v2.2.11
+	/*local camangle = R_PointToAngle(arw.x, arw.y)
 	if ((camangle - arw.angle) < 0) then 
 		zangle = InvAngle($)
-	end
+	end*/
 
 	arw.rollangle = zangle
 	return arw
@@ -109,6 +110,7 @@ end)
 end
 
 addHook("PlayerSpawn", function(p)
+	if not G_IsFLCRGametype() then return false end
 	if not valid(p) then return false end
 	if not valid(p.mo) then return false end
 	local mo = p.mo
@@ -196,7 +198,7 @@ addHook("ThinkFrame", do
 		
 		o.colorized = true
 		o.scale = 115*target.scale/100
-		--o.spritexscale = 115*target.scale/100
+		--o.spritexscale = 105*FRACUNIT/100
 		o.blendmode = AST_ADD
 		local bga = R_PointToAngle(target.x, target.y) -- Background angle
 		-- Place this object "behind" the player
@@ -255,11 +257,13 @@ rawset(_G, "deathThink1", function(p)
 end)
 
 addHook("PlayerThink", function(p)
+	if not G_IsFLCRGametype() then return end
 	if not valid(p) then return end
 	if (p.playerstate == PST_DEAD) then deathThink1(p) return end
 end)
 
 addHook("MobjDeath", function(mo)
+	if not G_IsFLCRGametype() then return false end
 	if valid(mo) and valid(mo.player) then
 		local p = mo.player
 		mo.flags = $ & ~(MF_SOLID|MF_SHOOTABLE)

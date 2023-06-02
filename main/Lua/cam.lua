@@ -23,7 +23,7 @@ mobjinfo[MT_FLCRCAM] = {
 }
 
 local function CRHudToggle()
-	if true then
+	if G_IsFLCRGametype() then
 		hud.disable("rings")
 		hud.disable("lives")
 		hud.disable("weaponrings")
@@ -34,6 +34,7 @@ local function CRHudToggle()
 		hud.disable("nightstime")
 		hud.disable("nightsrecords")
 		hud.disable("rankings")
+		--hud.disable("textspectator")
 	else
 		hud.enable("rings")
 		hud.enable("lives")
@@ -45,6 +46,7 @@ local function CRHudToggle()
 		hud.enable("nightstime")
 		hud.enable("nightsrecords")
 		hud.enable("rankings")
+		--hud.enable("textspectator")
 	end
 end
 
@@ -77,7 +79,7 @@ rawset(_G, "R_ProjectSprite", function(v, thing, cam)
 	local centery = (v.height() / 2)
 
 	-- aiming
-	if (v.renderer() == "software") then
+	--if (v.renderer() == "software") then
 		local function AIMINGTODY(a)
 			return FixedDiv((tan(a)*160)>>FRACBITS, fovtan)
 		end
@@ -88,7 +90,7 @@ rawset(_G, "R_ProjectSprite", function(v, thing, cam)
 			invmul = -1
 		end
 		centery = $ + (AIMINGTODY(angle) * invmul * (v.width() / 320))
-	end
+	--end
 
 	local centerxfrac = centerx<<FRACBITS
 	local centeryfrac = centery<<FRACBITS
@@ -246,6 +248,7 @@ addHook("MapLoad", function(mapnum)
 end)
 
 addHook("PreThinkFrame", do
+	if not G_IsFLCRGametype() then return end
 	for p in players.iterate
 		if not valid(p.mo) 
 		or p.spectator 
@@ -265,12 +268,16 @@ addHook("PreThinkFrame", do
 end)
 
 addHook("PlayerSpawn", function(p)
+	if not G_IsFLCRGametype() then return false end
 	if not valid(p) then return false end
 	if not valid(p.mo) then return false end
 	local mo = p.mo
 	
 	-- Camera mobj. Not using camera_t.
-	if not p.awayviewmobj and (gametype == GT_MATCH) then
+	-- Pay attention to this if statement.
+	-- If no p.awayviewmobj is present, the player's mobj is used instead! Shocking!
+	-- This causes a bunch of weird things to happen!
+	if not p.awayviewmobj then
 		local o = P_SpawnMobj(mo.x, mo.y, mo.z, MT_FLCRCAM)
 		o.state = S_THOK
 		o.angle = mo.angle
@@ -287,15 +294,16 @@ addHook("PlayerSpawn", function(p)
 	camera.chase = true
 end, MT_PLAYER)
 
-addHook("PlayerThink", function(p)
-	if (p.playerstate == PST_DEAD)
+/*addHook("PlayerThink", function(p)
+	if G_IsFLCRGametype()
+	and (p.playerstate == PST_DEAD)
 	and valid(p.awayviewmobj) and not p.awayviewtics then
 		P_RemoveMobj(p.awayviewmobj)
 	end
-end)
+end)*/
 
 addHook("PostThinkFrame", do
-	if (gametype ~= GT_MATCH) then return end
+	if not G_IsFLCRGametype() then return end
 	FLCR.CameraBattleAngle = $+ANG1/6
 	local totalPlayers = {} -- Self explainitory
 	for p in players.iterate
@@ -384,9 +392,9 @@ addHook("PostThinkFrame", do
 
 		-- Ease towards destination
 		P_MoveOrigin(cam,
-						cam.x + (new.x - cam.x)/factor - FixedMul(cos(FLCR.CameraBattleAngle), zoom),
-						cam.y + (new.y - cam.y)/factor - FixedMul(sin(FLCR.CameraBattleAngle), zoom),
-						cam.z + (new.z - cam.z)/factor + zoom)
+					cam.x + (new.x - cam.x)/factor - FixedMul(cos(FLCR.CameraBattleAngle), zoom),
+					cam.y + (new.y - cam.y)/factor - FixedMul(sin(FLCR.CameraBattleAngle), zoom),
+					cam.z + (new.z - cam.z)/factor + zoom)
 		
 		-- Face the center
 		cam.angle = R_PointToAngle2(cam.x, cam.y, center.x, center.y)
@@ -402,11 +410,11 @@ end)
 -- Enable or disable the Vanilla HUD
 hud.add(CRHudToggle, "game")
 
--- For displaying all Mobj's behind walls
+-- For displaying all players behind walls
 hud.add(function(v,p,c)
-	--if not valid(v) then return end
+	if not G_IsFLCRGametype() then return end
 	if not valid(p) then return end
-	if not p.awayviewmobj or p.spectator then return end
+	if not valid(p.awayviewmobj) or p.spectator then return end
 	local avm = p.awayviewmobj
 	P_TeleportCameraMove(c, avm.x, avm.y, avm.z)
 	c.angle = avm.angle
@@ -431,8 +439,9 @@ end, "game")
 
 -- Player Number, Health Bar, Downed meter
 hud.add(function(v,p,c)
+	if not G_IsFLCRGametype() then return end
 	if not valid(p) then return end
-	if not p.awayviewmobj or p.spectator then return end
+	if not valid(p.awayviewmobj) or p.spectator then return end
 	local avm = p.awayviewmobj
 	
 	local range = 8*RING_DIST

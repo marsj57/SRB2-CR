@@ -436,7 +436,7 @@ FLCR.AddWeapon({
 		local th = Lib.spawnCRMissile(mo, w, xyangle, zangle)
 		if valid(th) then
 			th.thinkfunc = w.thinkfunc
-			th.damage = w.damage * 15
+			th.damage = w.attack * 15
 			th.knockdown = th.damage/2
 			th.state = S_RRNG1
 			th.color = SKINCOLOR_WHITE
@@ -724,8 +724,8 @@ FLCR.AddWeapon({
 			--e.angle = R_PointToAngle(mo.target.x, mo.target.y, mo.x, mo.y) + ANGLE_90
 			/*if ((camangle - mo.angle) < 0) then 
 				ra = InvAngle($)
-			end*/
-			e.rollangle = ra
+			end
+			e.rollangle = ra*/
 			
 			-- Max Speed can be 40*FRACUNIT
 			local speed = abs(FixedHypot(FixedHypot(mo.momz, mo.momy), mo.momz))

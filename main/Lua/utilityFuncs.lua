@@ -355,15 +355,52 @@ Lib.Look4ClosestPlayer = function(mo, dist)
 	return lastmo
 end
 
--- SetNextTarget
+-- setNextPlayerTarget
 -- Flame
 --
--- mo (mobj_t)			- source mobj
-Lib.SetNextTarget = function(p)
-	if not valid(mo) then return end -- Sanity check
+-- player (player_t)	- source player
+Lib.setNextPlayerTarget = function(player)
+	if not valid(player) then return false end
+	if not valid(player.mo) then return false end
+	local mo = player.mo
+	local index = #player -- Player index. Will account for your player 'node'. 
+	-- Eg. In a netgame, if you are player 1, your node will be 0. If you are player 2, your node will be 1, etc
+
+	-- If no existing target, then we don't have anything to switch to!
+	if not valid(mo.target) then return false end
+
+	-- Start at your node and iterate through the maximum player count. Subtract by 1 because we are 0 indexed. 
+	-- (Player nodes are from 0 - 31)
+	local next
+	for i = index, index + (#players-1) do
+		local v = i%(#players)
+		if FLCRDebug then print(v) end
+		local p = players[v]
+		if not valid(p) then continue end -- Not a valid player, continue to next.
+		if p.spectator then continue end -- Don't bother with spectators.
+		if not valid(p.mo) then continue end -- Not a valid player mobj.
+		local imo = p.mo
+		if (p == player) then continue end -- Skip us
+		if (p.playerstate == PST_DEAD) then continue end
+
+		-- Team check
+		-- TODO: Team Skirmish?
+		if (gametype == GT_CTF)
+		and (not p.ctfteam
+		or (p.ctfteam == player.ctfteam)) then
+			return nil
+		elseif (gametype == GT_TEAMMATCH) and (imo.color == mo.color) then
+			return nil
+		end
+
+		if not P_CheckSight(mo, imo) then continue end
+
+		next = imo
+		break -- Break at first entry
+	end
 	
-	-- Start from current player (#player) index
-	-- Iterate through all players
+	mo.target = next
+	return next
 end
 
 -- doRingBurst: Spills an injured player's rings - Copied from the source

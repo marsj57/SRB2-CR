@@ -59,13 +59,13 @@ COM_AddCommand("skirmish_equip", function(p, ...)
 
 	local t = FLCR.Weapons[_G[rsn]] -- Display a handy message
 	if (pt == CRPT_GUN) then -- Gun
-		CONS_Printf(p, "Equipped GUN Weapon:  " + t.name + " (" + rsn + ")")
+		CONS_Printf(p, "Equipped GUN Weapon: " + t.name + " (" + rsn + ")")
 	elseif (pt == CRPT_BOMB) then -- Bomb
-		CONS_Printf(p, "Equipped BOMB Weapon: " + t.name + " (" + rsn + ")")
+		CONS_Printf(p, "Equipped BOMB Weapon:" + t.name + " (" + rsn + ")")
 	elseif (pt == CRPT_POD) then -- Pod
-		CONS_Printf(p, "Equipped POD Weapon:  " + t.name + " (" + rsn + ")")
-	/*elseif (pt == CRPT_LEG) then -- Legs?
-			print("Equipped LEG Part:  " + t.name + " (" + rsn + ")")*/
+		CONS_Printf(p, "Equipped POD Weapon: " + t.name + " (" + rsn + ")")
+	--elseif (pt == CRPT_LEG) then -- Legs?
+	--		print("Equipped LEG Part:  " + t.name + " (" + rsn + ")")
 	end
 end)
 

@@ -161,7 +161,7 @@ local defaultPlayerStruct = {
 	__index = {
 		id = 0,
 		player = nil,
-		loadout = {CRWEP_GUN_BASIC, CRWEP_BOMB_STANDARD, CRWEP_POD_STANDARD}, -- Noob Pack
+		loadout = {CRWEP_GUN_BASIC, CRWEP_BOMB_STANDARD, CRWEP_POD_STANDARD}, -- Noob pack
 		/*-- Noob pack
 		gunwep = CRWEP_GUN_BASIC,
 		bombwep = CRWEP_BOMB_STANDARD,
@@ -195,6 +195,9 @@ local function ResetCRPlayerData()
 	for i = 1, #players do
 		FLCR.PlayerData[i] = setmetatable({}, defaultPlayerStruct)
 		FLCR.PlayerData[i].id = i
+		-- Set this table again here
+		-- Otherwise when we change our loadout, it will affect EVERYONE
+		FLCR.PlayerData[i].loadout = {CRWEP_GUN_BASIC, CRWEP_BOMB_STANDARD, CRWEP_POD_STANDARD}
 	end
 end
 ResetCRPlayerData()

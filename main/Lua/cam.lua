@@ -530,18 +530,26 @@ mo.x-range,mo.x+range,
 mo.y-range,mo.y+range)*/
 
 -- Debug stuff
-/*hud.add(function(v,p,c)
-	if p.spectator then return end
-	for i = 1, #players
-		local PD = FLCR.PlayerData[i]
-		local name = PD.player and PD.player.name or "nil"
-		local flags
-		if (PD.player == p)
-			flags = V_YELLOWMAP
+if FLCRDebug then
+	hud.add(function(v,p,c)
+		if p.spectator then return end
+		local x, y = 0, 24
+		v.drawString(x,y,"Current FLCR.PlayerData table:", V_SNAPTOLEFT|V_ALLOWLOWERCASE)
+		for i = 1, 8
+			local PD = FLCR.PlayerData[i]
+			local str
+			local name = PD.player and PD.player.name or "nil"
+			local flags = V_SNAPTOLEFT|V_ALLOWLOWERCASE
+			if (PD.player == p)
+				flags = $|V_YELLOWMAP
+			end
+			local equip = { PD.loadout[CRPT_GUN], PD.loadout[CRPT_BOMB], PD.loadout[CRPT_POD] }
+			str = name + ", " + equip[CRPT_GUN] + ", " + equip[CRPT_BOMB] + ", " + equip[CRPT_POD]
+			y = 32+(8*(i-1))
+			v.drawString(x,y,str,flags)
 		end
-		v.drawString(0,(8*(i-1)),name, flags)
-	end
-end,"game")*/
+	end,"game")
+end
 
 addHook("NetVars", function(n)
 	FLCR.CameraBattleAngle = n($)

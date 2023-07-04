@@ -59,7 +59,11 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 		
 		-- Do the damage, set the state
 		Lib.doDamage(p, damage, knockdown, true)
-		if (CRPD.health <= 0) then return false end -- Process default behavior
+		if (CRPD.health <= 0) then -- Health below 0? Process default behavior
+			p.rings = 0
+			p.powers[pw_shield] = 0
+			return false
+		end
 
 		Lib.doRingBurst(p, damage/10) -- Visual effect to shoy "You got hit!" (1/10th of damage received) 
 		S_StartSound(target, sfx_s3kb9) -- [Ring Loss]
@@ -109,7 +113,11 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 		local knockdown = 100 -- Immediately get knocked down
 		-- Do the damage, set the state
 		Lib.doDamage(p, damage, knockdown, false)
-		if (CRPD.health <= 0) then return false end -- Process default behavior
+		if (CRPD.health <= 0) then -- Health below 0? Process default behavior
+			p.rings = 0
+			p.powers[pw_shield] = 0
+			return false
+		end
 		CRPD.statetics = TICRATE
 		CRPD.state = CRPS_DOWN
 		p.powers[pw_nocontrol] = knockdown

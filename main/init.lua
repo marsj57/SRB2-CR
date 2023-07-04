@@ -13,6 +13,7 @@ if not FLCR then
 		"damageFunctions.lua",
 		"miscThinkers.lua",
 		"cam.lua",
+		"menu.lua",
 	}) do
 		dofile(filename)
 	end

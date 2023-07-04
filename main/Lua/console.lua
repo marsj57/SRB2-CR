@@ -55,6 +55,10 @@ COM_AddCommand("skirmish_equip", function(p, ...)
 	assert(FLCR.Weapons[_G[rsn]], "Weapon " + rsn + " not a valid part!")
 	assert(FLCR.Weapons[_G[rsn]].parttype == pt, "Weapon " + FLCR.Weapons[_G[rsn]].name + " (" + rsn + ") not a valid part type to equip!")
 
+	if CRPD.firetics then
+		CONS_Printf(p, "Please wait to equip a new weapon.")
+	end
+
 	CRPD.loadout[pt] = _G[rsn] -- Equip the weapon!
 
 	local t = FLCR.Weapons[_G[rsn]] -- Display a handy message
@@ -69,3 +73,11 @@ COM_AddCommand("skirmish_equip", function(p, ...)
 	end
 end)
 
+-- HUD Viewing options!
+rawset(_G, "cv_crhudview", CV_RegisterVar({
+	name = "skirmish_hud",
+	defaultvalue = 1,
+	flags = CV_SAVE,
+	PossibleValue = {Off = 0, Minimal = 1, Full = 2, HUD = 3},
+	func = 0,
+}))

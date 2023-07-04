@@ -719,13 +719,14 @@ FLCR.AddWeapon({
 								MT_DUMMYFX)
 			e.state = S_FX_FIREUP2
 			e.frame = $|FF_PAPERSPRITE
-			--local camangle, ra = R_PointToAngle(mo.x, mo.y), -FixedAngle(90*FRACUNIT) + FixedAngle(mo.momz)
+			--local camangle = R_PointToAngle(mo.x, mo.y)
+			local ra = -FixedAngle(90*FRACUNIT) + FixedAngle(mo.momz)
 			e.angle = mo.angle
 			--e.angle = R_PointToAngle(mo.target.x, mo.target.y, mo.x, mo.y) + ANGLE_90
 			/*if ((camangle - mo.angle) < 0) then 
 				ra = InvAngle($)
-			end
-			e.rollangle = ra*/
+			end*/
+			e.rollangle = ra
 			
 			-- Max Speed can be 40*FRACUNIT
 			local speed = abs(FixedHypot(FixedHypot(mo.momz, mo.momy), mo.momz))

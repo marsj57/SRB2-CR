@@ -34,7 +34,7 @@ local function CRHudToggle()
 		hud.disable("nightstime")
 		hud.disable("nightsrecords")
 		hud.disable("rankings")
-		--hud.disable("textspectator")
+		hud.disable("textspectator")
 	else
 		hud.enable("rings")
 		hud.enable("lives")
@@ -46,7 +46,7 @@ local function CRHudToggle()
 		hud.enable("nightstime")
 		hud.enable("nightsrecords")
 		hud.enable("rankings")
-		--hud.enable("textspectator")
+		hud.enable("textspectator")
 	end
 end
 
@@ -79,7 +79,7 @@ rawset(_G, "R_ProjectSprite", function(v, thing, cam)
 	local centery = (v.height() / 2)
 
 	-- aiming
-	--if (v.renderer() == "software") then
+	if (v.renderer() == "software") then
 		local function AIMINGTODY(a)
 			return FixedDiv((tan(a)*160)>>FRACBITS, fovtan)
 		end
@@ -90,7 +90,7 @@ rawset(_G, "R_ProjectSprite", function(v, thing, cam)
 			invmul = -1
 		end
 		centery = $ + (AIMINGTODY(angle) * invmul * (v.width() / 320))
-	--end
+	end
 
 	local centerxfrac = centerx<<FRACBITS
 	local centeryfrac = centery<<FRACBITS
@@ -115,7 +115,7 @@ rawset(_G, "R_ProjectSprite", function(v, thing, cam)
 		return
 	end
 
-	if thing.player
+	if thing.player then
 		local skin = skins[thing.skin]
 		if (thing.skin and (skin.flags & SF_HIRES)) then
 			this_scale = FixedMul(this_scale, skin.highresscale)
@@ -408,10 +408,10 @@ addHook("PostThinkFrame", do
 end)
 
 -- Enable or disable the Vanilla HUD
-hud.add(CRHudToggle, "game")
+addHook("HUD", CRHudToggle, "game")
 
 -- For displaying all players behind walls
-hud.add(function(v,p,c)
+addHook("HUD", function(v,p,c)
 	if not G_IsFLCRGametype() then return end
 	if not valid(p) then return end
 	if not valid(p.awayviewmobj) or p.spectator then return end
@@ -438,7 +438,7 @@ hud.add(function(v,p,c)
 end, "game")
 
 -- Player Number, Health Bar, Downed meter
-hud.add(function(v,p,c)
+addHook("HUD", function(v,p,c)
 	if not G_IsFLCRGametype() then return end
 	if not valid(p) then return end
 	if not valid(p.awayviewmobj) or p.spectator then return end
@@ -451,67 +451,101 @@ hud.add(function(v,p,c)
 		if not found.player.crplayerdata then return nil end
 		local CRPD = FLCR.PlayerData[found.player.crplayerdata.id]
 		
-		local x,y,scale,oob = R_ScreenTransform(found.x, found.y, found.z, v, p, c)
+		local x,y,scale = R_ScreenTransform(found.x, found.y, found.z, v, p, c)
+		scale = max($, 2*FRACUNIT/3)
+		local flags = V_NOSCALESTART
 		-- Visual debug for values
-		/*v.drawString(v.width()/2, 0, 
-				x>>FRACBITS ..", ".. (x/scale) .. "\n"
-				.. y>>FRACBITS ..", ".. (y/scale) .. "\n"
-				.. scale>>FRACBITS, V_NOSCALESTART)*/
+		--if FLCRDebug then
+			if (CRPD.player == consoleplayer) then
+				local str = x>>FRACBITS ..", ".. (x/scale) .. "\n"
+						.. y>>FRACBITS ..", ".. (y/scale) .. "\n"
+						.. scale>>FRACBITS ..", ".. (scale)
+				v.drawString(v.width()/2 - v.stringWidth(str)/2, 0, str, flags)
+			end
+		--end
 		
-		local bgpatch = v.cachePatch("CRHUDBG")
-		local flags = V_NOSCALESTART|V_20TRANS
 		local color = v.getColormap(found.skin, found.color or SKINCOLOR_GREY)
 		local dxint, dxfix = v.dupx()
-		x = x - (42*(bgpatch.width*dxfix)/100)
-		v.drawScaled(x, y, FRACUNIT, bgpatch, flags, color) -- BG Patch
-		
-		flags = $ & ~(V_20TRANS)
-
-		-- Player Number
-		v.drawString(x + (13*(bgpatch.width*dxint)/100)<<FRACBITS,
-					y + (42*(bgpatch.height*dxint)/100)<<FRACBITS,
-					"P" .. CRPD.id,
-					flags, "fixed")
-		
-		-- Health NUMBER
-		v.drawNum((x>>FRACBITS + 96*(bgpatch.width*dxint)/100),
-					(y>>FRACBITS + 44*(bgpatch.height*dxint)/100), CRPD.health, flags)
-		-- Current knockdown ammount, DEBUG ONLY
-		if FLCRDebug then 
-			v.drawNum((x>>FRACBITS + 96*(bgpatch.width*dxint)/100),
-						(y>>FRACBITS - 24*(bgpatch.height*dxint)/100), CRPD.curknockdown, flags)
-		end
-		
-		-- Health Bar
-		-- For visual, ( 75*(bgpatch.width*dxint)/100 ) is 100% of the health bar
-		v.drawFill((x>>FRACBITS + 20*(bgpatch.width*dxint)/100), 
-					(y>>FRACBITS + 85*(bgpatch.height*dxint)/100), CRPD.health*(75*(bgpatch.width*dxint)/100)/1000, 6, 1|flags)
-		v.drawFill((x>>FRACBITS + 20*(bgpatch.width*dxint)/100), 
-					(y>>FRACBITS + 88*(bgpatch.height*dxint)/100), CRPD.health*(75*(bgpatch.width*dxint)/100)/1000, 4, 15|flags)	
-
-		-- 'Downed meter' bits
-		if (CRPD.curknockdown < 100) then
-			local dmbitp = v.cachePatch("CRHUDDM")
-			local pipCount = ease.linear((1+CRPD.curknockdown)*FRACUNIT/100,4*FRACUNIT,1*FRACUNIT)>>FRACBITS
-			for i = 1, pipCount do
-				local inc = (i-1) * (dmbitp.width)
-				v.drawScaled(x + ((67+inc)*(bgpatch.width*dxint)/100)<<FRACBITS,
-						y + ((8*(bgpatch.height*dxint)/100))<<FRACBITS, FRACUNIT, dmbitp, flags, v.getColormap(TC_DEFAULT,SKINCOLOR_WHITE)) -- BG Patch
+		if (string.lower(cv_crhudview.string) == "minimal") then
+			local px = x - 90*FRACUNIT
+			local py = y - 120*scale
+			
+			-- Player Number
+			v.drawString(px, py, "P" .. CRPD.id, flags, "fixed")
+			-- Health Number
+			local phx = x + 85*FRACUNIT
+			v.drawNum(phx>>FRACBITS, py>>FRACBITS - 8, CRPD.health, flags)
+			-- Health Bar
+			v.drawFill(px>>FRACBITS, py>>FRACBITS+33, CRPD.health*170/1000, 6, 15|flags)
+			v.drawFill(px>>FRACBITS, py>>FRACBITS+32, CRPD.health*170/1000, 4, 1|flags)
+			-- 'Downed meter' bits
+			if (CRPD.curknockdown < 100) then
+				local dmbitp = v.cachePatch("CRHUDDM")
+				local pipCount = ease.linear((1+CRPD.curknockdown)*FRACUNIT/100,4*FRACUNIT,1*FRACUNIT)>>FRACBITS
+				for i = 1, pipCount do
+					local inc = ((i-1) * 3*(dmbitp.width+1))
+					v.drawScaled(phx - 10*(dmbitp.width)<<FRACBITS + (inc)<<FRACBITS,
+							py - 30<<FRACBITS, FRACUNIT, dmbitp, flags, v.getColormap(TC_DEFAULT,SKINCOLOR_WHITE)) -- BG Patch
+				end
 			end
+		elseif (string.lower(cv_crhudview.string) == "full") then
+			local bgpatch = v.cachePatch("CRHUDBG")
+			if v.renderer() == "software" then
+				flags = $|V_20TRANS
+			elseif v.renderer() == "opengl" then
+				flags = $|V_30TRANS
+			end
+			x = x - (42*(bgpatch.width*dxfix)/100)
+			v.drawScaled(x, y, FRACUNIT, bgpatch, flags, color) -- BG Patch
+			
+			flags = $ & ~(V_20TRANS|V_30TRANS)
+
+			-- Player Number
+			v.drawString(x + (13*(bgpatch.width*dxint)/100)<<FRACBITS,
+						y + (42*(bgpatch.height*dxint)/100)<<FRACBITS,
+						"P" .. CRPD.id,
+						flags, "fixed")
+			
+			-- Health NUMBER
+			v.drawNum((x>>FRACBITS + 96*(bgpatch.width*dxint)/100),
+						(y>>FRACBITS + 44*(bgpatch.height*dxint)/100), CRPD.health, flags)
+			-- Current knockdown ammount, DEBUG ONLY
+			if FLCRDebug then 
+				v.drawNum((x>>FRACBITS + 96*(bgpatch.width*dxint)/100),
+							(y>>FRACBITS - 24*(bgpatch.height*dxint)/100), CRPD.curknockdown, flags)
+			end
+			
+			-- Health Bar
+			-- For visual, ( 75*(bgpatch.width*dxint)/100 ) is 100% of the health bar
+			v.drawFill((x>>FRACBITS + 20*(bgpatch.width*dxint)/100), 
+						(y>>FRACBITS + 85*(bgpatch.height*dxint)/100), CRPD.health*(75*(bgpatch.width*dxint)/100)/1000, 6, 1|flags)
+			v.drawFill((x>>FRACBITS + 20*(bgpatch.width*dxint)/100), 
+						(y>>FRACBITS + 88*(bgpatch.height*dxint)/100), CRPD.health*(75*(bgpatch.width*dxint)/100)/1000, 4, 15|flags)	
+
+			-- 'Downed meter' bits
+			if (CRPD.curknockdown < 100) then
+				local dmbitp = v.cachePatch("CRHUDDM")
+				local pipCount = ease.linear((1+CRPD.curknockdown)*FRACUNIT/100,4*FRACUNIT,1*FRACUNIT)>>FRACBITS
+				for i = 1, pipCount do
+					local inc = (i-1) * (dmbitp.width)
+					v.drawScaled(x + ((67+inc)*(bgpatch.width*dxint)/100)<<FRACBITS,
+							y + ((8*(bgpatch.height*dxint)/100))<<FRACBITS, FRACUNIT, dmbitp, flags, v.getColormap(TC_DEFAULT,SKINCOLOR_WHITE)) -- BG Patch
+				end
+			end
+			
+			-- "Status" text to show what state the player is in
+			if (CRPD.statetics > 2*TICRATE) then
+				local fade = min(10, (CRPD.statetics-(2*TICRATE))/2)
+				if (fade > 9) then return nil end -- Don't process anything else if visible for more than a second
+				flags = $ | (fade*V_10TRANS)
+			end
+			local statusstr, statusnum = Lib.getCRState(CRPD.player)
+			flags = $ | strcol[statusnum]
+			v.drawString(x + ((bgpatch.width*dxint)/2)<<FRACBITS,
+						y + 102*(bgpatch.height*dxint)/100<<FRACBITS,
+						statusstr,
+						flags, "fixed-center")
 		end
-		
-		-- "Status" text to show what state the player is in
-		if (CRPD.statetics > 2*TICRATE) then
-			local fade = min(10, (CRPD.statetics-(2*TICRATE))/2)
-			if (fade > 9) then return nil end -- Don't process anything else if visible for more than a second
-			flags = $ | (fade*V_10TRANS)
-		end
-		local statusstr, statusnum = Lib.getCRState(CRPD.player)
-		flags = $ | strcol[statusnum]
-		v.drawString(x + ((bgpatch.width*dxint)/2)<<FRACBITS,
-					y + 102*(bgpatch.height*dxint)/100<<FRACBITS,
-					statusstr,
-					flags, "fixed-center")
 	end,
 	avm, -- refmo
 	avm.x-range,avm.x+range,
@@ -531,10 +565,10 @@ mo.y-range,mo.y+range)*/
 
 -- Debug stuff
 if FLCRDebug then
-	hud.add(function(v,p,c)
+	addHook("HUD", function(v,p,c)
 		if p.spectator then return end
 		local x, y = 0, 24
-		v.drawString(x,y,"Current FLCR.PlayerData table:", V_SNAPTOLEFT|V_ALLOWLOWERCASE)
+		v.drawString(x,y,"Current FLCR.PlayerData table (8 Entries):", V_SNAPTOLEFT|V_ALLOWLOWERCASE)
 		for i = 1, 8
 			local PD = FLCR.PlayerData[i]
 			local str

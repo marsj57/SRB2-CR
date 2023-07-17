@@ -184,6 +184,7 @@ addHook("ThinkFrame", do
 		o.sprite2 = target.sprite2
 		o.state = target.state
 		o.frame = target.frame
+		o.fuse = 3
 		if (mo.flags2 & MF2_DONTDRAW) then
 			o.flags2 = $ | MF2_DONTDRAW
 		else
@@ -194,7 +195,7 @@ addHook("ThinkFrame", do
 		if skincolors[SKINCOLOR_P1_OUTLINE + #p].ramp[7] ~= r then -- Avoid setting repeatedly
 			skincolors[SKINCOLOR_P1_OUTLINE + #p].ramp = {r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r}
 		end
-		o.color = 114 + #p --(SKINCOLOR_P#_OUTLINE), #p is 0 indexed
+		o.color = SKINCOLOR_P1_OUTLINE + #p --#p is 0 indexed
 		
 		o.colorized = true
 		o.scale = 115*target.scale/100
@@ -219,9 +220,9 @@ end, MT_DUMMY)
 -- From Rollout Knockout
 rawset(_G, "deathThink1", function(p)
 	if not valid(p) then return end
-	if not valid(p.mo) then return end
-	
-	local mo = p.mo -- Simplify
+	local mo = p.mo or p.realmo
+	if not valid(mo) then return end
+
 	if (mo.fuse > 1) 
 	and not (leveltime%7) then -- Buildup to explosion.
 			local r = mo.radius>>FRACBITS
@@ -234,6 +235,7 @@ rawset(_G, "deathThink1", function(p)
 		mo.momx = 0
 		mo.momy = 0
 		mo.momz = 0
+		p.deadtimer = 3*TICRATE
 		local xpld = P_SpawnMobj(mo.x, mo.y, mo.z, MT_DUMMY) -- Spawn an object.
 		xpld.state = S_RXPL1
 		xpld.scale = 2*FRACUNIT

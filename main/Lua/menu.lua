@@ -21,7 +21,7 @@ local crmenus = {
 		options = {
 			{"Equipped Gun weapon:   ", CRPT_GUN },
 			{"Equipped Bomb weapon: ", CRPT_BOMB },
-			{"Equipped Bomb weapon: ", CRPT_POD },
+			{"Equipped Pod weapon: ", CRPT_POD },
 			{"Confirm", 4}
 		}
 	},
@@ -37,39 +37,81 @@ local crmenus = {
 		name = "Equippable Pods",
 		options = {}
 	}
+	/*[CRPT_LEG] = {
+		name = "Equippable Legs",
+		options = {}
+	}*/
 }
 
 addHook("PlayerSpawn", function(p)
+	if not valid(p) then return end
 	p.crmenu = {
-		open = false,
-		ref = nil,
-		options = 0,
-		choice = 1,
+		open = false, -- True/False
+		ref = nil, -- What menu are we in? See crmenus above
+		options = 0, -- Options in p.crmenu.ref
+		choice = 1, -- Choice
+		scroll = 1,
+		maxscroll = 4,
 		gunselect = 0,
 		bombselect = 0,
 		podselect = 0
 	}
-	if (p == consoleplayer) then -- Populate locally
-		for i = CRPT_GUN, CRPT_POD do
-			crmenus[i].options = {}
-			local t = Lib.getWeaponTable(i)
-			for j = 1, #t
-				table.insert(crmenus[i].options, { t[j].name, j })
+	if not G_IsFLCRGametype() then return end
+	--if p.spectator then
+		if (p == consoleplayer) then -- Populate locally
+			for i = CRPT_GUN, CRPT_POD do
+				crmenus[i].options = {}
+				local t = Lib.getWeaponTable(i)
+				for j = 1, #t
+					table.insert(crmenus[i].options, { t[j].name, j })
+				end
 			end
 		end
-	end
-	-- Weapon name basis
-	p.crmenu.gunselect = crmenus[CRPT_GUN].options[1][1]
-	p.crmenu.bombselect = crmenus[CRPT_BOMB].options[1][1]
-	p.crmenu.podselect = crmenus[CRPT_POD].options[1][1]
+		-- Weapons are on a first name basis
+		local menu = p.crmenu
+		menu.gunselect = crmenus[CRPT_GUN].options[1][1]
+		menu.bombselect = crmenus[CRPT_BOMB].options[1][1]
+		menu.podselect = crmenus[CRPT_POD].options[1][1]
+	--end
 end)
 
 Lib.drawCRMenu = function(v, p, c)
-	if not p.crmenu.open then return end
-	if not p.crmenu.ref then p.crmenu.ref = 0 end
-	if (type(p.crmenu.ref) == "number") then
+	local menu = p.crmenu
+	if not menu.open then return end
+	if not menu.ref then menu.ref = 0 end
+	if (type(menu.ref) == "number") then
 		-- Draw menu options
-		for k, option in ipairs(crmenus[p.crmenu.ref].options) do
+		local scroll, maxscroll = menu.scroll, menu.maxscroll
+		local y = 10
+		local flags = V_ALLOWLOWERCASE
+		for i = scroll, min(scroll+maxscroll, menu.options) do
+			if not crmenus[menu.ref].options[i] then continue end -- Validity check
+			local option = crmenus[menu.ref].options[i][1]
+			local str
+			local flags = V_ALLOWLOWERCASE
+			if i == menu.choice then
+				str = ">" .. option
+				flags = $|V_YELLOWMAP
+			else
+				str = option
+			end
+			v.drawString(10, y, str, flags)
+			if (menu.ref == 0) -- Main menu
+			and (i < menu.options) then
+				local width = v.stringWidth(str)
+				if i ~= menu.choice then width = $ + 8 end
+				local wsel
+				if i == 1 then wsel = menu.gunselect
+				elseif i == 2 then wsel = menu.bombselect
+				elseif i == 3 then wsel = menu.podselect end
+				if not wsel then continue end -- Validity check
+				v.drawString(10+width, y, wsel)
+			end
+			y = $ + 10
+		end
+		-- ipairs method
+		/*for k, option in ipairs(crmenus[p.crmenu.ref].options) do
+			if (k < scroll) and (k > maxscroll) then continue end
 			local str
 			local flags = V_ALLOWLOWERCASE
 			if k == p.crmenu.choice then
@@ -78,9 +120,9 @@ Lib.drawCRMenu = function(v, p, c)
 			else
 				str = option[1]
 			end
-			local y = 10 + (k - 1)*10
+			y = $ + 10
 			v.drawString(10, y, str, flags)
-			if (p.crmenu.ref == 0)
+			if (p.crmenu.ref == 0) -- Main menu
 			and (k < #crmenus[p.crmenu.ref].options) then
 				local width = v.stringWidth(str)
 				if k ~= p.crmenu.choice then width = $ + 8 end
@@ -92,7 +134,7 @@ Lib.drawCRMenu = function(v, p, c)
 				else return end
 				v.drawString(10+width, y, wsel)
 			end
-		end
+		end*/
 	end
 end
 
@@ -110,66 +152,80 @@ addHook("HUD", function(v,p,c)
 	end	
 end, "game")
 
-local function handleMenuSelection(p, option)
+Lib.menuSelection = function(p, option)
 	if not (type(option) == "table") then return end -- No selection
 	if (type(p.crmenu.ref) ~= "number") then return end -- Not a valid menu
 
-	if p.crmenu.ref == 0 then -- Main Menu
-		p.crmenu.ref = option[2]
-		p.crmenu.choice = 1
+	local menu = p.crmenu
 
-		if (p.crmenu.ref == 4) then -- Enter the game!
-			p.cmd.buttons = $ | BT_ATTACK
-			print("Attack sent!")
-			p.crmenu.ref = 0 -- Reset the menu
+	if menu.ref == 0 then -- Main Menu
+		menu.ref = option[2]
+		menu.choice = 1
+
+		if (menu.ref == 4) then -- Enter the game!
+			p.playerstate = PST_REBORN -- stupid dumb hack
+			p.cmd.buttons = BT_ATTACK
+			menu.ref = 0 -- Reset the menu
 		end
 		return
-	elseif p.crmenu.ref == CRPT_GUN then -- Gun selection
-		p.crmenu.gunselect = option[1]
-		p.crmenu.choice = CRPT_GUN -- Memory
-	elseif p.crmenu.ref == CRPT_BOMB then  -- Bomb selection
-		p.crmenu.bombselect = option[1]
-		p.crmenu.choice = CRPT_BOMB -- Memory
-	elseif p.crmenu.ref == CRPT_POD then -- Pod selection
-		p.crmenu.podselect = option[1]
-		p.crmenu.choice = CRPT_POD -- Memory
+	elseif menu.ref == CRPT_GUN then -- Gun selection
+		menu.gunselect = option[1]
+		menu.choice = CRPT_GUN -- Memory
+	elseif menu.ref == CRPT_BOMB then  -- Bomb selection
+		menu.bombselect = option[1]
+		menu.choice = CRPT_BOMB -- Memory
+	elseif menu.ref == CRPT_POD then -- Pod selection
+		menu.podselect = option[1]
+		menu.choice = CRPT_POD -- Memory
 	end
-	p.crmenu.ref = 0 -- Return to main menu
+	menu.scroll = 1
+	menu.ref = 0 -- Return to main menu
 end
 
 addHook("PreThinkFrame", do
 	for p in players.iterate
-		if p.crmenu.open then
+		local menu = p.crmenu
+		if menu.open then
 			local cmd = p.cmd
 			if not cmd.forwardmove then p.forwardheld = false end
 			-- Why does PF_JUMPDOWN and PF_SPINDOWN not work here???
 			if not (cmd.buttons & BT_JUMP) then p.jumpheld = false end
 			if not (cmd.buttons & BT_SPIN) then p.spinheld = false end
 
-			p.crmenu.options = #crmenus[p.crmenu.ref].options
+			menu.options = #crmenus[menu.ref].options
+			if not menu.scroll then menu.scroll = 1 end
 
-			if (cmd.forwardmove > 0)
+			if (cmd.forwardmove > 0) -- Up
 			and not p.forwardheld then
-				p.crmenu.choice = $ - 1
-				if (p.crmenu.choice <= 0) then p.crmenu.choice = p.crmenu.options end
+				menu.choice = $ - 1
+				if (menu.choice <= menu.scroll) then menu.scroll = menu.choice end
+				if (menu.choice <= 0) then 
+					menu.choice = menu.options
+					menu.scroll = max(1, menu.options - menu.maxscroll)
+				end
 				p.forwardheld = true
-			elseif (cmd.forwardmove < 0)
+			elseif (cmd.forwardmove < 0) -- Down
 			and not p.forwardheld then
-				p.crmenu.choice = $ + 1
-				if (p.crmenu.choice > p.crmenu.options) then p.crmenu.choice = 1 end
+				menu.choice = $ + 1
+				if (menu.choice > menu.scroll+menu.maxscroll) then menu.scroll = menu.choice - menu.maxscroll end
+				if (menu.choice > menu.options) then 
+					menu.choice = 1
+					menu.scroll = 1
+				end
 				p.forwardheld = true
 			end
 			cmd.forwardmove = 0
 			cmd.sidemove = 0
+			p.aiming = 0
 			cmd.buttons = $ & ~BT_ATTACK
 			if (cmd.buttons & BT_JUMP)
 			and not p.jumpheld then -- Confirm
-				handleMenuSelection(p, crmenus[p.crmenu.ref].options[p.crmenu.choice])
+				Lib.menuSelection(p, crmenus[menu.ref].options[menu.choice])
 				p.jumpheld = true
 			elseif (cmd.buttons & BT_SPIN)
 			and not p.spinheld then -- Cancel
-				p.crmenu.ref = 0
-				p.crmenu.choice = 1
+				menu.choice = menu.ref or 1
+				menu.ref = 0
 				p.spinheld = true
 			end
 			cmd.buttons = $ & BT_ATTACK

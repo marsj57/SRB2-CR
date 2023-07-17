@@ -14,6 +14,17 @@ addHook("TeamSwitch", function(p, _, fromspectators)
 	if not valid(p) then return nil end
 	if fromspectators then
 		Lib.assignPlayerToSlot(p, #p+1)
+		if not p.crmenu then return true end
+		if not p.crmenu.gunselect 
+		or not p.crmenu.bombselect 
+		or not p.crmenu.podselect then 
+			return -- Not initialized
+		end
+		-- We do string.format because some weapons with spaces in them
+		-- will pass as 2 args instead of one. And surround them in "quotes".
+		COM_BufInsertText(p, string.format('skirmish_equip gun "%s"', p.crmenu.gunselect))
+		COM_BufInsertText(p, string.format('skirmish_equip bomb "%s"', p.crmenu.bombselect))
+		COM_BufInsertText(p, string.format('skirmish_equip pod "%s"', p.crmenu.podselect))
 		return true
 	else
 		Lib.removePlayerFromSlot(#p+1)

@@ -103,6 +103,79 @@ rawset(_G, "atan", function(x)
 	return asin(FixedDiv(x, FixedSqrt(FRACUNIT + FixedPow(x, 2))))
 end*/
 
+if FLCRDebug then
+local dict = {
+	["nil"] = "nil",
+	["boolean"] = "bool",
+	["number"] = "int",
+	["string"] = "str",
+	["function"] = "func",
+	["userdata"] = "udata",
+	["thread"] = "thrd",
+	["table"] = "table",
+}
+rawset(_G, "drawContentsRecursively", function(dw, t, s)
+	-- draws table t recursively
+	-- dw must be a drawer, t must be a table, s must be a table
+	-- ensure s is already populated with position, do not modify during runtime
+	-- s = state
+	
+	--if s == nil then error("argument #3 is missing",2) end
+	if s.level == nil then
+		s.level = 0
+	end
+	
+	local levelpush = s.level*4
+	
+	if next(t) == nil then
+		dw.drawString(s.x + levelpush, s.y,
+			"\134".."[empty]",
+		V_ALLOWLOWERCASE, "small")
+		s.y = $+4
+		return
+	end
+	if t._HIDE then
+		dw.drawString(s.x + levelpush, s.y,
+			"\134".."[hidden]",
+		V_ALLOWLOWERCASE, "small")
+		s.y = $+4
+		return
+	end
+	for k,v in pairs(t) do
+		local vstr = tostring(v)
+		local vtype,utype = type(v),""
+		
+		local hex = vstr:sub(-8,-1)
+		local pre,post = dict[vtype],vstr
+		
+		if vtype == "userdata" then
+			utype = userdataType(v)
+			post = utype.." "..hex
+			--if utype ~= "unknown" then post = utype end
+		elseif vtype == "table" then
+			--post = hex.." #"..#v
+			post = hex
+			pre = $.."["..#v.."]"
+		elseif vtype == "function" or vtype == "thread" then
+			post = hex
+		end
+		
+		
+		
+		dw.drawString(s.x + levelpush, s.y,
+			("\130%s \128%s \131%s"):format(pre, tostring(k), post),
+		V_ALLOWLOWERCASE, "small")
+		
+		s.y = $+4
+		if vtype == "table" then
+			s.level = $+1
+			drawContentsRecursively(dw, v, s)
+			s.level = $-1
+		end
+	end
+end)
+end
+
 -- Globalize constants to avoid using lib_getenum in C.
 -- Yes, conceptually this is STUPID.
 local g = rawset -- From here, refer to everything as "g"

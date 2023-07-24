@@ -403,7 +403,7 @@ addHook("PostThinkFrame", do
 		local dist = R_PointToDist2(cam.x, cam.y, center.x, center.y)
 		local hdist = (cam.z - center.z) --R_PointToDist2(0, cam.z, dist, center.z) --(cam.z - center.z)
 		-- Aim towards the center
-		p.awayviewaiming = R_PointToAngle2(0, 0, dist, -hdist) -- ANG2
+		p.awayviewaiming = R_PointToAngle2(0, 0, dist, -hdist) --+ p.aiming/10-- ANG2
 	end
 end)
 
@@ -568,17 +568,16 @@ if FLCRDebug then
 	addHook("HUD", function(v,p,c)
 		if p.spectator then return end
 		local x, y = 0, 24
-		v.drawString(x,y,"Current FLCR.PlayerData table (8 Entries):", V_SNAPTOLEFT|V_ALLOWLOWERCASE)
+		local flags = V_SNAPTOLEFT|V_ALLOWLOWERCASE
+		v.drawString(x,y,"Current FLCR.PlayerData table (Disp. 8 Entries):", flags, "small")
 		for i = 1, 8
 			local PD = FLCR.PlayerData[i]
-			local str
 			local name = PD.player and PD.player.name or "nil"
-			local flags = V_SNAPTOLEFT|V_ALLOWLOWERCASE
 			if (PD.player == p)
 				flags = $|V_YELLOWMAP
 			end
 			local equip = { PD.loadout[CRPT_GUN], PD.loadout[CRPT_BOMB], PD.loadout[CRPT_POD] }
-			str = name + ", " + equip[CRPT_GUN] + ", " + equip[CRPT_BOMB] + ", " + equip[CRPT_POD]
+			local str = name + ", " + equip[CRPT_GUN] + ", " + equip[CRPT_BOMB] + ", " + equip[CRPT_POD]
 			y = 32+(8*(i-1))
 			v.drawString(x,y,str,flags)
 		end

@@ -22,9 +22,9 @@ addHook("TeamSwitch", function(p, _, fromspectators)
 		end
 		-- We do string.format because some weapons with spaces in them
 		-- will pass as 2 args instead of one. And surround them in "quotes".
-		COM_BufInsertText(p, string.format('skirmish_equip gun "%s"', p.crmenu.gunselect))
-		COM_BufInsertText(p, string.format('skirmish_equip bomb "%s"', p.crmenu.bombselect))
-		COM_BufInsertText(p, string.format('skirmish_equip pod "%s"', p.crmenu.podselect))
+		COM_BufInsertText(p, string.format('skirmish_equip gun "%s"', p.crmenu.gunselect[1]))
+		COM_BufInsertText(p, string.format('skirmish_equip bomb "%s"', p.crmenu.bombselect[1]))
+		COM_BufInsertText(p, string.format('skirmish_equip pod "%s"', p.crmenu.podselect[1]))
 		return true
 	else
 		Lib.removePlayerFromSlot(#p+1)

@@ -22,7 +22,7 @@ local crmenus = {
 			{"Equipped Gun weapon:   ", CRPT_GUN },
 			{"Equipped Bomb weapon: ", CRPT_BOMB },
 			{"Equipped Pod weapon: ", CRPT_POD },
-			{"Confirm", 4}
+			{"Confirm", 5}
 		}
 	},
 	[CRPT_GUN] = {
@@ -45,20 +45,25 @@ local crmenus = {
 
 addHook("PlayerSpawn", function(p)
 	if not valid(p) then return end
-	p.crmenu = {
-		open = false, -- True/False
-		ref = nil, -- What menu are we in? See crmenus above
-		options = 0, -- Options in p.crmenu.ref
-		choice = 1, -- Choice
-		scroll = 1,
-		maxscroll = 4,
-		gunselect = 0,
-		bombselect = 0,
-		podselect = 0
-	}
-	if not G_IsFLCRGametype() then return end
+	if G_IsFLCRGametype() then 
+		p.crmenu = {
+			open = false, -- True/False
+			ref = 0, -- What menu are we in? See crmenus above
+			options = 0, -- Options in p.crmenu.ref
+			choice = 1, -- Choice
+			scroll = 1,
+			maxscroll = 4,
+			gunselect = 0,
+			bombselect = 0,
+			podselect = 0
+			--legselect = 0
+		}
+	else
+		p.crmenu = nil
+		return
+	end
 	--if p.spectator then
-		if (p == consoleplayer) then -- Populate locally
+		--if (p == consoleplayer) then -- Populate locally
 			for i = CRPT_GUN, CRPT_POD do
 				crmenus[i].options = {}
 				local t = Lib.getWeaponTable(i)
@@ -66,12 +71,12 @@ addHook("PlayerSpawn", function(p)
 					table.insert(crmenus[i].options, { t[j].name, j })
 				end
 			end
-		end
+		--end
 		-- Weapons are on a first name basis
 		local menu = p.crmenu
-		menu.gunselect = crmenus[CRPT_GUN].options[1][1]
-		menu.bombselect = crmenus[CRPT_BOMB].options[1][1]
-		menu.podselect = crmenus[CRPT_POD].options[1][1]
+		menu.gunselect = crmenus[CRPT_GUN].options[1]
+		menu.bombselect = crmenus[CRPT_BOMB].options[1]
+		menu.podselect = crmenus[CRPT_POD].options[1]
 	--end
 end)
 
@@ -101,9 +106,9 @@ Lib.drawCRMenu = function(v, p, c)
 				local width = v.stringWidth(str)
 				if i ~= menu.choice then width = $ + 8 end
 				local wsel
-				if i == 1 then wsel = menu.gunselect
-				elseif i == 2 then wsel = menu.bombselect
-				elseif i == 3 then wsel = menu.podselect end
+				if i == 1 then wsel = menu.gunselect[1]
+				elseif i == 2 then wsel = menu.bombselect[1]
+				elseif i == 3 then wsel = menu.podselect[1] end
 				if not wsel then continue end -- Validity check
 				v.drawString(10+width, y, wsel)
 			end
@@ -111,7 +116,7 @@ Lib.drawCRMenu = function(v, p, c)
 		end
 		-- ipairs method
 		/*for k, option in ipairs(crmenus[p.crmenu.ref].options) do
-			if (k < scroll) and (k > maxscroll) then continue end
+			--if (k < scroll) and (k > maxscroll) then continue end
 			local str
 			local flags = V_ALLOWLOWERCASE
 			if k == p.crmenu.choice then
@@ -128,10 +133,10 @@ Lib.drawCRMenu = function(v, p, c)
 				if k ~= p.crmenu.choice then width = $ + 8 end
 
 				local wsel
-				if k == 1 then wsel = p.crmenu.gunselect
-				elseif k == 2 then wsel = p.crmenu.bombselect
-				elseif k == 3 then wsel = p.crmenu.podselect
-				else return end
+				if k == 1 then wsel = p.crmenu.gunselect[1]
+				elseif k == 2 then wsel = p.crmenu.bombselect[1]
+				elseif k == 3 then wsel = p.crmenu.podselect[1]
+				else continue end
 				v.drawString(10+width, y, wsel)
 			end
 		end*/
@@ -142,14 +147,11 @@ addHook("HUD", function(v,p,c)
 	if not G_IsFLCRGametype() then return end
 	if not valid(p) then return end
 	-- Menu always closed when in-game
-	if not p.spectator -- Not a spectator?
-	or p.crplayerdata then -- Or in-game?
-		p.crmenu.open = false
-		return -- No menu drawing!
-	else
-		p.crmenu.open = true
-		Lib.drawCRMenu(v, p, c)
-	end	
+	if p.spectator -- If a spectator
+	and not p.crplayerdata -- Not in-game
+	and p.crmenu.open then -- And the menu is open?
+		Lib.drawCRMenu(v, p, c) -- Then draw it!
+	end
 end, "game")
 
 Lib.menuSelection = function(p, option)
@@ -160,22 +162,35 @@ Lib.menuSelection = function(p, option)
 
 	if menu.ref == 0 then -- Main Menu
 		menu.ref = option[2]
-		menu.choice = 1
+		menu.options = #crmenus[max(1, min(menu.ref, $-1))].options
 
-		if (menu.ref == 4) then -- Enter the game!
+		if (menu.ref == CRPT_GUN) then
+			menu.choice = menu.gunselect[2]
+			menu.scroll = max(1, min(menu.gunselect[2]-2, menu.options-menu.maxscroll))
+		elseif (menu.ref == CRPT_BOMB) then
+			menu.choice = menu.bombselect[2]
+			menu.scroll = max(1, min(menu.bombselect[2]-2, menu.options-menu.maxscroll))
+		elseif (menu.ref == CRPT_POD) then
+			menu.choice = menu.podselect[2]
+			menu.scroll = max(1, min(menu.podselect[2]-2, menu.options-menu.maxscroll))
+		/*elseif (menu.ref == CRPT_LEGS) then
+			menu.choice = menu.legselect[2]
+			menu.scroll = max(1, min(menu.legselect[2]-2, menu.options-menu.maxscroll))*/
+		elseif (menu.ref > #crmenus) then -- Enter the game!
 			p.playerstate = PST_REBORN -- stupid dumb hack
 			p.cmd.buttons = BT_ATTACK
 			menu.ref = 0 -- Reset the menu
+			menu.options = 0
 		end
 		return
-	elseif menu.ref == CRPT_GUN then -- Gun selection
-		menu.gunselect = option[1]
+	elseif (menu.ref == CRPT_GUN) then -- Gun selection
+		menu.gunselect = option
 		menu.choice = CRPT_GUN -- Memory
-	elseif menu.ref == CRPT_BOMB then  -- Bomb selection
-		menu.bombselect = option[1]
+	elseif (menu.ref == CRPT_BOMB) then  -- Bomb selection
+		menu.bombselect = option
 		menu.choice = CRPT_BOMB -- Memory
-	elseif menu.ref == CRPT_POD then -- Pod selection
-		menu.podselect = option[1]
+	elseif (menu.ref == CRPT_POD) then -- Pod selection
+		menu.podselect = option
 		menu.choice = CRPT_POD -- Memory
 	end
 	menu.scroll = 1
@@ -183,7 +198,16 @@ Lib.menuSelection = function(p, option)
 end
 
 addHook("PreThinkFrame", do
-	for p in players.iterate
+	for p in players.iterate do
+		if not p.crmenu then continue end
+		if G_IsFLCRGametype()
+		and p.spectator -- Player is a spectator
+		and not p.crplayerdata then -- Definitely not in-game already?
+			p.crmenu.open = true -- Open the menu
+		else
+			p.crmenu.open = false
+		end
+
 		local menu = p.crmenu
 		if menu.open then
 			local cmd = p.cmd
@@ -231,4 +255,24 @@ addHook("PreThinkFrame", do
 			cmd.buttons = $ & BT_ATTACK
 		end
 	end
+end)
+
+if FLCRDebug then
+addHook("HUD", function(v,p,c)
+	--if p.spectator then return end
+	local x, y = 0, 24
+	local flags = V_SNAPTOLEFT|V_ALLOWLOWERCASE
+	v.drawString(x,y,"p.crmenu debug table:", flags, "small")
+	for pl in players.iterate do
+		local menu = pl.crmenu
+		--y = 32+(8*(i-1))
+		--v.drawString(x,y,str,flags)
+		drawContentsRecursively(v, menu, {x=x, y=y+8})
+		x = $ + 110
+	end
+end,"game")
+end
+
+addHook("NetVars", function(n)
+	crmenus = n($)
 end)

@@ -245,7 +245,7 @@ rawset(_G, "deathThink1", function(p)
 		--end
 		
 		-- Flash the screen
-		/*for px in players.iterate do
+		for px in players.iterate do
 			if (px == p) then continue end -- Us? Skip.
 			if px.spectator then continue end -- Spectator? Skip
 			if not px.mo then continue end -- Mo doesn't exist? Skip
@@ -254,7 +254,7 @@ rawset(_G, "deathThink1", function(p)
 				P_FlashPal(px, 1, 3)
 			end
 		end
-		P_FlashPal(p, 1, 3)*/
+		P_FlashPal(p, 1, 3)
 	end
 end)
 

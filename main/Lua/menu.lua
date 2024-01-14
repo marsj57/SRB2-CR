@@ -22,7 +22,8 @@ local crmenus = {
 			{"Equipped Gun weapon:   ", CRPT_GUN },
 			{"Equipped Bomb weapon: ", CRPT_BOMB },
 			{"Equipped Pod weapon: ", CRPT_POD },
-			{"Confirm", 5}
+			--{"Equipped Leg parts: ", CRPT_LEG },
+			{"Confirm", 99}
 		}
 	},
 	[CRPT_GUN] = {
@@ -257,11 +258,12 @@ addHook("PreThinkFrame", do
 	end
 end)
 
-if FLCRDebug then
+/*if FLCRDebug then
 addHook("HUD", function(v,p,c)
 	--if p.spectator then return end
 	local x, y = 0, 24
-	local flags = V_SNAPTOLEFT|V_ALLOWLOWERCASE
+	local flags = V_ALLOWLOWERCASE
+	if not p.crmenu.open then return end
 	v.drawString(x,y,"p.crmenu debug table:", flags, "small")
 	for pl in players.iterate do
 		local menu = pl.crmenu
@@ -271,7 +273,25 @@ addHook("HUD", function(v,p,c)
 		x = $ + 110
 	end
 end,"game")
-end
+
+addHook("HUD", function(v,p,c)
+	if p.spectator then return end
+	local x, y = 0, 24
+	local flags = V_SNAPTOLEFT|V_ALLOWLOWERCASE
+	v.drawString(x,y,"Current FLCR.PlayerData table (Disp. 8 Entries):", flags, "small")
+	for i = 1, 8
+		local PD = FLCR.PlayerData[i]
+		local name = PD.player and PD.player.name or "nil"
+		if (PD.player == p)
+			flags = $|V_YELLOWMAP
+		end
+		local equip = { PD.loadout[CRPT_GUN], PD.loadout[CRPT_BOMB], PD.loadout[CRPT_POD] }
+		local str = name + ", " + equip[CRPT_GUN] + ", " + equip[CRPT_BOMB] + ", " + equip[CRPT_POD]
+		y = 32+(8*(i-1))
+		v.drawString(x,y,str,flags)
+	end
+end,"game")
+end*/
 
 addHook("NetVars", function(n)
 	crmenus = n($)

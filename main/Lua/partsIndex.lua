@@ -636,10 +636,10 @@ FLCR.AddWeapon({
 				local speed = FixedHypot(mo.momx, mo.momy)
 				P_InstaThrust(mo, mo.angle, speed)
 			elseif valid(mo.tracer)
-			and (mo.fuse >= TICRATE) then -- Don't home in forever
+			and (mo.fuse >= TICRATE+6) then -- Don't home in forever
 				local angle = R_PointToAngle2(mo.x, mo.y, mo.tracer.x, mo.tracer.y) or FixedHypot(mo.momx, mo.momy)
 				mo.angle = angle
-				Lib.homingAttack(mo, mo.tracer, 25*FRACUNIT)
+				Lib.homingAttack(mo, mo.tracer, 20*FRACUNIT)
 			end
 		end
 	end,

@@ -452,84 +452,45 @@ addHook("HUD", function(v,p,c)
 		local CRPD = FLCR.PlayerData[found.player.crplayerdata.id]
 		
 		local x,y,scale = R_ScreenTransform(found.x, found.y, found.z, v, p, c)
-		scale = max($, 2*FRACUNIT/3)
+		--scale = max($, FRACUNIT/2)
 		local flags = V_NOSCALESTART
 		-- Visual debug for values
-		--if FLCRDebug then
+		if FLCRDebug then
 			if (CRPD.player == consoleplayer) then
-				local str = x>>FRACBITS ..", ".. (x/scale) .. "\n"
-						.. y>>FRACBITS ..", ".. (y/scale) .. "\n"
-						.. scale>>FRACBITS ..", ".. (scale)
-				v.drawString(v.width()/2 - v.stringWidth(str)/2, 0, str, flags)
+				local str1 = x ..", ".. x>>FRACBITS
+				local str2 = y ..", ".. y>>FRACBITS
+				local str3 = scale>>FRACBITS ..", ".. (scale)
+				v.drawString(v.width()/2, 0, str1, flags, "center")
+				v.drawString(v.width()/2, 8*v.dupy(), str2, flags, "center")
+				v.drawString(v.width()/2, 16*v.dupy(), str3, flags, "center")
 			end
-		--end
+		end
 		
 		local color = v.getColormap(found.skin, found.color or SKINCOLOR_GREY)
+		
 		local dxint, dxfix = v.dupx()
+		local dyint, dyfix = v.dupy()
+		local xoffset = 25
 		if (string.lower(cv_crhudview.string) == "minimal") then
-			local px = x - 90*FRACUNIT
-			local py = y - 120*scale
-			
 			-- Player Number
-			v.drawString(px, py, "P" .. CRPD.id, flags, "fixed")
+			v.drawString(x, y, "P" .. CRPD.id, flags, "fixed")
 			-- Health Number
-			local phx = x + 85*FRACUNIT
-			v.drawNum(phx>>FRACBITS, py>>FRACBITS - 8, CRPD.health, flags)
+			--local phx = x + ((2*xoffset)*FRACUNIT)*dxint
+			v.drawNum(x>>FRACBITS, y>>FRACBITS - 3, CRPD.health, flags)
 			-- Health Bar
-			v.drawFill(px>>FRACBITS, py>>FRACBITS+33, CRPD.health*170/1000, 6, 15|flags)
-			v.drawFill(px>>FRACBITS, py>>FRACBITS+32, CRPD.health*170/1000, 4, 1|flags)
-			-- 'Downed meter' bits
+			--v.drawFill(px>>FRACBITS, py>>FRACBITS + 10*dyint, (CRPD.health*((xoffset*2)*dxint)/1000), 2*dyint, 15)
+			--v.drawFill(px>>FRACBITS, py>>FRACBITS + 10*dyint, (CRPD.health*((xoffset*2)*dxint)/1000), 1*dyint, 1)
+			/*-- 'Downed meter' bits
 			if (CRPD.curknockdown < 100) then
 				local dmbitp = v.cachePatch("CRHUDDM")
 				local pipCount = ease.linear((1+CRPD.curknockdown)*FRACUNIT/100,4*FRACUNIT,1*FRACUNIT)>>FRACBITS
 				for i = 1, pipCount do
-					local inc = ((i-1) * 3*(dmbitp.width+1))
+					local inc = ((i-1) * 3*(dmbitp.width+2))
 					v.drawScaled(phx - 10*(dmbitp.width)<<FRACBITS + (inc)<<FRACBITS,
-							py - 30<<FRACBITS, FRACUNIT, dmbitp, flags, v.getColormap(TC_DEFAULT,SKINCOLOR_WHITE)) -- BG Patch
-				end
-			end
-		elseif (string.lower(cv_crhudview.string) == "full") then
-			local bgpatch = v.cachePatch("CRHUDBG")
-			if v.renderer() == "software" then
-				flags = $|V_20TRANS
-			elseif v.renderer() == "opengl" then
-				flags = $|V_30TRANS
-			end
-			x = x - (42*(bgpatch.width*dxfix)/100)
-			v.drawScaled(x, y, FRACUNIT, bgpatch, flags, color) -- BG Patch
-			
-			flags = $ & ~(V_20TRANS|V_30TRANS)
-
-			-- Player Number
-			v.drawString(x + (13*(bgpatch.width*dxint)/100)<<FRACBITS,
-						y + (42*(bgpatch.height*dxint)/100)<<FRACBITS,
-						"P" .. CRPD.id,
-						flags, "fixed")
-			
-			-- Health NUMBER
-			v.drawNum((x>>FRACBITS + 96*(bgpatch.width*dxint)/100),
-						(y>>FRACBITS + 44*(bgpatch.height*dxint)/100), CRPD.health, flags)
-			-- Current knockdown ammount, DEBUG ONLY
-			if FLCRDebug then 
-				v.drawNum((x>>FRACBITS + 96*(bgpatch.width*dxint)/100),
-							(y>>FRACBITS - 24*(bgpatch.height*dxint)/100), CRPD.curknockdown, flags)
-			end
-			
-			-- Health Bar
-			-- For visual, ( 75*(bgpatch.width*dxint)/100 ) is 100% of the health bar
-			v.drawFill((x>>FRACBITS + 20*(bgpatch.width*dxint)/100), 
-						(y>>FRACBITS + 85*(bgpatch.height*dxint)/100), CRPD.health*(75*(bgpatch.width*dxint)/100)/1000, 6, 1|flags)
-			v.drawFill((x>>FRACBITS + 20*(bgpatch.width*dxint)/100), 
-						(y>>FRACBITS + 88*(bgpatch.height*dxint)/100), CRPD.health*(75*(bgpatch.width*dxint)/100)/1000, 4, 15|flags)	
-
-			-- 'Downed meter' bits
-			if (CRPD.curknockdown < 100) then
-				local dmbitp = v.cachePatch("CRHUDDM")
-				local pipCount = ease.linear((1+CRPD.curknockdown)*FRACUNIT/100,4*FRACUNIT,1*FRACUNIT)>>FRACBITS
-				for i = 1, pipCount do
-					local inc = (i-1) * (dmbitp.width)
-					v.drawScaled(x + ((67+inc)*(bgpatch.width*dxint)/100)<<FRACBITS,
-							y + ((8*(bgpatch.height*dxint)/100))<<FRACBITS, FRACUNIT, dmbitp, flags, v.getColormap(TC_DEFAULT,SKINCOLOR_WHITE)) -- BG Patch
+							py - 30<<FRACBITS,
+							FRACUNIT, 
+							dmbitp, 
+							flags, v.getColormap(TC_DEFAULT,SKINCOLOR_WHITE)) -- BG Patch
 				end
 			end
 			
@@ -541,10 +502,11 @@ addHook("HUD", function(v,p,c)
 			end
 			local statusstr, statusnum = Lib.getCRState(CRPD.player)
 			flags = $ | strcol[statusnum]
-			v.drawString(x + ((bgpatch.width*dxint)/2)<<FRACBITS,
-						y + 102*(bgpatch.height*dxint)/100<<FRACBITS,
+			v.drawString(px + 65<<FRACBITS,
+						py + 40<<FRACBITS,
 						statusstr,
-						flags, "fixed-center")
+						flags, "small-fixed-center")
+			*/
 		end
 	end,
 	avm, -- refmo
@@ -562,27 +524,6 @@ end,
 mo, -- refmo
 mo.x-range,mo.x+range,
 mo.y-range,mo.y+range)*/
-
--- Debug stuff
-if FLCRDebug then
-	addHook("HUD", function(v,p,c)
-		if p.spectator then return end
-		local x, y = 0, 24
-		local flags = V_SNAPTOLEFT|V_ALLOWLOWERCASE
-		v.drawString(x,y,"Current FLCR.PlayerData table (Disp. 8 Entries):", flags, "small")
-		for i = 1, 8
-			local PD = FLCR.PlayerData[i]
-			local name = PD.player and PD.player.name or "nil"
-			if (PD.player == p)
-				flags = $|V_YELLOWMAP
-			end
-			local equip = { PD.loadout[CRPT_GUN], PD.loadout[CRPT_BOMB], PD.loadout[CRPT_POD] }
-			local str = name + ", " + equip[CRPT_GUN] + ", " + equip[CRPT_BOMB] + ", " + equip[CRPT_POD]
-			y = 32+(8*(i-1))
-			v.drawString(x,y,str,flags)
-		end
-	end,"game")
-end
 
 addHook("NetVars", function(n)
 	FLCR.CameraBattleAngle = n($)

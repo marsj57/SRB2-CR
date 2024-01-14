@@ -114,7 +114,7 @@ Lib.SetTracer = function(mo, tracer)
 	return tracer
 end
 
--- SetTracer: Same as above, but sets a tracer instead
+-- homingAttack: P_HomingAttack re-written in Lua with modifications
 -- Flame
 --
 -- source (mobj_t)		- source mobj

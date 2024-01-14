@@ -451,8 +451,7 @@ addHook("HUD", function(v,p,c)
 		if not found.player.crplayerdata then return nil end
 		local CRPD = FLCR.PlayerData[found.player.crplayerdata.id]
 		
-		local x,y,scale = R_ScreenTransform(found.x, found.y, found.z, v, p, c)
-		--scale = max($, FRACUNIT/2)
+		local x,y,scale = R_ScreenTransform(found.x, found.y, found.z+2*mobjinfo[found.type].height, v, p, c)
 		local flags = V_NOSCALESTART
 		-- Visual debug for values
 		if FLCRDebug then

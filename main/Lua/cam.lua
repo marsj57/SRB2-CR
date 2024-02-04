@@ -438,6 +438,7 @@ addHook("HUD", function(v,p,c)
 end, "game")
 
 -- Player Number, Health Bar, Downed meter
+-- Custom robo specific stuff
 addHook("HUD", function(v,p,c)
 	if not G_IsFLCRGametype() then return end
 	if not valid(p) then return end
@@ -451,13 +452,14 @@ addHook("HUD", function(v,p,c)
 		if not found.player.crplayerdata then return nil end
 		local CRPD = FLCR.PlayerData[found.player.crplayerdata.id]
 		
-		local x,y,scale = R_ScreenTransform(found.x, found.y, found.z+2*mobjinfo[found.type].height, v, p, c)
+		local camdistheight = FixedHypot(FixedHypot(c.x - p.mo.x, c.y - p.mo.y), c.z - p.mo.z)/5
+		local x,y,scale = R_ScreenTransform(found.x, found.y, found.z + found.height/2 + camdistheight, v, p, c)
 		local flags = V_NOSCALESTART
 		-- Visual debug for values
 		if FLCRDebug then
 			if (CRPD.player == consoleplayer) then
-				local str1 = x ..", ".. x>>FRACBITS
-				local str2 = y ..", ".. y>>FRACBITS
+				local str1 = x>>FRACBITS ..", ".. x
+				local str2 = y>>FRACBITS ..", ".. y
 				local str3 = scale>>FRACBITS ..", ".. (scale)
 				v.drawString(v.width()/2, 0, str1, flags, "center")
 				v.drawString(v.width()/2, 8*v.dupy(), str2, flags, "center")
@@ -467,29 +469,25 @@ addHook("HUD", function(v,p,c)
 		
 		local color = v.getColormap(found.skin, found.color or SKINCOLOR_GREY)
 		
-		local dxint, dxfix = v.dupx()
-		local dyint, dyfix = v.dupy()
-		local xoffset = 25
-		if (string.lower(cv_crhudview.string) == "minimal") then
+		local dxint, dxfix = v.dupx() -- x scale
+		local dyint, dyfix = v.dupy() -- y scale
+		local xoffset = 50
+		--if (string.lower(cv_crhudview.string) == "minimal") then
+			x = $ - (xoffset*dxfix)/2 -- Offset the x
 			-- Player Number
 			v.drawString(x, y, "P" .. CRPD.id, flags, "fixed")
 			-- Health Number
-			--local phx = x + ((2*xoffset)*FRACUNIT)*dxint
-			v.drawNum(x>>FRACBITS, y>>FRACBITS - 3, CRPD.health, flags)
+			v.drawNum(x>>FRACBITS + xoffset*dxint, y>>FRACBITS - 3*dyint, CRPD.health, flags)
 			-- Health Bar
-			--v.drawFill(px>>FRACBITS, py>>FRACBITS + 10*dyint, (CRPD.health*((xoffset*2)*dxint)/1000), 2*dyint, 15)
-			--v.drawFill(px>>FRACBITS, py>>FRACBITS + 10*dyint, (CRPD.health*((xoffset*2)*dxint)/1000), 1*dyint, 1)
-			/*-- 'Downed meter' bits
+			v.drawFill(x>>FRACBITS, y>>FRACBITS + 10*dyint, (CRPD.health*(xoffset*dxint)/1000), 2*dyint, 15|flags)
+			v.drawFill(x>>FRACBITS, y>>FRACBITS + 10*dyint, (CRPD.health*(xoffset*dxint)/1000), 1*dyint, 1|flags)
+			-- 'Downed meter' bits
 			if (CRPD.curknockdown < 100) then
 				local dmbitp = v.cachePatch("CRHUDDM")
-				local pipCount = ease.linear((1+CRPD.curknockdown)*FRACUNIT/100,4*FRACUNIT,1*FRACUNIT)>>FRACBITS
+				local pipCount = ease.linear(min(100, CRPD.curknockdown)*FRACUNIT/100,4*FRACUNIT,1*FRACUNIT)>>FRACBITS
 				for i = 1, pipCount do
 					local inc = ((i-1) * 3*(dmbitp.width+2))
-					v.drawScaled(phx - 10*(dmbitp.width)<<FRACBITS + (inc)<<FRACBITS,
-							py - 30<<FRACBITS,
-							FRACUNIT, 
-							dmbitp, 
-							flags, v.getColormap(TC_DEFAULT,SKINCOLOR_WHITE)) -- BG Patch
+
 				end
 			end
 			
@@ -497,16 +495,20 @@ addHook("HUD", function(v,p,c)
 			if (CRPD.statetics > 2*TICRATE) then
 				local fade = min(10, (CRPD.statetics-(2*TICRATE))/2)
 				if (fade > 9) then return nil end -- Don't process anything else if visible for more than a second
-				flags = $ | (fade*V_10TRANS)
+				flags = $ | (fade*V_10TRANS) -- Some fancy fadeout
 			end
 			local statusstr, statusnum = Lib.getCRState(CRPD.player)
 			flags = $ | strcol[statusnum]
-			v.drawString(px + 65<<FRACBITS,
-						py + 40<<FRACBITS,
+			--local stateText = { "ACTION", "NORMAL", "HIT", "DOWN", "REBIRTH" }
+			--statusstr = stateText[v.RandomKey(4)+1]
+			--local statuswidth = v.stringWidth(statusstr, flags, "small")
+
+			-- (x>>FRACBITS + (xoffset*dxint)/3)
+			v.drawString(x>>FRACBITS + (xoffset*dxint)/3, -- TODO: FIX ALLIGNMENT?
+						y>>FRACBITS + 13*dyint,
 						statusstr,
-						flags, "small-fixed-center")
-			*/
-		end
+						flags, "small-center")
+		--end
 	end,
 	avm, -- refmo
 	avm.x-range,avm.x+range,

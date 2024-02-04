@@ -45,6 +45,10 @@ addHook("PlayerSpawn", function(p)
 	CRPD.state = CRPS_NORMAL
 	CRPD.curknockdown = 0
 	mo.scale = 4*FRACUNIT/3
+	p.normalspeed = 2*skins[mo.skin].normalspeed/3
+	p.runspeed = 2*skins[mo.skin].runspeed/3
+	p.maxdash = 2*skins[mo.skin].maxdash/3
+	p.actionspd = 2*skins[mo.skin].actionspd/3
 	p.powers[pw_shield] = 0
 end)
 

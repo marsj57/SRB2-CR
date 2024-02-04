@@ -73,7 +73,7 @@ COM_AddCommand("skirmish_equip", function(p, ...)
 	end
 end)
 
--- HUD Viewing options!
+/*-- HUD Viewing options!
 rawset(_G, "cv_crhudview", CV_RegisterVar({
 	name = "skirmish_hud",
 	defaultvalue = 1,
@@ -81,3 +81,4 @@ rawset(_G, "cv_crhudview", CV_RegisterVar({
 	PossibleValue = {Off = 0, Minimal = 1, Full = 2, HUD = 3},
 	func = 0,
 }))
+*/

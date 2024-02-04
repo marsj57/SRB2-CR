@@ -43,6 +43,20 @@ states[S_BUMBLEBORE_BULLET] = { SPR_BUMB, A|FF_FULLBRIGHT|FF_ANIMATE, -1, nil, 1
 SafeFreeslot("SPR_RKAW", "S_RKAW1")
 states[S_RKAW1] = {SPR_RKAW, A|FF_FULLBRIGHT|FF_PAPERSPRITE, 1, nil, 0, 0, S_NULL}
 
+-- New Thok
+SafeFreeslot("SPR_NTHK", "S_NTHK")
+states[S_NTHK] = {SPR_NTHK, B|FF_FULLBRIGHT, 3, function(mo)
+	if not valid(mo) then return end
+	mo.scale = 2*FRACUNIT
+	--if mo.floorspriteslope then return end
+	P_CreateFloorSpriteSlope(mo)
+	mo.flags2 = $|MF2_SPLAT
+	mo.renderflags = $|RF_FLOORSPRITE|RF_SLOPESPLAT|RF_NOSPLATBILLBOARD
+	mo.floorspriteslope.o = {x = mo.x, y = mo.y, z = mo.z}
+	mo.floorspriteslope.xydirection = mo.angle
+	mo.floorspriteslope.zangle = 0
+end, 0, 0, S_NULL}
+
 -- Various FX!
 -- "Real Explosion" - From Metal Slug
 SafeFreeslot("SPR_RXPL")

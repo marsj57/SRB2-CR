@@ -9,35 +9,12 @@
 
 local Lib = FLCRLib
 
--- From Rollout Knockout
-Lib.spawnArrow = function(mo, target)
-	-- Need both a source 'mo' and a target 'mo'
-	if not (valid(mo) and valid(target)) then return end
-	
-	local arw = P_SpawnMobj(mo.x, mo.y, mo.z + 3*mobjinfo[mo.type].height, MT_DUMMY)
-	local xyangle, zangle = Lib.getXYZangle(mo, target)
-	arw.state = S_RKAW1
-	arw.angle = xyangle
-	arw.target = mo
-	arw.color = target.color or SKINCOLOR_GREEN -- Opponent's color
-	-- Fancy maths. Ensure your papersprite angle points towards your opponent.
-	--local ft = FixedAngle((leveltime%45)*(8*FRACUNIT))
-	P_MoveOrigin(arw, mo.x,-- + FixedMul(cos(arw.angle), 3*mo.radius + FixedMul(sin(ft), 4*FRACUNIT)),
-						mo.y,-- + FixedMul(sin(arw.angle), 3*mo.radius + FixedMul(sin(ft), 4*FRACUNIT)),
-						mo.z + 3*mobjinfo[mo.type].height)
+addHook("MobjThinker",function(mo)
+	if not valid(mo) then return false end
+	mo.fuse = min($,TICRATE)
+	return false
+end, MT_FLINGRING)
 
-	-- Rollangle stuff, this is purely visual
-	-- Not needed as of SRB2 v2.2.11
-	/*local camangle = R_PointToAngle(arw.x, arw.y)
-	if ((camangle - arw.angle) < 0) then 
-		zangle = InvAngle($)
-	end*/
-
-	arw.rollangle = zangle
-	return arw
-end
-
-if FLCRDebug then
 Lib.getSectorBounds = function(sec)
 	if not valid(sec) then return end -- Sanity check
 	local numlines = #sec.lines
@@ -107,7 +84,6 @@ addHook("ThinkFrame", do
 		end
 	end
 end)
-end
 
 addHook("PlayerSpawn", function(p)
 	if not G_IsFLCRGametype() then return false end
@@ -120,18 +96,24 @@ addHook("PlayerSpawn", function(p)
 		o.state = S_THOK
 		o.angle = mo.angle
 		o.refmo = mo
-		o.skin = p.mo.skin
+		o.skin = mo.skin
 		o.tics = -1 -- Special S_THOK state thing. Don't make this disappear.
 		o.health = -1
 		mo.outline = o
 	end
+	
+	if not mo.followarrow then
+		mo.followarrow = {}
+		for i = 0, 1 do
+			local o = P_SpawnMobj(mo.x, mo.y, mo.z, MT_DUMMY)
+			o.state = S_NTHK
+			o.frame = $ + i
+			o.skin = mo.skin
+			o.health = -1
+			table.insert(mo.followarrow, o)
+		end
+	end
 end)
-
-addHook("MobjThinker",function(mo)
-	if not valid(mo) then return false end
-	mo.fuse = min($,TICRATE)
-	return false
-end, MT_FLINGRING)
 
 addHook("ThinkFrame", do
 	-- Target finder, and thinker.
@@ -159,7 +141,6 @@ addHook("ThinkFrame", do
 				mo.target = nil
 				p.aiming = 0
 			else
-				Lib.spawnArrow(mo, target)
 				if not p.climbing
 				--and not (p.pflags & PF_SPINNING)
 				and not (p.pflags & PF_STARTDASH)
@@ -168,6 +149,39 @@ addHook("ThinkFrame", do
 					if (CRPD.state == CRPS_NORMAL) then p.drawangle = mo.angle end
 					p.aiming = R_PointToAngle2(0, 0, dist, zdiff)
 				end
+			end
+		end
+		
+		-- Arrow thinker
+		for i = 1, #mo.followarrow do
+			if not valid(mo.followarrow[i]) then continue end
+			local o = mo.followarrow[i]
+			o.tics = 3
+			o.color = mo.color
+			local bga = R_PointToAngle(mo.x, mo.y) -- Background angle
+			if (i == #mo.followarrow) then
+				P_MoveOrigin(o, mo.x + FixedMul(cos(mo.angle), 30*o.scale),
+								mo.y + FixedMul(sin(mo.angle), 30*o.scale),
+								mo.z)
+			else
+				P_MoveOrigin(o, mo.x + FixedMul(cos(bga), FRACUNIT),
+								mo.y + FixedMul(sin(bga), FRACUNIT),
+								mo.z)
+			end
+			if o.floorspriteslope then
+				local slope = o.floorspriteslope
+				o.angle = mo.angle
+				slope.o = {x = o.x, y = o.y, z = o.z}
+				slope.xydirection = o.angle
+				if (i == #mo.followarrow) then
+					slope.zangle = p.aiming
+				end
+			end
+
+			if valid(mo.target) then
+				o.flags2 = $ & ~MF2_DONTDRAW
+			else
+				o.flags2 = $ | MF2_DONTDRAW
 			end
 		end
 	end
@@ -209,19 +223,27 @@ addHook("ThinkFrame", do
 	end
 end)
 
--- Thinker for the outline mobj when the host (refmobj) dies
+/*-- Thinker for the outline mobj when the host (refmobj) dies
 addHook("MobjThinker", function(mo)
 	if (not valid(mo.refmo) and mo.skin)
 	or (valid(mo.refmo) and valid(mo.refmo.player) and (mo.refmo.player.playerstate == PST_DEAD)) then
 		P_RemoveMobj(mo) -- You should remove yourself, NOW!
 	end
-end, MT_DUMMY)
+end, MT_DUMMY)*/
 
 -- From Rollout Knockout
 rawset(_G, "deathThink1", function(p)
 	if not valid(p) then return end
 	local mo = p.mo or p.realmo
 	if not valid(mo) then return end
+
+	if valid(mo.outline) then P_RemoveMobj(mo.outline) end
+	if mo.followarrow then
+		for i = 1, #mo.followarrow do
+			if not valid(mo.followarrow[i]) then continue end
+			P_RemoveMobj(mo.followarrow[i])
+		end
+	end
 
 	if (mo.fuse > 1) 
 	and not (leveltime%7) then -- Buildup to explosion.
@@ -245,16 +267,17 @@ rawset(_G, "deathThink1", function(p)
 		--end
 		
 		-- Flash the screen
-		for px in players.iterate do
+		/*for px in players.iterate do
 			if (px == p) then continue end -- Us? Skip.
 			if px.spectator then continue end -- Spectator? Skip
 			if not px.mo then continue end -- Mo doesn't exist? Skip
+			-- mo sometimes doesn't exist here. TODO: Figure out which mo
 			local idist = FixedHypot(FixedHypot(px.mo.x - p.mo.x, px.mo.y - p.mo.y), px.mo.z - p.mo.z)
 			if (idist < 512*FRACUNIT) then 
 				P_FlashPal(px, 1, 3)
 			end
 		end
-		P_FlashPal(p, 1, 3)
+		P_FlashPal(p, 1, 3)*/
 	end
 end)
 

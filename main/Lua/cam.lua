@@ -26,6 +26,14 @@ local function CRHudToggle()
 	if G_IsFLCRGametype() then
 		hud.disable("rings")
 		hud.disable("lives")
+		hud.disable("score")
+		/*hudinfo[HUD_RINGS].y = 26 --hudinfo[HUD_TIME].y
+		hudinfo[HUD_TIME].y = 10 --hudinfo[HUD_SCORE].y
+		hudinfo[HUD_MINUTES].y = 10
+		hudinfo[HUD_TIMECOLON].y = 10
+		hudinfo[HUD_SECONDS].y = 10
+		hudinfo[HUD_TIMETICCOLON].y = 10
+		hudinfo[HUD_TICS].y = 10*/
 		hud.disable("weaponrings")
 		hud.disable("nightslink")
 		hud.disable("nightsdrill")
@@ -38,6 +46,7 @@ local function CRHudToggle()
 	else
 		hud.enable("rings")
 		hud.enable("lives")
+		hud.enable("score")
 		hud.enable("weaponrings")
 		hud.enable("nightslink")
 		hud.enable("nightsdrill")
@@ -443,8 +452,18 @@ addHook("HUD", function(v,p,c)
 	if not G_IsFLCRGametype() then return end
 	if not valid(p) then return end
 	if not valid(p.awayviewmobj) or p.spectator then return end
+
+	if not (cv_crhudview.value) then -- HUD is set to "OFF"
+		return -- Don't process anything else.
+	elseif (string.lower(cv_crhudview.string) == "hud") -- HUD is set to "HUD"
+		local patch = v.cachePatch("CRHUDHPG")
+		local ref = { hudinfo[HUD_RINGS], hudinfo[HUD_RINGSNUM] }
+		v.draw(ref[1].x, ref[1].y, patch, ref[1].f)
+		v.drawNum(ref[2].x, ref[2].y, p.crplayerdata.health, ref[2].f)
+		return -- Don't process anything else
+	end
+
 	local avm = p.awayviewmobj
-	
 	local range = 8*RING_DIST
 	searchBlockmap("objects", function(refmo, found)
 		if not found.player then return nil end
@@ -456,7 +475,7 @@ addHook("HUD", function(v,p,c)
 		local x,y,scale = R_ScreenTransform(found.x, found.y, found.z + found.height/2 + camdistheight, v, p, c)
 		local flags = V_NOSCALESTART
 		-- Visual debug for values
-		if FLCRDebug then
+		/*if FLCRDebug then
 			if (CRPD.player == consoleplayer) then
 				local str1 = x>>FRACBITS ..", ".. x
 				local str2 = y>>FRACBITS ..", ".. y
@@ -465,14 +484,14 @@ addHook("HUD", function(v,p,c)
 				v.drawString(v.width()/2, 8*v.dupy(), str2, flags, "center")
 				v.drawString(v.width()/2, 16*v.dupy(), str3, flags, "center")
 			end
-		end
+		end*/
 		
 		local color = v.getColormap(found.skin, found.color or SKINCOLOR_GREY)
 		
 		local dxint, dxfix = v.dupx() -- x scale
 		local dyint, dyfix = v.dupy() -- y scale
 		local xoffset = 50
-		--if (string.lower(cv_crhudview.string) == "minimal") then
+		if (string.lower(cv_crhudview.string) == "minimal") then
 			x = $ - (xoffset*dxfix)/2 -- Offset the x
 			-- Player Number
 			v.drawString(x, y, "P" .. CRPD.id, flags, "fixed")
@@ -484,13 +503,16 @@ addHook("HUD", function(v,p,c)
 			-- 'Downed meter' bits
 			if (CRPD.curknockdown < 100) then
 				local dmbitp = v.cachePatch("CRHUDDM")
-				local pipCount = ease.linear(min(100, CRPD.curknockdown)*FRACUNIT/100,4*FRACUNIT,1*FRACUNIT)>>FRACBITS
+				local pipCount = ease.linear(min(100, CRPD.curknockdown+1)*FRACUNIT/100,4*FRACUNIT,1*FRACUNIT)>>FRACBITS
 				for i = 1, pipCount do
-					local inc = ((i-1) * 3*(dmbitp.width+2))
-
+					--local inc = ((i-1) * 3*(dmbitp.width+2))
+					v.draw(x>>FRACBITS + (xoffset - (dmbitp.width+2)*i)*dxint,
+							y>>FRACBITS - 10*dyint,
+							dmbitp,
+							flags,
+							v.getColormap(TC_DEFAULT, SKINCOLOR_WHITE))
 				end
 			end
-			
 			-- "Status" text to show what state the player is in
 			if (CRPD.statetics > 2*TICRATE) then
 				local fade = min(10, (CRPD.statetics-(2*TICRATE))/2)
@@ -508,7 +530,7 @@ addHook("HUD", function(v,p,c)
 						y>>FRACBITS + 13*dyint,
 						statusstr,
 						flags, "small-center")
-		--end
+		end
 	end,
 	avm, -- refmo
 	avm.x-range,avm.x+range,

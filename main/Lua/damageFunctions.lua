@@ -75,9 +75,6 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 		fx.scale = 2*FRACUNIT
 		-- FX Rollangle stuff. This is purely visual
 		local camangle = R_PointToAngle(inflictor.x, inflictor.y)
-		if ((camangle - inflictor.angle) < 0) then 
-			zangle = InvAngle($)
-		end
 		fx.rollangle = zangle
 
 		-- Get thrust angle... and thrust!

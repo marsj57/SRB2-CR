@@ -50,6 +50,12 @@ addHook("PlayerSpawn", function(p)
 	p.maxdash = 2*skins[mo.skin].maxdash/3
 	p.actionspd = 2*skins[mo.skin].actionspd/3
 	p.powers[pw_shield] = 0
+
+	local fx = P_SpawnMobjFromMobj(mo, 0,0,mo.height/2, MT_DUMMY)
+	fx.color = mo.color
+	fx.colorized = true
+	fx.state = S_FX_WIND
+	fx.frame = $ & ~FF_PAPERSPRITE
 end)
 
 addHook("PreThinkFrame", do 
@@ -166,7 +172,13 @@ addHook("ThinkFrame", do
 		and (CRPD.curknockdown > 0) then 
 			CRPD.curknockdown = max(0, $ - 10)
 		end
-
+		
+		-- Ability thinkers
+		local ability = FLCR.PlayerAbilities[mo.skin]
+		if ability.func then
+			ability.func(p)
+		end
+		
 		-- Weapon firing.
 		-- Continued weapon fire
 		if CRPD.firetype and (CRPD.firetics > 0) then
@@ -188,3 +200,218 @@ end)
 addHook("NetVars", function(net)
 	FLCR.PlayerData = net($)
 end)
+
+-- Player Abilities
+-- TODO: SEPARATE THIS INTO LEG PARTS EVENTUALLY
+FLCR.PlayerAbilities = {}
+
+Lib.doPlayerAbilities = function(player)
+	if not valid(player) then return false end
+	if not player.crplayerdata then return false end
+	local CRPD = FLCR.PlayerData[player.crplayerdata.id]
+	if not valid(CRPD.player) then return false end
+	local p = CRPD.player -- Simplify player
+	if not valid(p.mo) then return false end
+	local mo = p.mo -- Simplify mobj
+	local ability = FLCR.PlayerAbilities[mo.skin] -- Simplify
+	
+	if (p.pflags & PF_JUMPED)
+	and not (p.pflags & PF_THOKKED)
+	and ability.jfunc then
+		ability.jfunc(p)
+		p.pflags = $ | PF_THOKKED
+		return true -- Custom Behavior
+	else
+		return false -- Normal behavior
+	end
+end
+
+FLCR.PlayerAbilities["sonic"] = {
+	jfunc = function(p)
+		local mo = p.mo
+
+		local thokspeed = FixedHypot(mo.momx, mo.momy) > 20*mo.scale and FixedHypot(mo.momx, mo.momy) or 20*mo.scale
+		P_InstaThrust(mo, p.mo.angle, thokspeed)
+		P_SetObjectMomZ(mo, FRACUNIT*8)
+
+		local t = P_SpawnMobjFromMobj(mo, 0, 0, 0, MT_DUMMY)
+		t.color = mo.color
+		t.colorized = true
+		t.state = S_FX_WIND
+		t.frame = $ & ~FF_PAPERSPRITE
+		S_StartSound(mo, sfx_thok)
+	end,
+	func = function(p)
+		local mo = p.mo
+
+		if (p.pflags & PF_THOKKED) then
+			if (P_MobjFlip(mo)*mo.momz > 0) then
+				if (leveltime%2) then
+					local g = P_SpawnGhostMobj(mo)
+					g.tics = 4
+					g.colorized = true
+				end
+			else
+				mo.state = S_PLAY_FALL
+				p.pflags = $ & ~(PF_JUMPED|PF_THOKKED)
+			end
+		end
+	end,
+}
+
+FLCR.PlayerAbilities["tails"] = {
+	jfunc = function(p)
+		local mo = p.mo
+
+		p.fly1 = 15 -- this is used to speed up the tails
+		p.powers[pw_tailsfly] = TICRATE -- Tails flying animation
+		p.pflags = $ & ~PF_JUMPED
+		mo.momx, mo.momy = $/2, $/2
+		mo.state = S_PLAY_FLY
+		P_SetObjectMomZ(mo, FRACUNIT*8)
+		S_StartSound(mo, sfx_zoom)
+	end,
+	func = function(p)
+		local mo = p.mo
+		if (p.pflags & PF_THOKKED) then
+			p.pflags = $|PF_CANCARRY
+
+			-- the ability: going up
+			if (P_MobjFlip(mo)*mo.momz > 0) then
+				-- reduce speed to 95%
+				mo.momx, mo.momy = $*95/100, $*95/100
+
+				-- spawn based advanced ghosts
+				if (leveltime%2) then
+					local g = P_SpawnGhostMobj(mo)
+					g.tics = 4
+					g.colorized = true
+				end
+			else
+				if (p.cmd.buttons & BT_JUMP) -- slowfall
+					P_SetObjectMomZ(mo, gravity/8, true)
+				else -- fall
+					mo.state = S_PLAY_FALL
+					p.pflags = $ & ~(PF_CANCARRY|PF_JUMPED|PF_THOKKED)
+				end
+			end
+		end
+	end,
+}
+
+FLCR.PlayerAbilities["metalsonic"] = {
+	func = function(p)
+		if p.dashmode and (p.dashmode > TICRATE*3)
+			p.normalspeed = min($, skins[p.skin].normalspeed)
+		end
+	end,
+}
+
+FLCR.PlayerAbilities["amy"] = {
+	jfunc = function(p)
+		local mo = p.mo
+		
+		mo.state = S_PLAY_ROLL
+		for i = 1, 8 do
+			local fa = i*ANGLE_45
+			local h = P_SpawnMobj(mo.x, mo.y, mo.z, MT_LHRT)
+			h.angle = fa
+			h.target = mo
+			h.flags = $ | MF_SCENERY|MF_NOCLIP|MF_NOCLIPTHING & ~MF_MISSILE
+			h.fuse = TICRATE/2
+			P_Thrust(h, h.angle, 6*FRACUNIT)
+			P_SetObjectMomZ(h, FRACUNIT*8)
+		end
+		P_SetObjectMomZ(mo, FRACUNIT*12)
+	end,
+	func = function(p)
+		local mo = p.mo
+	end,
+}
+
+SafeFreeslot("sfx_shadsr", "sfx_shadsl")
+FLCR.PlayerAbilities["shadow"] = {
+	jfunc = function(p)
+		local mo = p.mo
+
+		p.pflags = $ & ~PF_JUMPED
+		mo.sh_snaptime = 6
+		mo.momz, mo.state, mo.flags = 0, S_PLAY_FALL, $|MF_NOGRAVITY
+
+		-- N, NE, E, SE, S, SW, W, NW
+		local angles = {}
+		for i = 1, 8
+			angles[i] = mo.angle-(ANGLE_45*(i-1))
+		end
+
+		local angle = 1 -- default to forward with no input
+		if (p.cmd.sidemove)
+			if (p.cmd.sidemove < 0) -- left
+				if (p.cmd.forwardmove) -- diagonal
+					angle = (p.cmd.forwardmove) > 0 and 8 or 6
+				else
+					angle = 7
+				end
+			else -- right
+				if (p.cmd.forwardmove) -- diagonal
+					angle = (p.cmd.forwardmove) > 0 and 2 or 4
+				else
+					angle = 3
+				end
+			end
+		else -- forward/back
+			if (p.cmd.forwardmove)
+				angle = (p.cmd.forwardmove) > 0 and 1 or 5
+			end
+		end
+
+		p.drawangle = angles[angle]
+		P_InstaThrust(mo, angles[angle], 50*mo.scale)
+
+		mo.state = S_PLAY_FALL
+
+		local s = P_SpawnMobj(mo.x, mo.y, mo.z, MT_DUMMY)
+		s.skin = mo.skin
+		s.sprite = mo.sprite
+		s.angle = p.drawangle
+		s.frame = mo.frame & FF_FRAMEMASK | FF_TRANS60
+		s.fuse = TICRATE/7
+		s.scale = mo.scale
+		s.destscale = mo.scale*6
+		s.scalespeed = mo.scale/2
+		s.sprite2 = mo.sprite2
+		s.color = SKINCOLOR_CYAN
+		s.colorized = true
+		s.tics = -1
+
+
+		S_StartSound(mo, sfx_csnap)
+
+		mo.state = S_SHADOW_WARP1
+	end,
+	func = function(p)
+		local mo = p.mo
+
+		if (p.pflags & PF_THOKKED) then
+			if (mo.sh_snaptime)
+				mo.sh_snaptime = $-1
+				mo.flags2 = $|MF2_DONTDRAW
+				if P_IsObjectOnGround(mo)
+					mo.flags, mo.flags2 = $ & ~MF_NOGRAVITY, $ & ~MF2_DONTDRAW
+					p.pflags = $ & ~PF_THOKKED
+				end
+			else
+				mo.momx, mo.momy = $/2, $/2
+				mo.flags, mo.flags2 = $ & ~MF_NOGRAVITY, $ & ~MF2_DONTDRAW
+				p.pflags = $ & ~PF_THOKKED
+
+				/*local s = P_SpawnMobj(mo.x, mo.y, mo.z+FRACUNIT*24, MT_DUMMY)
+				s.state = S_CHAOSCONTROL1
+				s.destscale = 3*FRACUNIT*/
+				mo.state = S_SHADOW_WARP2
+			end
+		end
+	end,
+}
+
+addHook("AbilitySpecial", Lib.doPlayerAbilities)

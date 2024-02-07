@@ -91,7 +91,7 @@ addHook("PlayerSpawn", function(p)
 	if not valid(p.mo) then return false end
 	local mo = p.mo
 	
-	if not mo.outline then
+	/*if not mo.outline then
 		local o = P_SpawnMobj(mo.x, mo.y, mo.z, MT_DUMMY)
 		o.state = S_THOK
 		o.angle = mo.angle
@@ -100,7 +100,7 @@ addHook("PlayerSpawn", function(p)
 		o.tics = -1 -- Special S_THOK state thing. Don't make this disappear.
 		o.health = -1
 		mo.outline = o
-	end
+	end*/
 	
 	if not mo.followarrow then
 		mo.followarrow = {}
@@ -186,7 +186,7 @@ addHook("ThinkFrame", do
 		end
 	end
 
-	-- Outline thinker. Referenced by p.mo.outline.
+	/*-- Outline thinker. Referenced by p.mo.outline.
 	for p in players.iterate
 		if not valid(p.mo) or p.spectator then continue end
 		local mo = p.mo
@@ -220,7 +220,7 @@ addHook("ThinkFrame", do
 		P_MoveOrigin(o, target.x + FixedMul(cos(bga), FRACUNIT), 
 							target.y + FixedMul(sin(bga), FRACUNIT), 
 							target.z - FixedMul(o.scale, 4*FRACUNIT))
-	end
+	end*/
 end)
 
 /*-- Thinker for the outline mobj when the host (refmobj) dies
@@ -237,7 +237,7 @@ rawset(_G, "deathThink1", function(p)
 	local mo = p.mo or p.realmo
 	if not valid(mo) then return end
 
-	if valid(mo.outline) then P_RemoveMobj(mo.outline) end
+	--if valid(mo.outline) then P_RemoveMobj(mo.outline) end
 	if mo.followarrow then
 		for i = 1, #mo.followarrow do
 			if not valid(mo.followarrow[i]) then continue end

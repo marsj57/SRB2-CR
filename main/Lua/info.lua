@@ -9,7 +9,7 @@
 
 SafeFreeslot("MT_DUMMY", "MT_DUMMYMISSILE", "MT_DUMMYFX")
 
-for i = 1, #players do
+/*for i = 1, #players do
 	skincolors[freeslot("SKINCOLOR_P" + i + "_OUTLINE")] = {
 		name = "Custom Robo P" + i + " Outline",
 		ramp = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -18,7 +18,7 @@ for i = 1, #players do
 		chatcolor = V_INVERTMAP,
 		accessible = false
 	}
-end
+end*/
 
 local dummy_t = {
 	doomednum = -1,

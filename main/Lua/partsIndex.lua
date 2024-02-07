@@ -19,7 +19,7 @@ end)
 
 
 -- Guns
-FLCR.AddWeapon({
+FLCR.AddCRPart({
 	name = "basic",
 	desc = "A training gun that fires 3 rounds straight ahead. It's for absolute beginners. The rounds are weaker at greater distances.",
 	mt = MT_DUMMYMISSILE,
@@ -107,7 +107,7 @@ FLCR.AddWeapon({
 	down = 6,
 })
 
-FLCR.AddWeapon({
+FLCR.AddCRPart({
 	name = "3way", 
 	desc = "Fires 3 straight rounds in 3 rows. The farther you are from the enemy, the better its homing.",
 	mt = MT_DUMMYMISSILE,
@@ -214,7 +214,7 @@ FLCR.AddWeapon({
 	down = 6,
 })
 
-FLCR.AddWeapon({
+FLCR.AddCRPart({
 	name = "gatling", 
 	desc = "Fires multiple small rounds straight ahead. Stay close to the enemy for better shots.",
 	mt = MT_DUMMYMISSILE,
@@ -302,7 +302,7 @@ FLCR.AddWeapon({
 	down = 6,
 })
 
-FLCR.AddWeapon({
+FLCR.AddCRPart({
 	name = "vertical", 
 	desc = "Fires 2 rounds. One ascends diagonally, clearing walls. Use this as you hide behind walls.",
 	mt = MT_DUMMYMISSILE,
@@ -411,7 +411,7 @@ FLCR.AddWeapon({
 	down = 7,
 })
 
-FLCR.AddWeapon({
+FLCR.AddCRPart({
 	name = "sniper",
 	desc = "Fires one quick, straight round. While the round flies fast, it leaves you in danger for a time.",
 	mt = MT_DUMMYMISSILE,
@@ -498,7 +498,7 @@ FLCR.AddWeapon({
 	down = 7,
 })
 
-FLCR.AddWeapon({
+FLCR.AddCRPart({
 	name = "stun", 
 	desc = "Fire continuous short-ranged electric shots that paralyze foes. Use at close range.",
 	mt = MT_DUMMYMISSILE,
@@ -566,7 +566,7 @@ FLCR.AddWeapon({
 	down = 7,
 })
 
-FLCR.AddWeapon({
+FLCR.AddCRPart({
 	name = "ion", 
 	desc = "Fires two rounds that turn mid-flight.",
 	-- Instant down if hit. Between 35-40 dmg
@@ -579,7 +579,7 @@ FLCR.AddWeapon({
 	down = 2,
 })
 
-FLCR.AddWeapon({
+FLCR.AddCRPart({
 	name = "hornet", 
 	desc = "Spreads five bee-shaped rounds that chase its target.",
 	mt = MT_DUMMYMISSILE,
@@ -650,7 +650,7 @@ FLCR.AddWeapon({
 	down = 6,
 })
 
-FLCR.AddWeapon({
+FLCR.AddCRPart({
 	name = "flame", 
 	desc = "Fires flame-shaped rounds straight ahead. Its power increases with distance.",
 	mt = MT_DUMMYMISSILE,
@@ -741,7 +741,7 @@ FLCR.AddWeapon({
 	down = 7,
 })
 
-FLCR.AddWeapon({
+FLCR.AddCRPart({
 	name = "dragon", 
 	desc = "Fires one dragon-shaped round that zeroes in on foes. Stay on your guard after firing.",
 	spawnsound = sfx_drag01,
@@ -828,7 +828,7 @@ FLCR.AddWeapon({
 	down = 8,
 })
 
-FLCR.AddWeapon({
+FLCR.AddCRPart({
 	name = "splash", 
 	desc = "Fires 3 large yet weak rounds straight ahead. Briefly immobolizes foes.",
 	spawnsound = sfx_splasf,
@@ -907,7 +907,7 @@ FLCR.AddWeapon({
 })
 
 -- Bombs
-FLCR.AddWeapon({
+FLCR.AddCRPart({
 	name = "standard", 
 	desc = "Flies in an arc toward target. It's large blast radius makes aiming and multiple blows a snap.",
 	spawnsound = sfx_s3k81,
@@ -919,7 +919,7 @@ FLCR.AddWeapon({
 	down = 6,
 })
 
-FLCR.AddWeapon({
+FLCR.AddCRPart({
 	name = "standard f", 
 	desc = "Flies in an arc toward target. Knocks target sideways on impact, flushing out hidden foes.",
 	spawnsound = sfx_s3k81,
@@ -932,7 +932,7 @@ FLCR.AddWeapon({
 	down = 6,
 })
 
-FLCR.AddWeapon({
+FLCR.AddCRPart({
 	name = "standard s", 
 	desc = "Flies in an arc toward target. Immobilizes target upon impact for a short time.",
 	spawnsound = sfx_s3k81,
@@ -945,7 +945,7 @@ FLCR.AddWeapon({
 	down = 3,
 })
 
-FLCR.AddWeapon({
+FLCR.AddCRPart({
 	name = "standard k", 
 	desc = "Flies in an arc toward target. Knocks target down on impact.",
 	spawnsound = sfx_s3k81,
@@ -958,7 +958,7 @@ FLCR.AddWeapon({
 	down = 10,
 })
 
-FLCR.AddWeapon({
+FLCR.AddCRPart({
 	name = "standard x", 
 	desc = "Flies in an arc toward target. Explosion sends target high into the air.",
 	spawnsound = sfx_s3k81,
@@ -977,13 +977,13 @@ local crbombnames = {
 	"titan"
 }
 for _, bn in ipairs(crbombnames)
-	FLCR.AddWeapon({ name = bn,
+	FLCR.AddCRPart({ name = bn,
 						parttype = CRPT_BOMB 
 						})
 end
 
 -- Pods
-FLCR.AddWeapon({
+FLCR.AddCRPart({
 	name = "standard", 
 	desc = "Flies straight ahead. Blows target diagonally upward.",
 	spawnsound = sfx_s3k82,
@@ -1007,7 +1007,7 @@ local crpodnames = {
 	"titan"
 }
 for _, pn in ipairs(crpodnames)
-	FLCR.AddWeapon({ name = pn, 
+	FLCR.AddCRPart({ name = pn, 
 						parttype = CRPT_POD 
 						})
 end

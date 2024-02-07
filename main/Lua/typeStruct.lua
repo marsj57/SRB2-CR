@@ -87,7 +87,7 @@ rawset(_G, "strcol", { -- String Color
 	V_ROSYMAP, -- CRPS_REBIRTH
 })
 
-FLCR.AddWeapon = function(t)
+FLCR.AddCRPart = function(t)
 	t = $ or {}
 	assert(t.name, "Weapon name not provided!")
 	assert(t.parttype, "Weapon Part Type not provided!")
@@ -142,7 +142,7 @@ local defaultWeaponStruct = {
 }
 --registerMetatable(defaultWeaponStruct)
 
-local function ResetCRWeapons()
+local function ResetCRParts()
 	FLCR.Weapons = setmetatable({}, {
 		__newindex = function(t,k,v)
 			for Dk,Dv in pairs(defaultWeaponStruct) do -- iterate thru fallback table
@@ -155,7 +155,7 @@ local function ResetCRWeapons()
 	})
 	dofile("partsIndex.lua")
 end
-ResetCRWeapons()
+ResetCRParts()
 
 local defaultPlayerStruct = {
 	__index = {

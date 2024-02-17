@@ -333,11 +333,18 @@ addHook("PostThinkFrame", do
 						y = 0,
 						z = 0
 					}
-	for _,v in ipairs(totalPlayers)
+	local minz,maxz = 0,0
+	for k,v in spairs(totalPlayers, function(t,a,b) return t[b].z > t[a].z end)
 		if valid(v) then
 			center.x = $+(v.x/#totalPlayers) -- Our center x
 			center.y = $+(v.y/#totalPlayers) -- Our center y
-			center.z = $+(v.z/#totalPlayers)+(FixedMul(v.scale, (mobjinfo[v.type].height * P_MobjFlip(v)))/#totalPlayers) -- Our center z
+			
+			-- Instead of grabbing the "Average" Lets grab the player
+			-- With the highest z coord, and lowest z coord, and average that
+			if k == 1 then maxz = v.z + FixedMul(v.scale, (v.height/2 * P_MobjFlip(v))) end
+			if k == #totalPlayers then minz = v.z + FixedMul(v.scale, (v.height/2 * P_MobjFlip(v))) end
+			center.z = (maxz+minz)/2
+			--center.z = $+(v.z/#totalPlayers)+(FixedMul(v.scale, (mobjinfo[v.type].height * P_MobjFlip(v)))/#totalPlayers) -- Our center z
 		end
 	end
 	
@@ -376,19 +383,6 @@ addHook("PostThinkFrame", do
 				y = center.y - FixedMul(sin(FLCR.CameraBattleAngle), furthest.d[2]) - FixedMul(sin(FLCR.CameraBattleAngle), cv.dist),
 				z = center.z + cv.height --+ furthest.d[2]/3
 			}
-
-	/*if (#totalPlayers > 1) and (players[0].cmd.buttons & BT_CUSTOM1) then 
-		print(string.format("FurthestZ Name: %3s | FurthestZ Dist: %3s", furthest.d[1].player.name or "nil", furthest.d[2]>>FRACBITS))
-	end
-	
-	local debug = { 
-				center = P_SpawnMobj(center.x, center.y, center.z, MT_THOK),
-				centeroffs = P_SpawnMobj(new.x, new.y, new.z, MT_THOK)
-				}
-	debug.center.color = SKINCOLOR_RED
-	debug.center.tics = 1
-	debug.centeroffs.color = SKINCOLOR_BLUE
-	debug.centeroffs.destscale = FRACUNIT/16*/
 
 	-- And move!
 	local factor = 10
@@ -486,7 +480,7 @@ addHook("HUD", function(v,p,c)
 			end
 		end*/
 		
-		local color = v.getColormap(found.skin, found.color or SKINCOLOR_GREY)
+		--local color = v.getColormap(found.skin, found.color or SKINCOLOR_GREY)
 		
 		local dxint, dxfix = v.dupx() -- x scale
 		local dyint, dyfix = v.dupy() -- y scale
@@ -498,8 +492,18 @@ addHook("HUD", function(v,p,c)
 			-- Health Number
 			v.drawNum(x>>FRACBITS + xoffset*dxint, y>>FRACBITS - 3*dyint, CRPD.health, flags)
 			-- Health Bar
+			v.drawFill(x>>FRACBITS, y>>FRACBITS + 10*dyint, (xoffset*dxint), 2*dyint, 31|flags)
 			v.drawFill(x>>FRACBITS, y>>FRACBITS + 10*dyint, (CRPD.health*(xoffset*dxint)/1000), 2*dyint, 15|flags)
 			v.drawFill(x>>FRACBITS, y>>FRACBITS + 10*dyint, (CRPD.health*(xoffset*dxint)/1000), 1*dyint, 1|flags)
+			-- Experimental "colored" Health bar
+			/*local color = {
+						skincolors[found.color].ramp[1],
+						skincolors[found.color].ramp[7],
+						skincolors[found.color].ramp[15]
+						}
+			v.drawFill(x>>FRACBITS, y>>FRACBITS + 10*dyint, (xoffset*dxint), 2*dyint, color[3]|flags)
+			v.drawFill(x>>FRACBITS, y>>FRACBITS + 10*dyint, (CRPD.health*(xoffset*dxint)/1000), 2*dyint, color[2]|flags)
+			v.drawFill(x>>FRACBITS, y>>FRACBITS + 10*dyint, (CRPD.health*(xoffset*dxint)/1000), 1*dyint, color[1]|flags)*/
 			-- 'Downed meter' bits
 			if (CRPD.curknockdown < 100) then
 				local dmbitp = v.cachePatch("CRHUDDM")

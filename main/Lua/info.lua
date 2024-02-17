@@ -57,6 +57,10 @@ states[S_NTHK] = {SPR_NTHK, B|FF_FULLBRIGHT, 3, function(mo)
 	mo.floorspriteslope.zangle = 0
 end, 0, 0, S_NULL}
 
+-- Custom Amy Heart
+SafeFreeslot("S_LHRTC")
+states[S_LHRTC] = {SPR_LHRT, A|FF_FULLBRIGHT, TICRATE/2, nil, 0, 0, S_SPRK1}
+
 -- Various FX!
 -- "Real Explosion" - From Metal Slug
 SafeFreeslot("SPR_RXPL")

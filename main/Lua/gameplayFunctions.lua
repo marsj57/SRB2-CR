@@ -175,7 +175,8 @@ addHook("ThinkFrame", do
 		
 		-- Ability thinkers
 		local ability = FLCR.PlayerAbilities[mo.skin]
-		if ability.func then
+		if ability
+		and ability.func then
 			ability.func(p)
 		end
 		
@@ -217,6 +218,7 @@ Lib.doPlayerAbilities = function(player)
 	
 	if (p.pflags & PF_JUMPED)
 	and not (p.pflags & PF_THOKKED)
+	and ability
 	and ability.jfunc then
 		ability.jfunc(p)
 		p.pflags = $ | PF_THOKKED
@@ -282,7 +284,8 @@ FLCR.PlayerAbilities["tails"] = {
 				mo.momx, mo.momy = $*95/100, $*95/100
 
 				-- spawn based advanced ghosts
-				if (leveltime%2) then
+				if (leveltime%2)
+				and (P_MobjFlip(mo)*mo.momz > 5*FRACUNIT) then
 					local g = P_SpawnGhostMobj(mo)
 					g.tics = 4
 					g.colorized = true
@@ -314,18 +317,39 @@ FLCR.PlayerAbilities["amy"] = {
 		mo.state = S_PLAY_ROLL
 		for i = 1, 8 do
 			local fa = i*ANGLE_45
-			local h = P_SpawnMobj(mo.x, mo.y, mo.z, MT_LHRT)
+			local h = P_SpawnMobjFromMobj(mo,0,0,0,MT_LHRT)
+			h.state = S_LHRTC
 			h.angle = fa
 			h.target = mo
-			h.flags = $ | MF_SCENERY|MF_NOCLIP|MF_NOCLIPTHING & ~MF_MISSILE
-			h.fuse = TICRATE/2
+			h.flags = $ | MF_SCENERY|MF_NOCLIP|MF_NOCLIPTHING|MF_NOCLIPHEIGHT & ~MF_MISSILE
+			h.fuse = TICRATE*2 -- Dissapate after 2 seconds
 			P_Thrust(h, h.angle, 6*FRACUNIT)
-			P_SetObjectMomZ(h, FRACUNIT*8)
+			P_SetObjectMomZ(h, FRACUNIT*6)
 		end
 		P_SetObjectMomZ(mo, FRACUNIT*12)
 	end,
 	func = function(p)
 		local mo = p.mo
+		if (p.pflags & PF_THOKKED) then
+			if (P_MobjFlip(mo)*mo.momz > 0) then
+				-- Heart riser!
+				-- Follow Advanced style spawning but spawn hearts instead
+				if (leveltime%2)
+				and (P_MobjFlip(mo)*mo.momz > 5*FRACUNIT) then
+					local h = P_SpawnMobjFromMobj(mo,0,0,0,MT_LHRT)
+					h.state = S_LHRTC
+					h.scale = FRACUNIT
+					h.destscale = 1
+					h.scalespeed = FRACUNIT/TICRATE
+					h.target = mo
+					h.fuse = TICRATE*2 -- Dissapate after 2 seconds
+					h.flags = $ | MF_SCENERY|MF_NOGRAVITY|MF_NOCLIP|MF_NOCLIPTHING|MF_NOCLIPHEIGHT & ~MF_MISSILE
+				end
+			else
+				mo.state = S_PLAY_FALL
+				p.pflags = $ & ~(PF_JUMPED|PF_THOKKED)
+			end
+		end
 	end,
 }
 

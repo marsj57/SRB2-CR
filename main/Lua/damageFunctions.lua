@@ -62,7 +62,7 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 		if (CRPD.health <= 0) then -- Health below 0? Process default behavior
 			p.rings = 0
 			p.powers[pw_shield] = 0
-			return false
+			return nil
 		end
 
 		Lib.doRingBurst(p, damage/10) -- Visual effect to shoy "You got hit!" (1/10th of damage received) 
@@ -113,7 +113,7 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 		if (CRPD.health <= 0) then -- Health below 0? Process default behavior
 			p.rings = 0
 			p.powers[pw_shield] = 0
-			return false
+			return nil
 		end
 		CRPD.statetics = TICRATE
 		CRPD.state = CRPS_DOWN

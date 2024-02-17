@@ -9,7 +9,7 @@
 
 rawset(_G, "FLCR", {}) -- Flame's Custom Robo
 rawset(_G, "FLCRLib", {}) -- Flame's Custom Robo Library
-rawset(_G, "FLCRDebug", 1)
+rawset(_G, "FLCRDebug", 0)
 FLCR.PlayerData = {} -- Player Data table
 FLCR.Weapons = {} -- Weapons Table
 FLCR.CameraBattleAngle = 0
@@ -104,6 +104,7 @@ rawset(_G, "atan", function(x)
 end*/
 
 if FLCRDebug then
+-- Amperbee
 local dict = {
 	["nil"] = "nil",
 	["boolean"] = "bool",

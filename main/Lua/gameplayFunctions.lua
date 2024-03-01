@@ -250,12 +250,12 @@ FLCR.PlayerAbilities["sonic"] = {
 			if (P_MobjFlip(mo)*mo.momz > 0) then
 				if (leveltime%2) then
 					local g = P_SpawnGhostMobj(mo)
-					g.tics = 4
+					g.tics = 6
 					g.colorized = true
 				end
 			else
 				mo.state = S_PLAY_FALL
-				p.pflags = $ & ~(PF_JUMPED|PF_THOKKED)
+				p.pflags = $ & ~(PF_JUMPED|PF_THOKKED|PF_SPINNING)
 			end
 		end
 	end,
@@ -295,7 +295,7 @@ FLCR.PlayerAbilities["tails"] = {
 					P_SetObjectMomZ(mo, gravity/8, true)
 				else -- fall
 					mo.state = S_PLAY_FALL
-					p.pflags = $ & ~(PF_CANCARRY|PF_JUMPED|PF_THOKKED)
+					p.pflags = $ & ~(PF_CANCARRY|PF_JUMPED|PF_THOKKED|PF_SPINNING)
 				end
 			end
 		end
@@ -326,12 +326,14 @@ FLCR.PlayerAbilities["amy"] = {
 			P_Thrust(h, h.angle, 6*FRACUNIT)
 			P_SetObjectMomZ(h, FRACUNIT*6)
 		end
+		mo.momx, mo.momy = $/2, $/2
 		P_SetObjectMomZ(mo, FRACUNIT*12)
 	end,
 	func = function(p)
 		local mo = p.mo
 		if (p.pflags & PF_THOKKED) then
 			if (P_MobjFlip(mo)*mo.momz > 0) then
+				mo.momx, mo.momy = $*95/100, $*95/100
 				-- Heart riser!
 				-- Follow Advanced style spawning but spawn hearts instead
 				if (leveltime%2)
@@ -347,7 +349,7 @@ FLCR.PlayerAbilities["amy"] = {
 				end
 			else
 				mo.state = S_PLAY_FALL
-				p.pflags = $ & ~(PF_JUMPED|PF_THOKKED)
+				p.pflags = $ & ~(PF_JUMPED|PF_THOKKED|PF_SPINNING)
 			end
 		end
 	end,
@@ -365,7 +367,7 @@ FLCR.PlayerAbilities["shadow"] = {
 		-- N, NE, E, SE, S, SW, W, NW
 		local angles = {}
 		for i = 1, 8
-			angles[i] = mo.angle-(ANGLE_45*(i-1))
+			angles[i] = FLCR.CameraBattleAngle-(ANGLE_45*(i-1))
 		end
 
 		local angle = 1 -- default to forward with no input
@@ -407,7 +409,6 @@ FLCR.PlayerAbilities["shadow"] = {
 		s.color = SKINCOLOR_CYAN
 		s.colorized = true
 		s.tics = -1
-
 
 		S_StartSound(mo, sfx_csnap)
 

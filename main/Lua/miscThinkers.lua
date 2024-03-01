@@ -26,22 +26,29 @@ Lib.getSectorBounds = function(sec)
 	
 	local boundary = {}
 	-- Get our leftmost and rightmost x
-	for k,v in spairs(vtx, function(t,a,b) return t[b].x > t[a].x end) do
+	/*for k,v in spairs(vtx, function(t,a,b) return t[b].x > t[a].x end) do
 		if k == 1 then -- Leftmost
 			boundary.left = v.x/FRACUNIT
 		elseif k == #vtx then -- Rightmost
 			boundary.right = v.x/FRACUNIT
 		end
-	end
-
+	end*/
+	table.sort(vtx, function(a,b) do b.x > a.x end)
+	boundary.left = vtx[1]
+	boundary.right = vtx[#vtx]
+	
 	-- Get our topmost and bottommost y
-	for k,v in spairs(vtx, function(t,a,b) return t[b].y > t[a].y end) do
+	/*for k,v in spairs(vtx, function(t,a,b) return t[b].y > t[a].y end) do
 		if k == 1 then -- Topmost
 			boundary.top = v.y/FRACUNIT
 		elseif k == #vtx then -- Bottommost
 			boundary.bottom = v.y/FRACUNIT
 		end
-	end
+	end*/
+	table.sort(vtx, function(a,b) do b.y > a.y end)
+	boundary.top = vtx[1]
+	boundary.bottom = vtx[#vtx]
+	
 	return boundary.top,
 			boundary.bottom,
 			boundary.left, 

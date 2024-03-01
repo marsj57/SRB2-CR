@@ -27,13 +27,14 @@ local function CRHudToggle()
 		hud.disable("rings")
 		hud.disable("lives")
 		hud.disable("score")
-		/*hudinfo[HUD_RINGS].y = 26 --hudinfo[HUD_TIME].y
+		hudinfo[HUD_RINGS].y = 26 --hudinfo[HUD_TIME].y
+		hudinfo[HUD_RINGSNUM].y = 26 -- --hudinfo[HUD_TIME].y
 		hudinfo[HUD_TIME].y = 10 --hudinfo[HUD_SCORE].y
 		hudinfo[HUD_MINUTES].y = 10
 		hudinfo[HUD_TIMECOLON].y = 10
 		hudinfo[HUD_SECONDS].y = 10
 		hudinfo[HUD_TIMETICCOLON].y = 10
-		hudinfo[HUD_TICS].y = 10*/
+		hudinfo[HUD_TICS].y = 10
 		hud.disable("weaponrings")
 		hud.disable("nightslink")
 		hud.disable("nightsdrill")
@@ -47,6 +48,14 @@ local function CRHudToggle()
 		hud.enable("rings")
 		hud.enable("lives")
 		hud.enable("score")
+		hudinfo[HUD_RINGS].y = 42
+		hudinfo[HUD_RINGSNUM] = 42
+		hudinfo[HUD_TIME].y = 26
+		hudinfo[HUD_MINUTES].y = 26
+		hudinfo[HUD_TIMECOLON].y = 26
+		hudinfo[HUD_SECONDS].y = 26
+		hudinfo[HUD_TIMETICCOLON].y = 26
+		hudinfo[HUD_TICS].y = 26
 		hud.enable("weaponrings")
 		hud.enable("nightslink")
 		hud.enable("nightsdrill")
@@ -487,8 +496,9 @@ addHook("HUD", function(v,p,c)
 		local xoffset = 50
 		if (string.lower(cv_crhudview.string) == "minimal") then
 			x = $ - (xoffset*dxfix)/2 -- Offset the x
+			local npre = string.sub(CRPD.player.name, 1, 1) or "P" -- Get first character of player name
 			-- Player Number
-			v.drawString(x, y, "P" .. CRPD.id, flags, "fixed")
+			v.drawString(x, y, npre .. CRPD.id, flags, "fixed")
 			-- Health Number
 			v.drawNum(x>>FRACBITS + xoffset*dxint, y>>FRACBITS - 3*dyint, CRPD.health, flags)
 			-- Health Bar

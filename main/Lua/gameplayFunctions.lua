@@ -18,7 +18,7 @@ addHook("TeamSwitch", function(p, _, fromspectators)
 		if not p.crmenu.gunselect 
 		or not p.crmenu.bombselect 
 		or not p.crmenu.podselect then 
-			return -- Not initialized
+			return false -- Not initialized. Something has gone wrong
 		end
 		-- We do string.format because some weapons with spaces in them
 		-- will pass as 2 args instead of one. And surround them in "quotes".
@@ -51,6 +51,9 @@ addHook("PlayerSpawn", function(p)
 	p.actionspd = 2*skins[mo.skin].actionspd/3
 	p.powers[pw_shield] = 0
 
+	-- Menu specific stuff
+	p.powers[pw_nocontrol] = 1 -- Hack to prevent player from jumping on spawn (See Menu code)
+
 	local fx = P_SpawnMobjFromMobj(mo, 0,0,mo.height/2, MT_DUMMY)
 	fx.color = mo.color
 	fx.colorized = true
@@ -66,7 +69,7 @@ addHook("PreThinkFrame", do
 		if not valid(CRPD.player) then continue end
 		local p = CRPD.player
 
-		p.weapondelay = 1 -- Do not fire weapon rings ever
+		p.weapondelay = 1 -- Do not fire weapon rings. EVER!
 		
 		-- Firing tics
 		if (CRPD.firetics > 0) then

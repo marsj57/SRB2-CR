@@ -23,32 +23,19 @@ Lib.getSectorBounds = function(sec)
 		table.insert(vtx, { x = sec.lines[i].v1.x, y = sec.lines[i].v1.y }) -- Put these values in a table.
 		--print("Vertex #"..(i+1).." indexed! (X: ".. vtx[i+1].x/FRACUNIT ..", Y: ".. vtx[i+1].y/FRACUNIT ..")")
 	end
-	
+
 	local boundary = {}
+
 	-- Get our leftmost and rightmost x
-	/*for k,v in spairs(vtx, function(t,a,b) return t[b].x > t[a].x end) do
-		if k == 1 then -- Leftmost
-			boundary.left = v.x/FRACUNIT
-		elseif k == #vtx then -- Rightmost
-			boundary.right = v.x/FRACUNIT
-		end
-	end*/
-	table.sort(vtx, function(a,b) do b.x > a.x end)
-	boundary.left = vtx[1]
-	boundary.right = vtx[#vtx]
-	
+	table.sort(vtx, function(a,b) return b.x > a.x end)
+	boundary.left = vtx[1].x
+	boundary.right = vtx[#vtx].x
+
 	-- Get our topmost and bottommost y
-	/*for k,v in spairs(vtx, function(t,a,b) return t[b].y > t[a].y end) do
-		if k == 1 then -- Topmost
-			boundary.top = v.y/FRACUNIT
-		elseif k == #vtx then -- Bottommost
-			boundary.bottom = v.y/FRACUNIT
-		end
-	end*/
-	table.sort(vtx, function(a,b) do b.y > a.y end)
-	boundary.top = vtx[1]
-	boundary.bottom = vtx[#vtx]
-	
+	table.sort(vtx, function(a,b) return b.y > a.y end)
+	boundary.top = vtx[1].y
+	boundary.bottom = vtx[#vtx].y
+
 	return boundary.top,
 			boundary.bottom,
 			boundary.left, 
@@ -63,30 +50,26 @@ addHook("ThinkFrame", do
 		-- If sector special is a elemental damaging floor, spawn some FX!
 		local IsSectorElectric = (GetSecSpecial(sec.special, 1) == 4) and true or false
 		local IsSectorFire = (GetSecSpecial(sec.special, 1) == 3) and true or false
+		
+		local top, bottom, left, right = Lib.getSectorBounds(sec)
+		local xrand, yrand
+		xrand = P_RandomRange(left>>FRACBITS, right>>FRACBITS)<<FRACBITS
+		yrand = P_RandomRange(top>>FRACBITS, bottom>>FRACBITS)<<FRACBITS
+
+		-- Valid sector
+		if (R_PointInSubsector(xrand, yrand).sector ~= sec) then continue end
+
+		-- Spawn the FX!
+		local fx = P_SpawnMobj(xrand, yrand, sec.floorheight + 1, MT_DUMMYFX)
+
+		-- FX state dependent on sector type
 		if IsSectorElectric then
-			local top, bottom, left, right = Lib.getSectorBounds(sec)
-			
-			-- Spawn the FX!
-			local xrand, yrand
-			xrand = P_RandomRange(left, right)<<FRACBITS
-			yrand = P_RandomRange(top, bottom)<<FRACBITS
-			if (R_PointInSubsector(xrand, yrand).sector ~= sec) then continue end
-			
-			local fx = P_SpawnMobj(xrand, yrand, sec.floorheight + 1, MT_DUMMYFX)
 			if P_RandomChance(FRACUNIT/16) then
 				fx.state = S_FX_ELECUP1
 			else
 				fx.state = S_FX_ELECUP2
 			end
 		elseif IsSectorFire then
-			local top, bottom, left, right = Lib.getSectorBounds(sec)
-			-- Spawn the FX!
-			local xrand, yrand
-			xrand = P_RandomRange(left, right)<<FRACBITS
-			yrand = P_RandomRange(top, bottom)<<FRACBITS
-			if (R_PointInSubsector(xrand, yrand).sector ~= sec) then continue end
-			
-			local fx = P_SpawnMobj(xrand, yrand, sec.floorheight + 1, MT_DUMMYFX)
 			fx.state = S_FX_FIREUP1		
 		end
 	end
@@ -229,6 +212,24 @@ addHook("ThinkFrame", do
 							target.z - FixedMul(o.scale, 4*FRACUNIT))
 	end*/
 end)
+
+-- Sector bounds debugger
+/*addHook("PreThinkFrame", do
+	for p in players.iterate
+		local mo = p.mo or p.realmo
+		if not valid(mo) then continue end
+		if (p.cmd.buttons & BT_CUSTOM1)
+			local top, bottom, left, right = Lib.getSectorBounds(mo.subsector.sector)
+			
+			-- Spawn the FX!
+			local xrand, yrand
+			xrand = P_RandomRange(left>>FRACBITS, right>>FRACBITS)<<FRACBITS
+			yrand = P_RandomRange(top>>FRACBITS, bottom>>FRACBITS)<<FRACBITS
+			local fx = P_SpawnMobj(xrand, yrand, mo.floorz, MT_SPARK)
+			P_SetObjectMomZ(fx, 5*FRACUNIT, false)
+		end
+	end
+end)*/
 
 /*-- Thinker for the outline mobj when the host (refmobj) dies
 addHook("MobjThinker", function(mo)

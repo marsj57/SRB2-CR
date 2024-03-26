@@ -130,7 +130,8 @@ local defaultWeaponStruct = {
 	spawnfunc = nil, -- Function for when the bullet spawns
 	thinkfunc = nil, -- Does this bullet have a special thinker (Eg. Homing) while in flight?
 	knockfunc = nil, -- Does this bullet have custom knockback?
-	
+	--unlocked = false, -- Is this weapon unlocked? Can it be selected?
+
 	-- Hud Display stuff
 	attack = 0,
 	speed = 0,

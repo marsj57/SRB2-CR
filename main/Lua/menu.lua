@@ -26,59 +26,61 @@ local crmenus = {
 			{"Confirm", 99}
 		}
 	},
-	[CRPT_GUN] = {
+	[CRPT_GUN] = { -- 1
 		name = "Equippable guns",
 		options = {}
 	},
-	[CRPT_BOMB] = {
+	[CRPT_BOMB] = { -- 2
 		name = "Equippable Bombs",
 		options = {}
 	},
-	[CRPT_POD] = {
+	[CRPT_POD] = { -- 3
 		name = "Equippable Pods",
 		options = {}
 	}
-	/*[CRPT_LEG] = {
+	/*[CRPT_LEG] = { -- 4
 		name = "Equippable Legs",
 		options = {}
 	}*/
 }
 
+Lib.resetWeaponMenu = function()
+	for i = CRPT_GUN, CRPT_POD do
+		crmenus[i].options = {}
+		local t = Lib.getWeaponTable(i)
+		for j = 1, #t
+			table.insert(crmenus[i].options, { t[j].name, j })
+		end
+	end
+end
+Lib.resetWeaponMenu()
+
 addHook("PlayerSpawn", function(p)
 	if not valid(p) then return end
-	if G_IsFLCRGametype() then 
-		p.crmenu = {
-			open = false, -- True/False
-			ref = 0, -- What menu are we in? See crmenus above
-			options = 0, -- Options in p.crmenu.ref
-			choice = 1, -- Choice
-			scroll = 1,
-			maxscroll = 4,
-			gunselect = 0,
-			bombselect = 0,
-			podselect = 0
-			--legselect = 0
-		}
+	if G_IsFLCRGametype() then
+		if not p.crmenu then -- Not intialized?
+			p.crmenu = {
+				open = false, -- True/False
+				ref = 0, -- What menu are we in? See crmenus above
+				options = 0, -- Count for menu of options in p.crmenu.ref
+				choice = 1, -- Choice
+				scroll = 1,
+				maxscroll = 4,
+				gunselect = 0,
+				bombselect = 0,
+				podselect = 0
+				--legselect = 0
+			}
+
+			local menu = p.crmenu
+			menu.gunselect = crmenus[CRPT_GUN].options[1]
+			menu.bombselect = crmenus[CRPT_BOMB].options[1]
+			menu.podselect = crmenus[CRPT_POD].options[1]
+		end
 	else
 		p.crmenu = nil
 		return
 	end
-	--if p.spectator then
-		--if (p == consoleplayer) then -- Populate locally
-			for i = CRPT_GUN, CRPT_POD do
-				crmenus[i].options = {}
-				local t = Lib.getWeaponTable(i)
-				for j = 1, #t
-					table.insert(crmenus[i].options, { t[j].name, j })
-				end
-			end
-		--end
-		-- Weapons are on a first name basis
-		local menu = p.crmenu
-		menu.gunselect = crmenus[CRPT_GUN].options[1]
-		menu.bombselect = crmenus[CRPT_BOMB].options[1]
-		menu.podselect = crmenus[CRPT_POD].options[1]
-	--end
 end)
 
 Lib.drawCRMenu = function(v, p, c)
@@ -115,32 +117,6 @@ Lib.drawCRMenu = function(v, p, c)
 			end
 			y = $ + 10
 		end
-		-- ipairs method
-		/*for k, option in ipairs(crmenus[p.crmenu.ref].options) do
-			--if (k < scroll) and (k > maxscroll) then continue end
-			local str
-			local flags = V_ALLOWLOWERCASE
-			if k == p.crmenu.choice then
-				str = ">" .. option[1]
-				flags = $|V_YELLOWMAP
-			else
-				str = option[1]
-			end
-			y = $ + 10
-			v.drawString(10, y, str, flags)
-			if (p.crmenu.ref == 0) -- Main menu
-			and (k < #crmenus[p.crmenu.ref].options) then
-				local width = v.stringWidth(str)
-				if k ~= p.crmenu.choice then width = $ + 8 end
-
-				local wsel
-				if k == 1 then wsel = p.crmenu.gunselect[1]
-				elseif k == 2 then wsel = p.crmenu.bombselect[1]
-				elseif k == 3 then wsel = p.crmenu.podselect[1]
-				else continue end
-				v.drawString(10+width, y, wsel)
-			end
-		end*/
 	end
 end
 
@@ -160,11 +136,11 @@ Lib.menuSelection = function(p, option)
 	if (type(p.crmenu.ref) ~= "number") then return end -- Not a valid menu
 
 	local menu = p.crmenu
+	local sound = sfx_menu1 -- Default sound
 
 	if menu.ref == 0 then -- Main Menu
 		menu.ref = option[2]
 		menu.options = #crmenus[max(1, min(menu.ref, $-1))].options
-
 		if (menu.ref == CRPT_GUN) then
 			menu.choice = menu.gunselect[2]
 			menu.scroll = max(1, min(menu.gunselect[2]-2, menu.options-menu.maxscroll))
@@ -179,10 +155,12 @@ Lib.menuSelection = function(p, option)
 			menu.scroll = max(1, min(menu.legselect[2]-2, menu.options-menu.maxscroll))*/
 		elseif (menu.ref > #crmenus) then -- Enter the game!
 			p.playerstate = PST_REBORN -- stupid dumb hack
-			p.cmd.buttons = BT_ATTACK
+			p.cmd.buttons = BT_ATTACK -- Spawn with simulated button
 			menu.ref = 0 -- Reset the menu
 			menu.options = 0
+			sound = sfx_s3k63 -- Confirm!
 		end
+		S_StartSound(nil, sound, p)
 		return
 	elseif (menu.ref == CRPT_GUN) then -- Gun selection
 		menu.gunselect = option
@@ -194,6 +172,7 @@ Lib.menuSelection = function(p, option)
 		menu.podselect = option
 		menu.choice = CRPT_POD -- Memory
 	end
+	S_StartSound(nil, sound, p)
 	menu.scroll = 1
 	menu.ref = 0 -- Return to main menu
 end
@@ -211,6 +190,7 @@ addHook("PreThinkFrame", do
 
 		local menu = p.crmenu
 		if menu.open then
+			local sound = sfx_menu1 -- Default sound
 			local cmd = p.cmd
 			if not cmd.forwardmove then p.forwardheld = false end
 			-- Why does PF_JUMPDOWN and PF_SPINDOWN not work here???
@@ -223,6 +203,7 @@ addHook("PreThinkFrame", do
 			if (cmd.forwardmove > 0) -- Up
 			and not p.forwardheld then
 				menu.choice = $ - 1
+				S_StartSound(nil, sound, p)
 				if (menu.choice <= menu.scroll) then menu.scroll = menu.choice end
 				if (menu.choice <= 0) then 
 					menu.choice = menu.options
@@ -232,6 +213,7 @@ addHook("PreThinkFrame", do
 			elseif (cmd.forwardmove < 0) -- Down
 			and not p.forwardheld then
 				menu.choice = $ + 1
+				S_StartSound(nil, sound, p)
 				if (menu.choice > menu.scroll+menu.maxscroll) then menu.scroll = menu.choice - menu.maxscroll end
 				if (menu.choice > menu.options) then 
 					menu.choice = 1
@@ -239,10 +221,14 @@ addHook("PreThinkFrame", do
 				end
 				p.forwardheld = true
 			end
+			
+			-- Below are a bunch of hacks to prevent movement as a spectator.
+			-- And allow jump/spin to be used as menu confirm/back buttons.
 			cmd.forwardmove = 0
 			cmd.sidemove = 0
 			p.aiming = 0
-			cmd.buttons = $ & ~BT_ATTACK
+			--cmd.angleturn = p.realmo.angle>>16 -- See PlayerCmd hook below
+			cmd.buttons = $ & ~BT_ATTACK -- Prevent player from spawning with the 'Fire' button
 			if (cmd.buttons & BT_JUMP)
 			and not p.jumpheld then -- Confirm
 				Lib.menuSelection(p, crmenus[menu.ref].options[menu.choice])
@@ -253,10 +239,24 @@ addHook("PreThinkFrame", do
 				menu.ref = 0
 				p.spinheld = true
 			end
+			-- Prevent the player from rising as spectator
+			-- Also prevent Lib.menuSelection repeat trigger
 			cmd.buttons = $ & BT_ATTACK
 		end
 	end
 end)
+
+-- Don't allow turning left/right while in menu
+addHook("PlayerCmd", function(p, cmd)
+	local mo = p.mo or p.realmo
+	if not valid(mo) then return end
+	if G_IsFLCRGametype()
+	and p.crmenu
+	and p.crmenu.open then
+		cmd.angleturn = mo.angle>>16
+	end
+end)
+
 
 /*if FLCRDebug then
 addHook("HUD", function(v,p,c)

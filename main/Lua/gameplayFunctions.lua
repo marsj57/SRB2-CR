@@ -22,9 +22,9 @@ addHook("TeamSwitch", function(p, _, fromspectators)
 		end
 		-- We do string.format because some weapons with spaces in them
 		-- will pass as 2 args instead of one. And surround them in "quotes".
-		COM_BufInsertText(p, string.format('skirmish_equip gun "%s"', p.crmenu.gunselect[1]))
-		COM_BufInsertText(p, string.format('skirmish_equip bomb "%s"', p.crmenu.bombselect[1]))
-		COM_BufInsertText(p, string.format('skirmish_equip pod "%s"', p.crmenu.podselect[1]))
+		COM_BufInsertText(p, string.format('skirmish_equip gun "%s"', p.crmenu.gunselect[2]))
+		COM_BufInsertText(p, string.format('skirmish_equip bomb "%s"', p.crmenu.bombselect[2]))
+		COM_BufInsertText(p, string.format('skirmish_equip pod "%s"', p.crmenu.podselect[2]))
 		return true
 	else
 		Lib.removePlayerFromSlot(#p+1)
@@ -61,7 +61,7 @@ addHook("PlayerSpawn", function(p)
 	fx.frame = $ & ~FF_PAPERSPRITE
 end)
 
-addHook("PreThinkFrame", do 
+addHook("PreThinkFrame", do
 	for player in players.iterate
 		if not valid(player) then continue end
 		if not player.crplayerdata then continue end
@@ -70,7 +70,7 @@ addHook("PreThinkFrame", do
 		local p = CRPD.player
 
 		p.weapondelay = 1 -- Do not fire weapon rings. EVER!
-		
+
 		-- Firing tics
 		if (CRPD.firetics > 0) then
 			CRPD.firetics = $ - 1

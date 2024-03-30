@@ -55,8 +55,11 @@ COM_AddCommand("skirmish_equip", function(p, ...)
 	assert(FLCR.Weapons[_G[rsn]], "Weapon " + rsn + " not a valid part!")
 	assert(FLCR.Weapons[_G[rsn]].parttype == pt, "Weapon " + FLCR.Weapons[_G[rsn]].name + " (" + rsn + ") not a valid part type to equip!")
 
-	if CRPD.firetics then
-		CONS_Printf(p, "Please wait to equip a new weapon.")
+	-- TODO: Perhaps a jointime variable that tracks how long
+	-- the player has been in-game and NOT a spectator.
+	if (CRPD.statetics > 0) then
+		CONS_Printf(p, "Cannot equip a weapon right now.")
+		return
 	end
 
 	CRPD.loadout[pt] = _G[rsn] -- Equip the weapon!

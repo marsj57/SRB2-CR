@@ -9,9 +9,34 @@ Lib.getWeaponTable = function(parttype)
 	
 	for k,v in ipairs(FLCR.Weapons) do
 		if (v.parttype ~= parttype) then continue end
-		table.insert(t, v)
+		-- Index 1 (t[x][1]): Weapon name
+		-- Index 2 (t[x][2]): Actual weapon index in FLCR.Weapons
+		table.insert(t, {v, k})
 	end
 	
+	return t
+end
+
+Lib.getWepStats = function(pt, index)
+	local t = {}
+	local w = FLCR.Weapons
+
+	table.insert(t, {"atk", w[index].attack}) -- Attack
+	table.insert(t, {"spd", w[index].speed}) -- Speed
+	if pt == CRPT_GUN then -- For gun parts in particular
+		table.insert(t, {"hmg", w[index].homing}) -- Homing
+		table.insert(t, {"rld", w[index].reload}) -- Reload
+		table.insert(t, {"dwn", w[index].down}) -- Down
+	elseif pt == CRPT_BOMB then -- For bomb parts in particular
+		table.insert(t, {"dwn", w[index].down}) -- Down
+		table.insert(t, {"siz", w[index].size}) -- Size
+		table.insert(t, {"tim", w[index].time})	-- Time
+	elseif pt == CRPT_POD then -- For pod parts in particular
+		table.insert(t, {"hmg", w[index].homing}) -- Homing
+		table.insert(t, {"siz", w[index].size}) -- Size
+		table.insert(t, {"tim", w[index].time})	-- Time
+	end
+
 	return t
 end
 
@@ -19,11 +44,11 @@ local crmenus = {
 	[0] = {
 		name = "Main Menu",
 		options = {
-			{"Equipped Gun weapon:   ", CRPT_GUN },
-			{"Equipped Bomb weapon: ", CRPT_BOMB },
-			{"Equipped Pod weapon: ", CRPT_POD },
-			--{"Equipped Leg parts: ", CRPT_LEG },
-			{"Confirm", 99}
+			{ CRPT_GUN , "Equipped Gun weapon:   "},
+			{ CRPT_BOMB, "Equipped Bomb weapon: "},
+			{ CRPT_POD, "Equipped Pod weapon: " },
+			--{ CRPT_LEG, "Equipped Leg parts: " },
+			{ 99, "Confirm"}
 		}
 	},
 	[CRPT_GUN] = { -- 1
@@ -49,7 +74,10 @@ Lib.resetWeaponMenu = function()
 		crmenus[i].options = {}
 		local t = Lib.getWeaponTable(i)
 		for j = 1, #t
-			table.insert(crmenus[i].options, { t[j].name, j })
+			-- Index 1: Inserted menu position. Menu specific number.
+			-- Index 2: Weapon name
+			-- Index 3: Actual weapon index in FLCR.Weapons
+			table.insert(crmenus[i].options, { j, t[j][1].name, t[j][2] })
 		end
 	end
 end
@@ -91,10 +119,9 @@ Lib.drawCRMenu = function(v, p, c)
 		-- Draw menu options
 		local scroll, maxscroll = menu.scroll, menu.maxscroll
 		local y = 10
-		local flags = V_ALLOWLOWERCASE
 		for i = scroll, min(scroll+maxscroll, menu.options) do
 			if not crmenus[menu.ref].options[i] then continue end -- Validity check
-			local option = crmenus[menu.ref].options[i][1]
+			local option = crmenus[menu.ref].options[i][2]
 			local str
 			local flags = V_ALLOWLOWERCASE
 			if i == menu.choice then
@@ -109,13 +136,35 @@ Lib.drawCRMenu = function(v, p, c)
 				local width = v.stringWidth(str)
 				if i ~= menu.choice then width = $ + 8 end
 				local wsel
-				if i == 1 then wsel = menu.gunselect[1]
-				elseif i == 2 then wsel = menu.bombselect[1]
-				elseif i == 3 then wsel = menu.podselect[1] end
+				if i == 1 then wsel = menu.gunselect[2]
+				elseif i == 2 then wsel = menu.bombselect[2]
+				elseif i == 3 then wsel = menu.podselect[2] end
 				if not wsel then continue end -- Validity check
 				v.drawString(10+width, y, wsel)
 			end
 			y = $ + 10
+		end
+		
+		-- Draw graphics
+		local wstats = {}
+		if not menu.ref then -- Main Menu
+			if menu.choice < menu.options then
+				local index
+				if menu.choice == CRPT_GUN then index = menu.gunselect[3]
+				elseif menu.choice == CRPT_BOMB then index = menu.bombselect[3]
+				elseif menu.choice == CRPT_POD then index = menu.podselect[3] end
+				wstats = Lib.getWepStats(menu.choice, index)
+			end
+		else
+			local index = crmenus[menu.ref].options[menu.choice][3]
+			wstats = Lib.getWepStats(menu.ref, index)
+		end
+
+		for Dk,Dv in ipairs(wstats) do
+			local stat, val = Dv[1], Dv[2]
+			local gfx = v.cachePatch("CRWS"..val)
+			v.drawString(10 + (Dk-1)*(v.stringWidth(stat)+10), 60, stat, V_ALLOWLOWERCASE)
+			v.draw(10 + (Dk-1)*(v.stringWidth(stat)+10), 60, gfx)
 		end
 	end
 end
@@ -139,17 +188,17 @@ Lib.menuSelection = function(p, option)
 	local sound = sfx_menu1 -- Default sound
 
 	if menu.ref == 0 then -- Main Menu
-		menu.ref = option[2]
+		menu.ref = option[1]
 		menu.options = #crmenus[max(1, min(menu.ref, $-1))].options
 		if (menu.ref == CRPT_GUN) then
-			menu.choice = menu.gunselect[2]
-			menu.scroll = max(1, min(menu.gunselect[2]-2, menu.options-menu.maxscroll))
+			menu.choice = menu.gunselect[1]
+			menu.scroll = max(1, min(menu.gunselect[1]-2, menu.options-menu.maxscroll))
 		elseif (menu.ref == CRPT_BOMB) then
-			menu.choice = menu.bombselect[2]
-			menu.scroll = max(1, min(menu.bombselect[2]-2, menu.options-menu.maxscroll))
+			menu.choice = menu.bombselect[1]
+			menu.scroll = max(1, min(menu.bombselect[1]-2, menu.options-menu.maxscroll))
 		elseif (menu.ref == CRPT_POD) then
-			menu.choice = menu.podselect[2]
-			menu.scroll = max(1, min(menu.podselect[2]-2, menu.options-menu.maxscroll))
+			menu.choice = menu.podselect[1]
+			menu.scroll = max(1, min(menu.podselect[1]-2, menu.options-menu.maxscroll))
 		/*elseif (menu.ref == CRPT_LEGS) then
 			menu.choice = menu.legselect[2]
 			menu.scroll = max(1, min(menu.legselect[2]-2, menu.options-menu.maxscroll))*/
@@ -234,9 +283,18 @@ addHook("PreThinkFrame", do
 				Lib.menuSelection(p, crmenus[menu.ref].options[menu.choice])
 				p.jumpheld = true
 			elseif (cmd.buttons & BT_SPIN)
-			and not p.spinheld then -- Cancel
-				menu.choice = menu.ref or 1
+			and not p.spinheld then -- Cancel/back
+				if (menu.ref == CRPT_GUN) then -- Gun selection
+					menu.choice = CRPT_GUN -- Memory
+				elseif (menu.ref == CRPT_BOMB) then  -- Bomb selection
+					menu.choice = CRPT_BOMB -- Memory
+				elseif (menu.ref == CRPT_POD) then -- Pod selection
+					menu.choice = CRPT_POD -- Memory
+				else
+					menu.choice = 1
+				end
 				menu.ref = 0
+				menu.scroll = 1
 				p.spinheld = true
 			end
 			-- Prevent the player from rising as spectator

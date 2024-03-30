@@ -43,13 +43,17 @@ Lib.getSectorBounds = function(sec)
 end
 
 addHook("ThinkFrame", do
-	if (leveltime%5) then return end -- Don't trigger every tic
+	if not (leveltime%5) then return end -- Don't trigger every tic
 	for sector in sectors.iterate
 		if not valid(sector) then continue end
 		local sec = sector
 		-- If sector special is a elemental damaging floor, spawn some FX!
 		local IsSectorElectric = (GetSecSpecial(sec.special, 1) == 4) and true or false
 		local IsSectorFire = (GetSecSpecial(sec.special, 1) == 3) and true or false
+		
+		-- First check to see if sector is actually a elemental damaging floor.
+		-- This is a sanity check, otherwise this WILL cause frame drops.
+		if not (IsSectorElectric and IsSectorFire) then continue end
 		
 		local top, bottom, left, right = Lib.getSectorBounds(sec)
 		local xrand, yrand

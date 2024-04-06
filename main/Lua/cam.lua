@@ -1,13 +1,13 @@
 -- Hey, you're awfully nosy aren't you?
--- Just so you know, a lot of what you see here is mixed between original code
+-- Just so you know, a lot of what you see here is mixed between original code,
 -- and code that I've gotten permission to use.
 --
--- A word of warning: YOU SHOULD ASSUME __NONE__ OF THE CODE HERE IS REUSABLE.
+-- You should assume that the code I borrowed is not reusable.
+-- I've commented the names of individuals from whom,
+-- I received permission to use their code.
 -- GET PERMISSION TO USE THIS STUFF BEFORE YOU USE IT YOURSELF
---
+-- 
 -- Flame
-
--- The goal of this file is to be a standalone file.
 
 local Lib = FLCRLib
 
@@ -44,12 +44,12 @@ local function CRHudToggle()
 		hud.disable("nightsrecords")
 		hud.disable("rankings")
 		hud.disable("textspectator")
-	else
+	elseif G_IsVanillaGametype()
 		hud.enable("rings")
 		hud.enable("lives")
 		hud.enable("score")
 		hudinfo[HUD_RINGS].y = 42
-		hudinfo[HUD_RINGSNUM] = 42
+		hudinfo[HUD_RINGSNUM].y = 42
 		hudinfo[HUD_TIME].y = 26
 		hudinfo[HUD_MINUTES].y = 26
 		hudinfo[HUD_TIMECOLON].y = 26
@@ -394,7 +394,7 @@ addHook("PostThinkFrame", do
 			}
 
 	-- And move!
-	local factor = 10
+	local factor = 15
 	local zoomMax = 3*RING_DIST
 	local zoomPercent = (furthest.d[2] >= zoomMax) and FRACUNIT or FixedDiv(furthest.d[2] + furthest.z[2]*3, zoomMax)
 	local zoom = ease.linear(zoomPercent, 10, 100)<<FRACBITS

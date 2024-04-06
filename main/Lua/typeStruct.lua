@@ -1,10 +1,12 @@
 -- Hey, you're awfully nosy aren't you?
--- Just so you know, a lot of what you see here is mixed between original code
+-- Just so you know, a lot of what you see here is mixed between original code,
 -- and code that I've gotten permission to use.
 --
--- A word of warning: YOU SHOULD ASSUME __NONE__ OF THE CODE HERE IS REUSABLE.
+-- You should assume that the code I borrowed is not reusable.
+-- I've commented the names of individuals from whom,
+-- I received permission to use their code.
 -- GET PERMISSION TO USE THIS STUFF BEFORE YOU USE IT YOURSELF
---
+-- 
 -- Flame
 
 /*
@@ -79,12 +81,12 @@ createEnum(playerStates, {
 })
 
 rawset(_G, "strcol", { -- String Color
-	--0, -- CRPS_INVALID
-	V_ORANGEMAP, -- CRPS_ACTION
-	0, -- CRPS_NORMAL
-	V_REDMAP, -- CRPS_HIT
-	V_AZUREMAP, -- CRPS_DOWN
-	V_ROSYMAP, -- CRPS_REBIRTH
+	--[CRPS_INVALID] = 0,
+	[CRPS_ACTION] = V_ORANGEMAP,
+	[CRPS_NORMAL] = 0,
+	[CRPS_HIT] = V_REDMAP,
+	[CRPS_DOWN] = V_AZUREMAP,
+	[CRPS_REBIRTH] = V_ROSYMAP,
 })
 
 FLCR.AddCRPart = function(t)

@@ -1,4 +1,14 @@
+-- Hey, you're awfully nosy aren't you?
+-- Just so you know, a lot of what you see here is mixed between original code,
+-- and code that I've gotten permission to use.
+--
+-- You should assume that the code I borrowed is not reusable.
+-- I've commented the names of individuals from whom,
+-- I received permission to use their code.
+-- GET PERMISSION TO USE THIS STUFF BEFORE YOU USE IT YOURSELF
+-- 
 -- Flame
+--
 -- This is my horrible menu implementation.
 -- Please don't use this. I don't know how to make a proper menu. :(
 
@@ -19,24 +29,27 @@ end
 
 Lib.getWepStats = function(pt, index)
 	local t = {}
-	local w = FLCR.Weapons
+	local w = FLCR.Weapons[index]
 
-	table.insert(t, {"atk", w[index].attack}) -- Attack
-	table.insert(t, {"spd", w[index].speed}) -- Speed
+	table.insert(t, {"atk", w.attack}) -- Attack
+	table.insert(t, {"spd", w.speed}) -- Speed
 	if pt == CRPT_GUN then -- For gun parts in particular
-		table.insert(t, {"hmg", w[index].homing}) -- Homing
-		table.insert(t, {"rld", w[index].reload}) -- Reload
-		table.insert(t, {"dwn", w[index].down}) -- Down
+		table.insert(t, {"hmg", w.homing}) -- Homing
+		table.insert(t, {"rld", w.reload}) -- Reload
+		table.insert(t, {"dwn", w.down}) -- Down
 	elseif pt == CRPT_BOMB then -- For bomb parts in particular
-		table.insert(t, {"dwn", w[index].down}) -- Down
-		table.insert(t, {"siz", w[index].size}) -- Size
-		table.insert(t, {"tim", w[index].time})	-- Time
+		table.insert(t, {"dwn", w.down}) -- Down
+		table.insert(t, {"siz", w.size}) -- Size
+		table.insert(t, {"tim", w.time})	-- Time
 	elseif pt == CRPT_POD then -- For pod parts in particular
-		table.insert(t, {"hmg", w[index].homing}) -- Homing
-		table.insert(t, {"siz", w[index].size}) -- Size
-		table.insert(t, {"tim", w[index].time})	-- Time
+		table.insert(t, {"hmg", w.homing}) -- Homing
+		table.insert(t, {"siz", w.size}) -- Size
+		table.insert(t, {"tim", w.time})	-- Time
 	end
 
+	-- Return table of values
+	-- t[x][1] contains string
+	-- t[x][2] contains the value returned from FLCR.Weapons
 	return t
 end
 
@@ -153,13 +166,14 @@ Lib.drawCRMenu = function(v, p, c)
 				if menu.choice == CRPT_GUN then index = menu.gunselect[3]
 				elseif menu.choice == CRPT_BOMB then index = menu.bombselect[3]
 				elseif menu.choice == CRPT_POD then index = menu.podselect[3] end
-				wstats = Lib.getWepStats(menu.choice, index)
+				wstats = Lib.getWepStats(menu.choice, index) -- Pull from Weapon table
 			end
-		else
+		else -- Sub menu
 			local index = crmenus[menu.ref].options[menu.choice][3]
-			wstats = Lib.getWepStats(menu.ref, index)
+			wstats = Lib.getWepStats(menu.ref, index) -- Pull from Weapon table
 		end
 
+		-- Draw the graphic
 		for Dk,Dv in ipairs(wstats) do
 			local stat, val = Dv[1], Dv[2]
 			local gfx = v.cachePatch("CRWS"..val)

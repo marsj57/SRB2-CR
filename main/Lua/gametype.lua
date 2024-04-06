@@ -1,10 +1,12 @@
 -- Hey, you're awfully nosy aren't you?
--- Just so you know, a lot of what you see here is mixed between original code
+-- Just so you know, a lot of what you see here is mixed between original code,
 -- and code that I've gotten permission to use.
 --
--- A word of warning: YOU SHOULD ASSUME __NONE__ OF THE CODE HERE IS REUSABLE.
+-- You should assume that the code I borrowed is not reusable.
+-- I've commented the names of individuals from whom,
+-- I received permission to use their code.
 -- GET PERMISSION TO USE THIS STUFF BEFORE YOU USE IT YOURSELF
---
+-- 
 -- Flame
 
 freeslot("TOL_SKIRMISH")
@@ -26,6 +28,11 @@ G_AddGametype({
 -- Check to see if we are in a Custom Robo Gametype
 rawset(_G, "G_IsFLCRGametype", function()
 	return (gametype == GT_ROBO)
+end)
+
+-- Check to see if we are in a Vanilla Gametype
+rawset(_G, "G_IsVanillaGametype", function()
+	return ((gametype >= GT_COOP) and (gametype <= GT_CTF))
 end)
 
 -- Check to see if the map is a Custom Robo Type of Level

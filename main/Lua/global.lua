@@ -1,10 +1,12 @@
 -- Hey, you're awfully nosy aren't you?
--- Just so you know, a lot of what you see here is mixed between original code
+-- Just so you know, a lot of what you see here is mixed between original code,
 -- and code that I've gotten permission to use.
 --
--- A word of warning: YOU SHOULD ASSUME __NONE__ OF THE CODE HERE IS REUSABLE.
+-- You should assume that the code I borrowed is not reusable.
+-- I've commented the names of individuals from whom,
+-- I received permission to use their code.
 -- GET PERMISSION TO USE THIS STUFF BEFORE YOU USE IT YOURSELF
---
+-- 
 -- Flame
 
 rawset(_G, "FLCR", {}) -- Flame's Custom Robo

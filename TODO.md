@@ -12,8 +12,11 @@ A map is needed to showcase both Electric and Fire hazards.
 - [ ] Map 05 (Optional)
 
 ## ART ASSETS
-For HUD and mid-flight Bullet sprites:
+For HUD, mid-flight bullet, and explosion sprites:
 - [ ] Various gun weapon graphics and few angle sprites.
+  - Dragon gun
+  - Splash gun
+  - Future "Fist" Melee weapon
 - [ ] Various bomb weapon graphics and few angle sprites.
 - [ ] Various pod weapon graphics and few angle sprites.
 
@@ -23,6 +26,9 @@ For HUD and mid-flight Bullet sprites:
 - [ ] Sprite graphic for when player is in CRPS_ACTION state and spawning into the game. Ref: Sonic Battle (GBA) character marker for when a character respawns into the fight after death.
 
 ## CODE
+- [ ] Find solution to equipping parts only on spawn and not mid-game.
+  - Look for available vanilla solutions before resorting to variable creation.
+
 - [ ] Leg Parts (Optional)
   - Allow abilities to be tied to parts instead of character skins.
 
@@ -47,12 +53,15 @@ For HUD and mid-flight Bullet sprites:
   - X (Explosion)- Blows opponent diagonally high in the air
 
 - [ ] Make the Custom Robo CRPS_ACTION state do something!
-- [ ] Mimic the way Sonic Battle GBA does (re)spawning for players.
+  - Mimic the way Sonic Battle GBA does (re)spawning for players.
+  - Add Kart death explosion flare upon spawn.
+  
 - [ ] Create different death thinker code. Current death thinker code reused from SRB2 Rollout Knockout.
 
 - [ ] If currently targeting a player in range, have a button that switches to another target player in a game with 3+ people.
 
 - [ ] Finalize how menu will look.
+  - Menu functionally works, need to make it look nice
 
 # Future considerations
 - [ ] Additional weapons.

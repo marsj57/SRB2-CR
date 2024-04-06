@@ -24,24 +24,27 @@ For HUD and mid-flight Bullet sprites:
 
 ## CODE
 - [ ] Leg Parts (Optional)
-Allow abilities to be tied to parts instead of character skins.
+  - Allow abilities to be tied to parts instead of character skins.
 
 - [ ] Finish code for the remaining Bomb and Pod weapons.
 - [ ] Fix stun gun functionality.
 
+- [ ] Add countering
+  - If you're in the middle of weapon firing, getting hit with someone will cause all other bullets to dissapate.
+
 - [ ] Restructure knockback code. Give a knockback function to all weapons (weapon.knockfunc).
 - Specifically for bomb and pod weapons:
-	B (Burst)- Blows opponent sideways slowly, blast lingers
-	C (Cyclone)- Blows opponent slowly upwards
-	D (Destroy)- Blows opponent diagonally upwards, blast lingers
-	F (Flipper)- Blows opponent sideways
-	G (Gazer)- Blows opponent upwards
-	H (Horizon)- Blows opponent slowly sideways
-	K (Knockdown)- Will always knock opponent down
-	P (Pillar)- Blows opponent upwards, blast lingers
-	S (Stun)- Immobilizes target
-	T (Traction)- Pulls opponent towards you
-	X (Explosion)- Blows opponent diagonally high in the air
+  - B (Burst)- Blows opponent sideways slowly, blast lingers
+  - C (Cyclone)- Blows opponent slowly upwards
+  - D (Destroy)- Blows opponent diagonally upwards, blast lingers
+  - F (Flipper)- Blows opponent sideways
+  - G (Gazer)- Blows opponent upwards
+  - H (Horizon)- Blows opponent slowly sideways
+  - K (Knockdown)- Will always knock opponent down
+  - P (Pillar)- Blows opponent upwards, blast lingers
+  - S (Stun)- Immobilizes target
+  - T (Traction)- Pulls opponent towards you
+  - X (Explosion)- Blows opponent diagonally high in the air
 
 - [ ] Make the Custom Robo CRPS_ACTION state do something!
 - [ ] Mimic the way Sonic Battle GBA does (re)spawning for players.

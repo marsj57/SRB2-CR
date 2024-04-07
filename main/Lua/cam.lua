@@ -394,7 +394,7 @@ addHook("PostThinkFrame", do
 			}
 
 	-- And move!
-	local factor = 15
+	local factor = 12
 	local zoomMax = 3*RING_DIST
 	local zoomPercent = (furthest.d[2] >= zoomMax) and FRACUNIT or FixedDiv(furthest.d[2] + furthest.z[2]*3, zoomMax)
 	local zoom = ease.linear(zoomPercent, 10, 100)<<FRACBITS

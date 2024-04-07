@@ -22,6 +22,31 @@ SafeFreeslot("MT_DUMMY", "MT_DUMMYMISSILE", "MT_DUMMYFX")
 	}
 end*/
 
+skincolors[freeslot("SKINCOLOR_CR_FLATRED")] = {
+	name = "CR - Flat Red",
+	ramp = {37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37},
+	invcolor = skincolors[SKINCOLOR_RED].invcolor,
+	invshade = 0,
+	chatcolor = skincolors[SKINCOLOR_RED].chatcolor,
+	accessible = false
+}
+skincolors[freeslot("SKINCOLOR_CR_FLATBLUE")] = {
+	name = "CR - Flat Blue",
+	ramp = {152,152,152,152,152,152,152,152,152,152,152,152,152,152,152,152},
+	invcolor = skincolors[SKINCOLOR_BLUE].invcolor,
+	invshade = 0,
+	chatcolor = skincolors[SKINCOLOR_BLUE].chatcolor,
+	accessible = false
+}
+skincolors[freeslot("SKINCOLOR_CR_FLATGREEN")] = {
+	name = "CR - Flat Green",
+	ramp = {101,101,101,101,101,101,101,101,101,101,101,101,101,101,101,101},
+	invcolor = skincolors[SKINCOLOR_GREEN].invcolor,
+	invshade = 0,
+	chatcolor = skincolors[SKINCOLOR_GREEN].chatcolor,
+	accessible = false
+}
+
 local dummy_t = {
 	doomednum = -1,
 	spawnstate = S_INVISIBLE,

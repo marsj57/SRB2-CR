@@ -69,7 +69,7 @@ Mid-flight bullet, and explosion sprites:
   - Mimic the way Sonic Battle GBA does (re)spawning for players.
   - Add Kart death explosion flare upon spawn.
   
-- [ ] Create different death thinker code. Current death thinker code reused from SRB2 Rollout Knockout.
+- [x] Create different death thinker code. Current death thinker code reused from SRB2 Rollout Knockout.
   - The death anim from upcoming game, [Void Souls](https://store.steampowered.com/app/2736690/Void_Sols/?curator_clanid=28641392), looks awesome to replicate.
 
 - [ ] If currently targeting a player in range, have a button that switches to another target player in a game with 3+ people.

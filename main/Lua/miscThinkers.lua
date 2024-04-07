@@ -14,7 +14,9 @@ local Lib = FLCRLib
 
 addHook("MobjThinker",function(mo)
 	if not valid(mo) then return false end
-	mo.fuse = min($,TICRATE)
+	if G_IsFLCRGametype() then
+		mo.fuse = min($,TICRATE)
+	end
 	return false
 end, MT_FLINGRING)
 
@@ -296,10 +298,123 @@ rawset(_G, "deathThink1", function(p)
 	end
 end)
 
+addHook("MobjThinker", function(mo)
+	if not valid(mo) then return false end
+	if (mo.color >= SKINCOLOR_CR_FLATRED)
+	and (mo.color <= SKINCOLOR_CR_FLATGREEN) 
+	and (mo.momx or mo.momy or mo.momz) then
+		mo.momx = $ - $/16
+		mo.momy = $ - $/16
+		mo.momz = $ - $/16
+		if mo.prev then
+			for i = 1, 5 do -- How many objects to spawn between previous and current x,y,z positions
+				local x = ease.linear(i*FRACUNIT/5, mo.prev.x, mo.x)
+				local y = ease.linear(i*FRACUNIT/5, mo.prev.y, mo.y)
+				local z = ease.linear(i*FRACUNIT/5, mo.prev.z+mo.height/2, mo.z+mo.height/2)
+
+				local subfx = P_SpawnGhostMobj(mo)
+				P_SetOrigin(subfx, x, y, z)
+				subfx.scale = mo.scale/3
+			end
+		end
+		mo.prev = {
+			x = mo.x,
+			y = mo.y,
+			z = mo.z,
+		}
+	end
+	return false
+end, MT_DUMMYFX)
+
+rawset(_G, "deathThink2", function(p)
+	if not valid(p) then return end
+	local mo = p.mo or p.realmo
+	if not valid(mo) then return end
+
+	--if valid(mo.outline) then P_RemoveMobj(mo.outline) end
+	if mo.followarrow then
+		for i = 1, #mo.followarrow do
+			if not valid(mo.followarrow[i]) then continue end
+			P_RemoveMobj(mo.followarrow[i])
+		end
+	end
+
+	if (mo.fuse > 1) 
+	and (leveltime%4) < 2 then -- Buildup to explosion.
+			local r = mo.radius>>FRACBITS
+			local fx = P_SpawnGhostMobj(mo)
+			--fx.blendmode = AST_ADD
+			fx.color = P_RandomRange(SKINCOLOR_CR_FLATRED, SKINCOLOR_CR_FLATGREEN)
+			
+			-- Vizualization: Pop like a balloon
+			if (mo.fuse <= 4) then
+				local percent = FRACUNIT/mo.fuse
+				mo.scale = ease.linear(percent, 4*FRACUNIT/3, 2*FRACUNIT)
+			end
+	elseif (mo.fuse == 1) then -- Explode!
+		mo.momx = 0
+		mo.momy = 0
+		mo.momz = 0
+		p.deadtimer = 3*TICRATE
+		
+		local g = P_SpawnGhostMobj(mo)
+		g.fuse = TICRATE/7
+		g.scale = mo.scale
+		g.frame = mo.frame & FF_FRAMEMASK | (FF_FULLBRIGHT|FF_TRANS50)
+		g.destscale = mo.scale*6
+		g.scalespeed = mo.scale/3
+		g.sprite2 = mo.sprite2
+		g.color = mo.color
+		g.colorized = true
+		g.blendmode = AST_ADD
+		g.tics = -1
+		
+		for i = 0, 31 do
+			--if P_RandomChance(FRACUNIT/4) then continue end
+			local fa = i*ANGLE_22h -- How many angles can the explosion debris go in?
+			local ns = 80*FRACUNIT
+			
+			local fx = P_SpawnMobj(mo.x, mo.y, mo.z, MT_DUMMYFX)
+			fx.state = S_THOK
+			fx.tics = -1
+			fx.frame = fx.frame & FF_FRAMEMASK | (FF_FULLBRIGHT)
+			fx.blendmode = AST_ADD
+			fx.color = P_RandomRange(SKINCOLOR_CR_FLATRED, SKINCOLOR_CR_FLATGREEN)
+			fx.angle = fa
+			fx.scale = 2*FRACUNIT
+
+			P_InstaThrust(fx, fx.angle, ns)
+
+			if (i > 15) then
+				-- For every other explosion object above 15,
+				-- apply alternating momz to the explosion debris.
+				if (i&1) then 
+					fx.momz = (ns*3)/5
+				else
+					fx.momz = -((ns*3)/5)
+				end
+				fx.flags = $ & ~MF_NOGRAVITY -- Allow these to have gravity
+			end
+			
+			fx.flags = $ & ~(MF_NOCLIP|MF_NOCLIPHEIGHT)
+			fx.flags = $ | MF_BOUNCE
+			fx.flags2 = $ | MF2_DEBRIS
+			fx.fuse = TICRATE/2+1 -- Die in half a second.
+
+			fx.prev = {
+				x = fx.x,
+				y = fx.y,
+				z = fx.z,
+			}
+		end
+		P_StartQuake(40*FRACUNIT, 5) -- Shake the screen.
+	end
+end)
+
 addHook("PlayerThink", function(p)
 	if not G_IsFLCRGametype() then return end
 	if not valid(p) then return end
-	if (p.playerstate == PST_DEAD) then deathThink1(p) return end
+	if (p.playerstate == PST_DEAD) then deathThink2(p) return end
 end)
 
 addHook("MobjDeath", function(mo)

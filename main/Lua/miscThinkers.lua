@@ -302,7 +302,8 @@ addHook("MobjThinker", function(mo)
 	if not valid(mo) then return false end
 	if (mo.color >= SKINCOLOR_CR_FLATRED)
 	and (mo.color <= SKINCOLOR_CR_FLATGREEN) 
-	and (mo.momx or mo.momy or mo.momz) then
+	and (mo.momx or mo.momy or mo.momz) 
+	and (mo.flags2 & MF2_DEBRIS) then
 		mo.momx = $ - $/16
 		mo.momy = $ - $/16
 		mo.momz = $ - $/16
@@ -368,11 +369,17 @@ rawset(_G, "deathThink2", function(p)
 		g.colorized = true
 		g.blendmode = AST_ADD
 		g.tics = -1
-		
+
+		local wfx = P_SpawnMobjFromMobj(mo, 0,0,mo.height/3, MT_DUMMYFX)
+		wfx.color = mo.color
+		wfx.colorized = true
+		wfx.state = S_FX_WIND
+		wfx.frame = $ & ~FF_PAPERSPRITE
+
 		for i = 0, 31 do
 			--if P_RandomChance(FRACUNIT/4) then continue end
 			local fa = i*ANGLE_22h -- How many angles can the explosion debris go in?
-			local ns = 80*FRACUNIT
+			local ns = P_RandomRange(40,100)<<FRACBITS
 			
 			local fx = P_SpawnMobj(mo.x, mo.y, mo.z, MT_DUMMYFX)
 			fx.state = S_THOK
@@ -389,15 +396,17 @@ rawset(_G, "deathThink2", function(p)
 				-- For every other explosion object above 15,
 				-- apply alternating momz to the explosion debris.
 				if (i&1) then 
-					fx.momz = (ns*3)/5
+					fx.momz = (ns*4)/5
 				else
-					fx.momz = -((ns*3)/5)
+					fx.momz = -((ns*4)/5)
 				end
 				fx.flags = $ & ~MF_NOGRAVITY -- Allow these to have gravity
+			else
+				fx.momz = P_RandomRange(-10, 10)<<FRACBITS
 			end
 			
 			fx.flags = $ & ~(MF_NOCLIP|MF_NOCLIPHEIGHT)
-			fx.flags = $ | MF_BOUNCE
+			fx.flags = $ | MF_BOUNCE|MF_NOCLIPTHING
 			fx.flags2 = $ | MF2_DEBRIS
 			fx.fuse = TICRATE/2+1 -- Die in half a second.
 

@@ -20,5 +20,6 @@ In order to make a public release, edit defaults.sh:
 - PK3_SUBVERSION_DEF	minor version number
 - FOLDER_NAME_DEF		Defines the root folder for building
 
-## TODO List
+# TODO List
+Here is a list of things I feel are necessary for initial release:
 [TODO List](https://github.com/marsj57/SRB2-CR/blob/main/TODO.md)

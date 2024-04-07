@@ -4,7 +4,7 @@ Looking to mimic the playstyle of Custom Robo as much as possible with some vari
 
 ## MAPS
 Excluding the current basic arena map, 3+ maps feels like like healthy variety.
-A map is needed to showcase both Electric and Fire hazards.
+A map is requested to showcase Electric, Fire, and Conveyor belt hazards.
 - [ ] Map 01
 - [ ] Map 02
 - [ ] Map 03
@@ -12,13 +12,23 @@ A map is needed to showcase both Electric and Fire hazards.
 - [ ] Map 05 (Optional)
 
 ## ART ASSETS
-For HUD, mid-flight bullet, and explosion sprites:
-- [ ] Various gun weapon graphics and few angle sprites.
+HUD Specific
+- [ ] HUD graphic(s) for "full" HUD option.
+  - At the time of writing, there's one specific hud graphic that I would like to recreate, or something similar, match the Custom Robo motif and to display appropriate player stats on screen.
+  - Look in the Graphics/HUD/directory for CRHUDBG as an example. This was my attempt. This is too big on a 320x200 screen resolution.
+  - I have something more compact shown by default. However, I am looking to have something more graphically compact.
+
+- [ ] HUD graphics for each weapon.
+  - Not displayed on character.
+  - One frame graphic to "display" weapon.
+
+Mid-flight bullet, and explosion sprites:
+- [ ] Few angle sprites for the following weapons.
   - Dragon gun
   - Splash gun
-  - Future "Fist" Melee weapon
-- [ ] Various bomb weapon graphics and few angle sprites.
-- [ ] Various pod weapon graphics and few angle sprites.
+  - Future "Fist" Melee weapon?
+- [ ] Few angle sprites for bomb weapons.
+- [ ] Few angle sprites for pod weapons.
 
 - [ ] Dedicated Menu BG graphic? (Undecided)
 - [ ] Additional FX effects for bullet debris explosions / mid-flight travel.
@@ -27,7 +37,7 @@ For HUD, mid-flight bullet, and explosion sprites:
 
 ## CODE
 - [ ] Find solution to equipping parts only on spawn and not mid-game.
-  - Look for available vanilla solutions before resorting to variable creation.
+  - Look for available vanilla solutions (Re: Timer?) before resorting to variable creation.
 
 - [ ] Leg Parts (Optional)
   - Allow abilities to be tied to parts instead of character skins.
@@ -38,7 +48,10 @@ For HUD, mid-flight bullet, and explosion sprites:
 - [ ] Add countering
   - If you're in the middle of weapon firing, getting hit with someone will cause all other bullets to dissapate.
 
-- [ ] Restructure knockback code. Give a knockback function to all weapons (weapon.knockfunc).
+- [ ] Restructure and/or overhaul DamageMobj code.
+  - I don't like my code in it's current state and would like to rewrite it. Moreover, see below.
+  
+- [ ] Give a knockback function to all weapons (weapon.knockfunc).
 - Specifically for bomb and pod weapons:
   - B (Burst)- Blows opponent sideways slowly, blast lingers
   - C (Cyclone)- Blows opponent slowly upwards
@@ -57,11 +70,12 @@ For HUD, mid-flight bullet, and explosion sprites:
   - Add Kart death explosion flare upon spawn.
   
 - [ ] Create different death thinker code. Current death thinker code reused from SRB2 Rollout Knockout.
+  - The death anim from upcoming game, [Void Souls](https://store.steampowered.com/app/2736690/Void_Sols/?curator_clanid=28641392), looks awesome to replicate.
 
 - [ ] If currently targeting a player in range, have a button that switches to another target player in a game with 3+ people.
 
 - [ ] Finalize how menu will look.
-  - Menu functionally works, need to make it look nice
+  - Menu functionally works, need to make it look nice.
 
 # Future considerations
 - [ ] Additional weapons.

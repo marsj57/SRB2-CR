@@ -375,6 +375,9 @@ rawset(_G, "deathThink2", function(p)
 		wfx.colorized = true
 		wfx.state = S_FX_WIND
 		wfx.frame = $ & ~FF_PAPERSPRITE
+		S_StartSound(mo, sfx_s3k81) -- [Burst]
+		S_StartSound(mo, sfx_s3k4e) -- [Big explosion]
+		--S_StartSound(mo, sfx_s3k61) -- [Drilling]
 
 		for i = 0, 31 do
 			--if P_RandomChance(FRACUNIT/4) then continue end
@@ -439,6 +442,8 @@ addHook("MobjDeath", function(mo)
 		mo.momx = $/4
 		mo.momy = $/4
 		P_SetObjectMomZ(mo, 20*FRACUNIT, false)
+		--S_StartSound(mo, sfx_kc5b)
+		S_StartSound(mo, sfx_s3ka0) -- [Launch]
 		--p.cmd.angleturn = 0
 		return true
 	end

@@ -9,7 +9,6 @@
 -- 
 -- Flame
 
-
 local Lib = FLCRLib
 
 addHook("MobjThinker",function(mo)
@@ -248,7 +247,6 @@ addHook("MobjThinker", function(mo)
 	end
 end, MT_DUMMY)*/
 
--- From Rollout Knockout
 rawset(_G, "deathThink1", function(p)
 	if not valid(p) then return end
 	local mo = p.mo or p.realmo
@@ -307,6 +305,13 @@ addHook("MobjThinker", function(mo)
 		mo.momx = $ - $/16
 		mo.momy = $ - $/16
 		mo.momz = $ - $/16
+		
+		/*if (P_MobjFlip(mo)*mo.momz < 0)
+		and ((mo.z+(mo.momz/2) <= mo.floorz)
+		or (mo.z+(mo.momz/2) >= mo.ceilingz))
+			P_SetObjectMomZ(mo, -mo.momz/2, false)
+		end*/
+
 		if mo.prev then
 			for i = 1, 5 do -- How many objects to spawn between previous and current x,y,z positions
 				local x = ease.linear(i*FRACUNIT/5, mo.prev.x, mo.x)
@@ -403,13 +408,13 @@ rawset(_G, "deathThink2", function(p)
 				else
 					fx.momz = -((ns*4)/5)
 				end
-				fx.flags = $ & ~MF_NOGRAVITY -- Allow these to have gravity
+				--fx.flags = $ & ~MF_NOGRAVITY -- Allow these to have gravity
 			else
 				fx.momz = P_RandomRange(-10, 10)<<FRACBITS
 			end
 			
 			fx.flags = $ & ~(MF_NOCLIP|MF_NOCLIPHEIGHT)
-			fx.flags = $ | MF_BOUNCE|MF_NOCLIPTHING
+			fx.flags = $ | MF_BOUNCE|MF_NOCLIPTHING|MF_MISSILE|MF_GRENADEBOUNCE
 			fx.flags2 = $ | MF2_DEBRIS
 			fx.fuse = TICRATE/2+1 -- Die in half a second.
 
@@ -439,6 +444,7 @@ addHook("MobjDeath", function(mo)
 		mo.fuse = TICRATE -- NEEDS to be set to have the player visible on death.
 		mo.state = S_PLAY_PAIN
 		p.playerstate = PST_DEAD
+		p.crdeathangle = mo.angle
 		mo.momx = $/4
 		mo.momy = $/4
 		P_SetObjectMomZ(mo, 20*FRACUNIT, false)

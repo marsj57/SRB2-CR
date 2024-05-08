@@ -325,7 +325,8 @@ addHook("PlayerCmd", function(p, cmd)
 	if G_IsFLCRGametype()
 	and p.crmenu
 	and p.crmenu.open then
-		cmd.angleturn = mo.angle>>16
+		local crdeathangle = p.crdeathangle or mo.angle
+		cmd.angleturn = crdeathangle>>16
 	end
 end)
 

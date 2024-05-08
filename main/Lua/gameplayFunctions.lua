@@ -52,6 +52,7 @@ addHook("PlayerSpawn", function(p)
 	p.maxdash = skins[mo.skin].maxdash/2
 	p.actionspd = 2*skins[mo.skin].actionspd/3
 	p.powers[pw_shield] = 0
+	p.crdeathangle = 0
 
 	-- Menu specific stuff
 	p.powers[pw_nocontrol] = 1 -- Hack to prevent player from jumping on spawn (See Menu code)

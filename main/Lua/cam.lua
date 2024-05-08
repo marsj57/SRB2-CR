@@ -93,8 +93,10 @@ rawset(_G, "R_ProjectSprite", function(v, thing, cam)
 		fovtan = 17*fovtan/10
 	end
 
-	local centerx = (v.width() / 2)
-	local centery = (v.height() / 2)
+	local center = {
+		x = v.width() / 2,
+		y = v.height() / 2
+	}
 
 	-- aiming
 	if (v.renderer() == "software") then
@@ -107,11 +109,11 @@ rawset(_G, "R_ProjectSprite", function(v, thing, cam)
 			angle = abs(angle)
 			invmul = -1
 		end
-		centery = $ + (AIMINGTODY(angle) * invmul * (v.width() / 320))
+		center.y = $ + (AIMINGTODY(angle) * invmul * (v.width() / 320))
 	end
 
-	local centerxfrac = centerx<<FRACBITS
-	local centeryfrac = centery<<FRACBITS
+	local centerxfrac = center.x<<FRACBITS
+	local centeryfrac = center.y<<FRACBITS
 	local projection = FixedDiv(centerxfrac, fovtan)
 	local projectiony = projection
 
@@ -219,10 +221,10 @@ rawset(_G, "R_ProjectSprite", function(v, thing, cam)
 	local sprtopscreen = centeryfrac - FixedMul(texturemid, spryscale) -- R_DrawVisSprite
 	local sprbotscreen = sprtopscreen + FixedMul(patch.height<<FRACBITS, spryscale) -- R_DrawMaskedColumn
 
-	--[[v.drawString(0, stats_y, "x1: "+ x1)
-	v.drawString(0, stats_y+10, "x2: "+ x2)
-	v.drawString(0, stats_y+20, "sprtopscreen: "+ FixedInt(sprtopscreen))
-	v.drawString(0, stats_y+30, "sprbotscreen: "+ FixedInt(sprbotscreen))]]
+	--v.drawString(0, stats_y, "x1: "+ x1)
+	--v.drawString(0, stats_y+10, "x2: "+ x2)
+	--v.drawString(0, stats_y+20, "sprtopscreen: "+ FixedInt(sprtopscreen))
+	--v.drawString(0, stats_y+30, "sprbotscreen: "+ FixedInt(sprbotscreen))
 
 	-- draw bounding box
 	--v.drawFill(x1, FixedInt(sprtopscreen), (x2-x1), FixedInt(sprbotscreen-sprtopscreen), 36|V_NOSCALESTART)
@@ -239,26 +241,41 @@ rawset(_G, "R_ProjectSprite", function(v, thing, cam)
 end)
 -- End Lactozilla
 
-rawset(_G, "R_ScreenTransform", function(x, y, z, v, p, cam)
+local vwidth = 160
+local vheight = 100
+addHook("HUD", function(v)
+	vwidth,vheight = v.width(), v.height()
+end)
+rawset(_G, "R_ScreenTransform", function(x, y, z)
 	local ang, aim
-	if cam.chase then -- obtain the differences
-		z = $ - cam.z
-		ang = cam.angle
-		aim = cam.aiming
-	else
-		z = $ - p.viewz
-		ang = p.mo.angle
-		aim = p.aiming
+	if camera.chase then -- obtain the differences
+		z = $ - camera.z
+		ang = camera.angle
+		aim = camera.aiming
+	elseif valid(consoleplayer.mo) then
+		if valid(consoleplayer.awayviewmobj) then
+			local avm = consoleplayer.awayviewmobj -- Simplify
+			z = $ - avm.z
+			ang = avm.angle
+			aim = consoleplayer.awayviewaiming
+		else
+			z = $ - consoleplayer.viewz
+			ang = consoleplayer.mo.angle
+			aim = consoleplayer.aiming
+		end
+	else -- Camera not chasing, consoleplayer mo not valid?
+		return false -- Don't process anything.
 	end
 	local h = R_PointToDist(x, y)
 	local da = ang - R_PointToAngle(x, y)
-	local sizex = (v.width()/2)
-	local sizey = (v.height()/2)
+	local sizex = vwidth/2
+	local sizey = vheight/2
+	local fov = FixedAngle(CV_FindVar("fov").value)
 
 	return sizex<<FRACBITS + tan(da)*sizex,
 	sizey<<FRACBITS + (tan(aim) - FixedDiv(z, 1 + FixedMul(cos(da), h)))*sizex,
 	FixedDiv((sizex<<FRACBITS), h+1),
-	(abs(da) > ANG60) or (abs(aim - R_PointToAngle2(0, 0, h, z)) > ANGLE_45)
+	(abs(da) > fov/2) or (abs(aim - R_PointToAngle2(0, 0, h, z)) > ((fov/3)+(ANG10/3)) )
 end)
 
 addHook("MapLoad", function(mapnum)
@@ -312,13 +329,65 @@ addHook("PlayerSpawn", function(p)
 	camera.chase = true
 end, MT_PLAYER)
 
-/*addHook("PlayerThink", function(p)
-	if G_IsFLCRGametype()
-	and (p.playerstate == PST_DEAD)
-	and valid(p.awayviewmobj) and not p.awayviewtics then
-		P_RemoveMobj(p.awayviewmobj)
+Lib.drawLine = function(startpoint, endpoint, color, numpoints, duration)
+	-- Sanity.
+	local aIsTable = (type(startpoint) == "table")
+	local bIsTable = (type(endpoint) == "table")
+	if not aIsTable then
+		error("bad argument #1 to 'Lib.drawLine' (table expected, got " .. type(startpoint) .. ")")
+	elseif not bIsTable then
+		error("bad argument #2 to 'Lib.drawLine' (table expected, got " .. type(endpoint) .. ")")
 	end
-end)*/
+
+	if not numpoints then numpoints = 2 end
+	for i = 1, numpoints do
+		local x = ease.linear(i*FRACUNIT/numpoints, startpoint.x, endpoint.x)
+		local y = ease.linear(i*FRACUNIT/numpoints, startpoint.y, endpoint.y)
+		local z = ease.linear(i*FRACUNIT/numpoints, startpoint.z, endpoint.z)
+		
+		local th = P_SpawnMobj(x,y,z,MT_THOK)
+		th.flags = $|MF_NOBLOCKMAP|MF_SCENERY
+		th.color = color or SKINCOLOR_WHITE
+		th.tics = duration or 1
+		th.scale = FRACUNIT/2
+		th.blendmode = AST_ADD
+	end
+end
+
+Lib.drawBounds = function(b, c, np, dur)
+	local bIsTable = (type(b) == "table") -- b is table
+	if not bIsTable then -- Sanity check
+		error("bad argument #1 to 'Lib.drawBounds' (table expected, got " .. type(b) .. ")")
+	end
+
+	// bottom
+	local p1 = {x = b.min.x, y = b.min.y, z = b.min.z}
+	local p2 = {x = b.max.x, y = b.min.y, z = b.min.z}
+	local p3 = {x = b.max.x, y = b.min.y, z = b.max.z}
+	local p4 = {x = b.min.x, y = b.min.y, z = b.max.z}
+
+	Lib.drawLine(p1, p2, c, np, dur)
+	Lib.drawLine(p2, p3, c, np, dur)
+	Lib.drawLine(p3, p4, c, np, dur)
+	Lib.drawLine(p4, p1, c, np, dur)
+
+	// top
+	local p5 = {x = b.min.x, y = b.max.y, z = b.min.z}
+	local p6 = {x = b.max.x, y = b.max.y, z = b.min.z}
+	local p7 = {x = b.max.x, y = b.max.y, z = b.max.z}
+	local p8 = {x = b.min.x, y = b.max.y, z = b.max.z}
+
+	Lib.drawLine(p5, p6, c, np, dur)
+	Lib.drawLine(p6, p7, c, np, dur)
+	Lib.drawLine(p7, p8, c, np, dur)
+	Lib.drawLine(p8, p5, c, np, dur)
+
+	// sides
+	Lib.drawLine(p1, p5, c, np, dur)
+	Lib.drawLine(p2, p6, c, np, dur)
+	Lib.drawLine(p3, p7, c, np, dur)
+	Lib.drawLine(p4, p8, c, np, dur)
+end
 
 addHook("PostThinkFrame", do
 	if not G_IsFLCRGametype() then return end
@@ -326,97 +395,119 @@ addHook("PostThinkFrame", do
 	local totalPlayers = {} -- Self explainitory
 	for p in players.iterate
 		if not valid(p.mo) or p.spectator then continue end
-		table.insert(totalPlayers, p.mo) -- Insert every player's mo into the above table
+		table.insert(totalPlayers, p.mo) -- Insert every valid player into the above table
 	end
-	
-	if not #totalPlayers then return end
-	
+
+	if not #totalPlayers then
+		return
+	elseif (#totalPlayers == 1) 
+	--and FLCRDebug then
+		local t = P_SpawnMobj(0,0,0, MT_THOK)
+		t.tics = 1
+		t.color = P_RandomRange(1,#skincolors-1)
+		--t.flags = MF2_DONTDRAW
+		table.insert(totalPlayers, t)
+	end
+
 	local cv = {
-				height = CV_FindVar("cam_height").value,
-				dist = CV_FindVar("cam_dist").value
-				}
-	
+		height = CV_FindVar("cam_height").value,
+		dist = CV_FindVar("cam_dist").value,
+		fov = CV_FindVar("fov").value
+	}
+
 	-- Get our center x, y, and z coordinates
-	local center = {
-						x = 0,
-						y = 0,
-						z = 0
-					}
-	local minz,maxz = 0,0
-	for k,v in spairs(totalPlayers, function(t,a,b) return t[b].z > t[a].z end)
-		if valid(v) then
-			center.x = $+(v.x/#totalPlayers) -- Our center x
-			center.y = $+(v.y/#totalPlayers) -- Our center y
-			
-			-- Instead of grabbing the "Average" Lets grab the player
-			-- With the highest z coord, and lowest z coord, and average that
-			if k == 1 then maxz = v.z + FixedMul(v.scale, (v.height/2 * P_MobjFlip(v))) end
-			if k == #totalPlayers then minz = v.z + FixedMul(v.scale, (v.height/2 * P_MobjFlip(v))) end
-			center.z = (maxz+minz)/2
-			--center.z = $+(v.z/#totalPlayers)+(FixedMul(v.scale, (mobjinfo[v.type].height * P_MobjFlip(v)))/#totalPlayers) -- Our center z
-		end
+	-- Average ONLY the minimum and maximum values. Not the whole totalPlayers table.
+	local minx,maxx = INT32_MAX,INT32_MIN
+	local miny,maxy = INT32_MAX,INT32_MIN
+	local minz,maxz = INT32_MAX,INT32_MIN
+	for k,v in ipairs(totalPlayers)
+		minx,maxx = min($1,v.x),max($2,v.x)
+		miny,maxy = min($1,v.y),max($2,v.y)
+		minz = min($1,v.z + FixedMul(v.scale, (v.height/2 * P_MobjFlip(v))))
+		maxz = max($1,v.z + FixedMul(v.scale, (v.height/2 * P_MobjFlip(v))))
 	end
-	
-	-- Get the furthest player from the center
-	local temp = 0 -- Temp value
-	local furthest = {
-						--x = {nil, 0},
-						--y = {nil, 0},
-						z = {nil, 0},
-						d = {nil, 0}
-					}
-	for _,v in ipairs(totalPlayers)
-		temp = R_PointToDist2(v.x, v.y, center.x, center.y)
-		if (temp > furthest.d[2]) then
-			furthest.d = {v, temp}
-		end
-		/*temp = abs(v.x - center.x)
-		if (temp > furthest.x[2]) then
-			furthest.x = {v, temp}
-		end
-		
-		temp = abs(v.y - center.y)
-		if (temp > furthest.y[2]) then
-			furthest.y = {v, temp}
-		end*/
-		
-		temp = abs(v.z + FixedMul(v.scale, (mobjinfo[v.type].height * P_MobjFlip(v))) - center.z)
-		if (temp > furthest.z[2]) then
-			furthest.z = {v, temp}
-		end
+
+	-- Average the center
+	local center = {
+		x = (maxx+minx)/2,
+		y = (maxy+miny)/2,
+		z = (maxz+minz)/2
+	}
+
+	-- Thank you for helping me with this mental block, Lach!
+	local l1, l2, l3 = 0,0,0
+	for k,v in ipairs(totalPlayers)
+		local f = FixedAngle(cv.fov/2)
+		local g = FLCR.CameraBattleAngle - R_PointToAngle2(v.x, v.y, center.x, center.y)
+		if (abs(g) > ANGLE_90) then continue end
+		local dist = R_PointToDist2(v.x, v.y, center.x, center.y)
+		local width = FixedMul(sin(g), dist)
+		l1, l2 = abs(FixedMul(cos(g), dist)), abs(FixedMul(tan(ANGLE_90 - f), width))
+
+		--abs(aim - R_PointToAngle2(0, 0, l1+l2, z))
+		-- > ((fov/3)+(ANG10/3) -- 33.3333
+		--local zangle = R_PointToAngle2(0, 0, dist, zdist)
 	end
 
 	-- Set these coordinates...
 	local new = {
-				x = center.x - FixedMul(cos(FLCR.CameraBattleAngle), furthest.d[2]) - FixedMul(cos(FLCR.CameraBattleAngle), cv.dist),
-				y = center.y - FixedMul(sin(FLCR.CameraBattleAngle), furthest.d[2]) - FixedMul(sin(FLCR.CameraBattleAngle), cv.dist),
-				z = center.z + cv.height --+ furthest.d[2]/3
-			}
+		x = center.x - FixedMul(cos(FLCR.CameraBattleAngle), l1+l2) - FixedMul(cos(FLCR.CameraBattleAngle), cv.dist),
+		y = center.y - FixedMul(sin(FLCR.CameraBattleAngle), l1+l2) - FixedMul(sin(FLCR.CameraBattleAngle), cv.dist),
+		z = center.z + cv.height
+	}
 
-	-- And move!
-	local factor = 12
-	local zoomMax = 3*RING_DIST
-	local zoomPercent = (furthest.d[2] >= zoomMax) and FRACUNIT or FixedDiv(furthest.d[2] + furthest.z[2]*3, zoomMax)
-	local zoom = ease.linear(zoomPercent, 10, 100)<<FRACBITS
+	local factor = 10
 	for p in players.iterate -- Since everybody has their own awayviewmobj...
 		if not valid(p.awayviewmobj) then continue end
 		local cam = p.awayviewmobj -- Not using the exposed camera_t because the exposed camera_t likes to angle itself to the consoleplayer.
 
 		-- Ease towards destination
-		P_MoveOrigin(cam,
-					cam.x + (new.x - cam.x)/factor - FixedMul(cos(FLCR.CameraBattleAngle), zoom),
-					cam.y + (new.y - cam.y)/factor - FixedMul(sin(FLCR.CameraBattleAngle), zoom),
-					cam.z + (new.z - cam.z)/factor + zoom)
+		P_MoveOrigin(cam, cam.x + (new.x - cam.x)/factor, 
+					cam.y + (new.y - cam.y)/factor,
+					cam.z + (new.z - cam.z)/factor)
 		
 		-- Face the center
 		cam.angle = R_PointToAngle2(cam.x, cam.y, center.x, center.y)
 		
 		-- Aiming math towards the center
 		local dist = R_PointToDist2(cam.x, cam.y, center.x, center.y)
-		local hdist = (cam.z - center.z) --R_PointToDist2(0, cam.z, dist, center.z) --(cam.z - center.z)
+		local hdist = (cam.z - center.z) --R_PointToDist2(0, cam.z, dist, center.z)
 		-- Aim towards the center
 		p.awayviewaiming = R_PointToAngle2(0, 0, dist, -hdist) --+ p.aiming/10-- ANG2
 	end
+
+	-- Debug visual
+	/*if #totalPlayers > 1 
+	and FLCRDebug then
+		local b = {
+			min = {
+				x = minx,
+				y = miny,
+				z = minz
+			},
+			max = {
+				x = maxx,
+				y = maxy,
+				z = maxz
+			}
+		}
+		Lib.drawBounds(b, SKINCOLOR_WHITE, 32, 1)
+
+		local extents = centermaxdist/2
+		local be = {
+			min = {
+				x = minx - extents,
+				y = miny - extents,
+				z = minz - extents,
+			},
+			max = {
+				x = maxx + extents,
+				y = maxy + extents,
+				z = maxz + extents,
+			}
+		}
+		Lib.drawBounds(be, SKINCOLOR_RED, 32, 1)
+	end*/
 end)
 
 -- Enable or disable the Vanilla HUD
@@ -433,17 +524,17 @@ addHook("HUD", function(v,p,c)
 	c.aiming = p.awayviewaiming
 	--if not valid(p.mo) then return end
 	--if not valid(c) then return end
-	for p in players.iterate
-		local mo = p.mo
+	for pl in players.iterate
+		local mo = pl.mo
 		if not valid(mo) then continue end
 		if (FixedHypot(FixedHypot(avm.x - mo.x, avm.y - mo.y), 
 									avm.z - mo.z) > 8*RING_DIST) then
 			continue -- Out of range
 		end
 		if (mo.health <= 0)
-		or (p.playerstate == PST_DEAD) then continue end
-		if (mo.flags2 & MF2_DONTDRAW) then continue end
-		if P_CheckSight(avm, mo) then continue end
+		or (pl.playerstate == PST_DEAD) then continue end -- Dead
+		if (mo.flags2 & MF2_DONTDRAW) then continue end -- Invisible
+		if P_CheckSight(avm, mo) then continue end -- Awayviewmobj LOST signt of player
 
 		R_ProjectSprite(v, mo, c)
 	end
@@ -474,8 +565,9 @@ addHook("HUD", function(v,p,c)
 		if not found.player.crplayerdata then return nil end
 		local CRPD = FLCR.PlayerData[found.player.crplayerdata.id]
 		
-		local camdistheight = FixedHypot(FixedHypot(c.x - p.mo.x, c.y - p.mo.y), c.z - p.mo.z)/5
-		local x,y,scale = R_ScreenTransform(found.x, found.y, found.z + found.height/2 + camdistheight, v, p, c)
+		local camdistheight = FixedHypot(FixedHypot(c.x - found.x, c.y - found.y), c.z - found.z)/5
+		local x,y,scale,oob = R_ScreenTransform(found.x, found.y, found.z + found.height/2 + camdistheight)
+		if oob then return nil end -- Breakout. Don't process anything else.
 		local flags = V_NOSCALESTART
 		-- Visual debug for values
 		/*if FLCRDebug then

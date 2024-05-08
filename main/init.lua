@@ -2,6 +2,8 @@
 
 if not FLCR then
 	for _, filename in ipairs({
+		--"Library/vec3.lua",
+		--"Library/encap.lua",
 		"global.lua",
 		"info.lua",
 		"utilityFuncs.lua",

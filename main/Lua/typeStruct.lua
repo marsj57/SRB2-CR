@@ -108,7 +108,7 @@ FLCR.AddCRPart = function(t)
 
 	local id = #FLCR.Weapons + 1
 	rawset(_G, rsn, id)
-	FLCR.Weapons[id] = t
+	FLCR.Weapons[id] = t -- Table.insert does not respect the __newindex metamethod in BLUA 5.1
 
 	--local pts = string.sub(rsn, 7, 8) -- Part type String
 	if (pt == CRPT_GUN) then -- Gun

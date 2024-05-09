@@ -114,6 +114,7 @@ addHook("PlayerSpawn", function(p)
 end)
 
 addHook("ThinkFrame", do
+	if not G_IsFLCRGametype() then return end
 	-- Target finder, and thinker.
 	for player in players.iterate
 		if not valid(player) then continue end
@@ -151,35 +152,37 @@ addHook("ThinkFrame", do
 		end
 		
 		-- Arrow thinker
-		for i = 1, #mo.followarrow do
-			if not valid(mo.followarrow[i]) then continue end
-			local o = mo.followarrow[i]
-			o.tics = 3
-			o.color = mo.color
-			local bga = R_PointToAngle(mo.x, mo.y) -- Background angle
-			if (i == #mo.followarrow) then
-				P_MoveOrigin(o, mo.x + FixedMul(cos(mo.angle), 30*o.scale),
-								mo.y + FixedMul(sin(mo.angle), 30*o.scale),
-								mo.z)
-			else
-				P_MoveOrigin(o, mo.x + FixedMul(cos(bga), FRACUNIT),
-								mo.y + FixedMul(sin(bga), FRACUNIT),
-								mo.z)
-			end
-			if o.floorspriteslope then
-				local slope = o.floorspriteslope
-				o.angle = mo.angle
-				slope.o = {x = o.x, y = o.y, z = o.z}
-				slope.xydirection = o.angle
+		if mo.followarrow then -- Non-nil table?
+			for i = 1, #mo.followarrow do
+				if not valid(mo.followarrow[i]) then continue end
+				local o = mo.followarrow[i]
+				o.tics = 3
+				o.color = mo.color
+				local bga = R_PointToAngle(mo.x, mo.y) -- Background angle
 				if (i == #mo.followarrow) then
-					slope.zangle = p.aiming
+					P_MoveOrigin(o, mo.x + FixedMul(cos(mo.angle), 30*o.scale),
+									mo.y + FixedMul(sin(mo.angle), 30*o.scale),
+									mo.z)
+				else
+					P_MoveOrigin(o, mo.x + FixedMul(cos(bga), FRACUNIT),
+									mo.y + FixedMul(sin(bga), FRACUNIT),
+									mo.z)
 				end
-			end
+				if o.floorspriteslope then
+					local slope = o.floorspriteslope
+					o.angle = mo.angle
+					slope.o = {x = o.x, y = o.y, z = o.z}
+					slope.xydirection = o.angle
+					if (i == #mo.followarrow) then
+						slope.zangle = p.aiming
+					end
+				end
 
-			if valid(mo.target) then
-				o.flags2 = $ & ~MF2_DONTDRAW
-			else
-				o.flags2 = $ | MF2_DONTDRAW
+				if valid(mo.target) then
+					o.flags2 = $ & ~MF2_DONTDRAW
+				else
+					o.flags2 = $ | MF2_DONTDRAW
+				end
 			end
 		end
 	end

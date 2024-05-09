@@ -52,7 +52,7 @@ addHook("PlayerSpawn", function(p)
 	p.maxdash = skins[mo.skin].maxdash/2
 	p.actionspd = 2*skins[mo.skin].actionspd/3
 	p.powers[pw_shield] = 0
-	p.crdeathangle = 0
+	p.crdeathangle = 0 -- Death angle hack, see deathThink1 in miscThinkers.lua and menu.lua
 
 	-- Menu specific stuff
 	p.powers[pw_nocontrol] = 1 -- Hack to prevent player from jumping on spawn (See Menu code)
@@ -99,7 +99,8 @@ addHook("ThinkFrame", do
 		local CRPD = FLCR.PlayerData[player.crplayerdata.id]
 		if not valid(CRPD.player) then continue end
 		local p = CRPD.player
-		local mo = p.mo 
+		if not valid(p.mo) then continue end
+		local mo = p.mo
 		local loadout = CRPD.loadout
 		local cmd = p.cmd
 		local wmask = (cmd.buttons & BT_WEAPONMASK) % 4 -- 0 and 1-3

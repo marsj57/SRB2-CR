@@ -9,6 +9,8 @@
 -- 
 -- Flame
 
+local Lib = FLCRLib
+
 freeslot("TOL_SKIRMISH")
 
 -- To the user, this is a "Skirmish" gametype.
@@ -38,4 +40,13 @@ end)
 -- Check to see if the map is a Custom Robo Type of Level
 rawset(_G, "G_IsFLCRTOL", function(mapnum)
 	return (mapheaderinfo[mapmum].typeoflevel & TOL_SKIRMISH)
+end)
+
+addHook("MapChange", function(mapnum)
+	if G_IsFLCRGametype() then return end -- Don't process anything if already Custom Robo map
+	for p in players.iterate
+		if not valid(p) then continue end
+		if not p.crplayerdata then continue end
+		Lib.removePlayerFromSlot(#p+1)
+	end
 end)

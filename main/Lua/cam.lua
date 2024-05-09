@@ -87,7 +87,7 @@ rawset(_G, "R_ProjectSprite", function(v, thing, cam)
 	end
 
 	-- R_ExecuteSetViewSize
-	local fov = FixedAngle(CV_FindVar("fov").value/2)
+	local fov = isdedicatedserver and ANGLE_45 or FixedAngle(CV_FindVar("fov").value/2)
 	local fovtan = tan(fov)
 	if (splitscreen) then -- Splitscreen FOV should be adjusted to maintain expected vertical view
 		fovtan = 17*fovtan/10
@@ -270,7 +270,7 @@ rawset(_G, "R_ScreenTransform", function(x, y, z)
 	local da = ang - R_PointToAngle(x, y)
 	local sizex = vwidth/2
 	local sizey = vheight/2
-	local fov = FixedAngle(CV_FindVar("fov").value)
+	local fov = isdedicatedserver and ANGLE_90 or FixedAngle(CV_FindVar("fov").value)
 
 	return sizex<<FRACBITS + tan(da)*sizex,
 	sizey<<FRACBITS + (tan(aim) - FixedDiv(z, 1 + FixedMul(cos(da), h)))*sizex,
@@ -400,8 +400,8 @@ addHook("PostThinkFrame", do
 
 	if not #totalPlayers then
 		return
-	elseif (#totalPlayers == 1) 
-	--and FLCRDebug then
+	elseif FLCRDebug
+	and (#totalPlayers == 1) then
 		local t = P_SpawnMobj(0,0,0, MT_THOK)
 		t.tics = 1
 		t.color = P_RandomRange(1,#skincolors-1)
@@ -410,9 +410,9 @@ addHook("PostThinkFrame", do
 	end
 
 	local cv = {
-		height = CV_FindVar("cam_height").value,
-		dist = CV_FindVar("cam_dist").value,
-		fov = CV_FindVar("fov").value
+		height = isdedicatedserver and 192*FRACUNIT or CV_FindVar("cam_height").value,
+		dist = isdedicatedserver and 80*FRACUNIT or CV_FindVar("cam_dist").value,
+		fov = isdedicatedserver and 90*FRACUNIT or CV_FindVar("fov").value
 	}
 
 	-- Get our center x, y, and z coordinates
@@ -420,7 +420,7 @@ addHook("PostThinkFrame", do
 	local minx,maxx = INT32_MAX,INT32_MIN
 	local miny,maxy = INT32_MAX,INT32_MIN
 	local minz,maxz = INT32_MAX,INT32_MIN
-	for k,v in ipairs(totalPlayers)
+	for _,v in ipairs(totalPlayers)
 		minx,maxx = min($1,v.x),max($2,v.x)
 		miny,maxy = min($1,v.y),max($2,v.y)
 		minz = min($1,v.z + FixedMul(v.scale, (v.height/2 * P_MobjFlip(v))))
@@ -434,26 +434,37 @@ addHook("PostThinkFrame", do
 		z = (maxz+minz)/2
 	}
 
+	-- Get the closest player to the camera
 	-- Thank you for helping me with this mental block, Lach!
 	local l1, l2, l3 = 0,0,0
-	for k,v in ipairs(totalPlayers)
-		local f = FixedAngle(cv.fov/2)
-		local g = FLCR.CameraBattleAngle - R_PointToAngle2(v.x, v.y, center.x, center.y)
-		if (abs(g) > ANGLE_90) then continue end
-		local dist = R_PointToDist2(v.x, v.y, center.x, center.y)
-		local width = FixedMul(sin(g), dist)
-		l1, l2 = abs(FixedMul(cos(g), dist)), abs(FixedMul(tan(ANGLE_90 - f), width))
+	if (#totalPlayers > 1)
+		local maxcamdist = INT32_MAX
+		for _,v in ipairs(totalPlayers)	
+			local f = FixedAngle(cv.fov/2) -- Local FOV value in ANGLE value. Halved.
+			local g = FLCR.CameraBattleAngle - R_PointToAngle2(v.x, v.y, center.x, center.y) -- Our Delta angle
+			if (abs(g) > ANGLE_90) then continue end -- Ignore anything further with a greater Delta (Eg. further away)
 
-		--abs(aim - R_PointToAngle2(0, 0, l1+l2, z))
-		-- > ((fov/3)+(ANG10/3) -- 33.3333
-		--local zangle = R_PointToAngle2(0, 0, dist, zdist)
+			local camdist = R_PointToDist2(v.x, v.y, camera.x, camera.y) -- Player to camera distance
+			if camdist > maxcamdist then continue end -- Last one is closer
+			maxcamdist = camdist
+			
+			local dist = R_PointToDist2(v.x, v.y, center.x, center.y) -- Player to center distance
+			local width = FixedMul(sin(g), dist) -- Delta angle sin value
+			
+			-- Our final l1, inner triangle towards our center
+			-- Our final l2, outer triangle towards our camera
+			l1, l2 = abs(FixedMul(cos(g), dist)), abs(FixedMul(tan(ANGLE_90 - f), width))
+			-- Our final l3, add some z
+			local z1, z2 = v.z, center.z
+			l3 = R_PointToDist2(0, z1, (l1+l2), z2)
+		end
 	end
 
 	-- Set these coordinates...
 	local new = {
-		x = center.x - FixedMul(cos(FLCR.CameraBattleAngle), l1+l2) - FixedMul(cos(FLCR.CameraBattleAngle), cv.dist),
-		y = center.y - FixedMul(sin(FLCR.CameraBattleAngle), l1+l2) - FixedMul(sin(FLCR.CameraBattleAngle), cv.dist),
-		z = center.z + cv.height
+		x = center.x - FixedMul(cos(FLCR.CameraBattleAngle), l1+l2+l3) - FixedMul(cos(FLCR.CameraBattleAngle), cv.dist),
+		y = center.y - FixedMul(sin(FLCR.CameraBattleAngle), l1+l2+l3) - FixedMul(sin(FLCR.CameraBattleAngle), cv.dist),
+		z = center.z + l3 + cv.height
 	}
 
 	local factor = 10
@@ -477,8 +488,8 @@ addHook("PostThinkFrame", do
 	end
 
 	-- Debug visual
-	/*if #totalPlayers > 1 
-	and FLCRDebug then
+	if FLCRDebug 
+	and #totalPlayers > 1 then
 		local b = {
 			min = {
 				x = minx,
@@ -493,7 +504,7 @@ addHook("PostThinkFrame", do
 		}
 		Lib.drawBounds(b, SKINCOLOR_WHITE, 32, 1)
 
-		local extents = centermaxdist/2
+		/*local extents = centermaxdist/2
 		local be = {
 			min = {
 				x = minx - extents,
@@ -506,8 +517,8 @@ addHook("PostThinkFrame", do
 				z = maxz + extents,
 			}
 		}
-		Lib.drawBounds(be, SKINCOLOR_RED, 32, 1)
-	end*/
+		Lib.drawBounds(be, SKINCOLOR_RED, 32, 1)*/
+	end
 end)
 
 -- Enable or disable the Vanilla HUD

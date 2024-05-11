@@ -54,11 +54,11 @@ addHook("ThinkFrame", do
 		-- If sector special is a elemental damaging floor, spawn some FX!
 		local IsSectorElectric = (GetSecSpecial(sec.special, 1) == 4) and true or false
 		local IsSectorFire = (GetSecSpecial(sec.special, 1) == 3) and true or false
-		
+
 		-- First check to see if sector is actually a elemental damaging floor.
 		-- This is a sanity check, otherwise this WILL cause frame drops.
 		if not (IsSectorElectric and IsSectorFire) then continue end
-		
+
 		local top, bottom, left, right = Lib.getSectorBounds(sec)
 		local xrand, yrand
 		xrand = P_RandomRange(left>>FRACBITS, right>>FRACBITS)<<FRACBITS
@@ -447,9 +447,13 @@ addHook("MobjDeath", function(mo)
 		mo.fuse = TICRATE -- NEEDS to be set to have the player visible on death.
 		mo.state = S_PLAY_PAIN
 		p.playerstate = PST_DEAD
-		p.crdeathangle = mo.angle
 		mo.momx = $/4
 		mo.momy = $/4
+		if p.crplayerdata then
+			local CRPD = FLCR.PlayerData[p.crplayerdata.id]
+			CRPD.state = CRPS_LOSE
+			CRPD.statetics = 0
+		end
 		P_SetObjectMomZ(mo, 20*FRACUNIT, false)
 		--S_StartSound(mo, sfx_kc5b)
 		S_StartSound(mo, sfx_s3ka0) -- [Launch]

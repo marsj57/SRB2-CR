@@ -45,8 +45,6 @@ end)
 addHook("MapChange", function(mapnum)
 	if G_IsFLCRGametype() then return end -- Don't process anything if already Custom Robo map
 	for p in players.iterate
-		if not valid(p) then continue end
-		if not p.crplayerdata then continue end
 		Lib.removePlayerFromSlot(#p+1)
 	end
 end)

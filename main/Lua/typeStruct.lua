@@ -78,6 +78,7 @@ createEnum(playerStates, {
 	"CRPS_HIT",
 	"CRPS_DOWN",
 	"CRPS_REBIRTH",
+	"CRPS_LOSE", -- Death
 })
 
 rawset(_G, "strcol", { -- String Color

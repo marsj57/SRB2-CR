@@ -201,8 +201,8 @@ Lib.getCRState = function(p)
 	-- Returns both text and correspnding number
 	if CRPD.state
 	and (CRPD.state >= CRPS_ACTION)
-	and (CRPD.state <= CRPS_REBIRTH)
-		local stateText = { "ACTION", "NORMAL", "HIT", "DOWN", "REBIRTH" }
+	and (CRPD.state <= CRPS_LOSE)
+		local stateText = { "ACTION", "NORMAL", "HIT", "DOWN", "REBIRTH", "LOSE" }
 		return stateText[CRPD.state], CRPD.state
 	else
 		return "INVALID", 0

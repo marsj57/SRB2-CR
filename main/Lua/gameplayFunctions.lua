@@ -14,7 +14,7 @@ local Lib = FLCRLib
 addHook("TeamSwitch", function(p, _, fromspectators)
 	if not G_IsFLCRGametype() then return nil end
 	if not valid(p) then return nil end
-	if fromspectators then
+	if fromspectators then -- This player is joining the game
 		Lib.assignPlayerToSlot(p, #p+1)
 		if not p.crmenu then return true end
 		if not p.crmenu.gunselect 
@@ -28,7 +28,14 @@ addHook("TeamSwitch", function(p, _, fromspectators)
 		COM_BufInsertText(p, string.format('skirmish_equip bomb "%s"', p.crmenu.bombselect[2]))
 		COM_BufInsertText(p, string.format('skirmish_equip pod "%s"', p.crmenu.podselect[2]))
 		return true
-	else
+	else -- This player is exiting the game
+		p.crdeathangle = valid(p.mo) and p.mo.angle or 0
+		if p.crplayerdata then
+			local CRPD = FLCR.PlayerData[p.crplayerdata.id]
+			CRPD.statetics = 0
+			CRPD.firetics = 0
+			CRPD.curknockdown = 0
+		end
 		Lib.removePlayerFromSlot(#p+1)
 		return true
 	end
@@ -82,9 +89,9 @@ addHook("PreThinkFrame", do
 			CRPD.firetics = 0
 			CRPD.firemaxrounds = 0
 		end
-		
+
 		-- State Change
-		CRPD.statetics = min(INT32_MAX, $ + 1) -- Counts up instead of down. Informs how long we've been in this state for
+		CRPD.statetics = min(INT32_MAX-1, $ + 1) -- Counts up instead of down. Informs how long we've been in this state for
 		if (CRPD.prevstate ~= CRPD.state) then
 			CRPD.prevstate = CRPD.state
 			CRPD.statetics = 0
@@ -132,7 +139,8 @@ addHook("ThinkFrame", do
 		end
 
 		-- State thinker
-		if (p.playerstate == PST_DEAD) then
+		if (p.playerstate == PST_DEAD)
+		or (CRPD.state == CRPS_LOSE) then
 			continue
 		elseif (CRPD.state ~= CRPS_NORMAL) then
 			if (CRPD.state == CRPS_HIT)
@@ -242,7 +250,11 @@ FLCR.PlayerAbilities["sonic"] = {
 
 		local thokspeed = FixedHypot(mo.momx, mo.momy) > 20*mo.scale and FixedHypot(mo.momx, mo.momy) or 20*mo.scale
 		P_InstaThrust(mo, p.mo.angle, thokspeed)
-		P_SetObjectMomZ(mo, FRACUNIT*8)
+		if (mo.eflags & MFE_UNDERWATER)
+			P_SetObjectMomZ(mo, FRACUNIT*6)
+		else
+			P_SetObjectMomZ(mo, FRACUNIT*8)
+		end
 
 		local t = P_SpawnMobjFromMobj(mo, 0, 0, 0, MT_DUMMY)
 		t.color = mo.color
@@ -278,7 +290,11 @@ FLCR.PlayerAbilities["tails"] = {
 		p.pflags = $ & ~PF_JUMPED
 		mo.momx, mo.momy = $/2, $/2
 		mo.state = S_PLAY_FLY
-		P_SetObjectMomZ(mo, FRACUNIT*8)
+		if (mo.eflags & MFE_UNDERWATER)
+			P_SetObjectMomZ(mo, FRACUNIT*5)
+		else
+			P_SetObjectMomZ(mo, FRACUNIT*8)
+		end
 		S_StartSound(mo, sfx_zoom)
 	end,
 	func = function(p)
@@ -332,10 +348,18 @@ FLCR.PlayerAbilities["amy"] = {
 			h.flags = $ | MF_SCENERY|MF_NOCLIP|MF_NOCLIPTHING|MF_NOCLIPHEIGHT & ~MF_MISSILE
 			h.fuse = TICRATE*2 -- Dissapate after 2 seconds
 			P_Thrust(h, h.angle, 6*FRACUNIT)
-			P_SetObjectMomZ(h, FRACUNIT*6)
+			if (mo.eflags & MFE_UNDERWATER)
+				P_SetObjectMomZ(mo, FRACUNIT*3)
+			else
+				P_SetObjectMomZ(mo, FRACUNIT*6)
+			end
 		end
 		mo.momx, mo.momy = $/2, $/2
-		P_SetObjectMomZ(mo, FRACUNIT*12)
+		if (mo.eflags & MFE_UNDERWATER)
+			P_SetObjectMomZ(mo, FRACUNIT*6)
+		else
+			P_SetObjectMomZ(mo, FRACUNIT*12)
+		end
 	end,
 	func = function(p)
 		local mo = p.mo

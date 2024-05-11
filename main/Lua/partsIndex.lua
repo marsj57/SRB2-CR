@@ -523,10 +523,13 @@ FLCR.AddCRPart({
 		local xyangle = mo.target and R_PointToAngle2(mo.x, mo.y, mo.target.x, mo.target.y) or p.drawangle
 		local zangle = p.aiming
 		local th = Lib.spawnCRMissile(mo, w, xyangle, zangle)
+		mo.momx = $/4
+		mo.momy = $/4
+		mo.momz = -$/5
 		if valid(th) then
-			th.momx = 1
-			th.momy = 1
-			th.momz = 1
+			th.momx = FixedMul(cos(xyangle), FRACUNIT)
+			th.momy = FixedMul(sin(xyangle), FRACUNIT)
+			th.momz = 0
 			th.damage = w.attack * 15
 			th.knockdown = th.damage/2
 			th.state = S_FX_ELECEXPLODE

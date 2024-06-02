@@ -368,7 +368,7 @@ Lib.setNextPlayerTarget = function(player)
 	local index = #player -- Player index. Will account for your player 'node'. 
 	-- Eg. In a netgame, if you are player 1, your node will be 0. If you are player 2, your node will be 1, etc
 
-	-- If no existing target, then we don't have anything to switch to!
+	-- If no existing source, then we don't have anything to switch to!
 	if not valid(mo.target) then return false end
 
 	-- Start at your node and iterate through the maximum player count. Subtract by 1 because we are 0 indexed. 
@@ -395,7 +395,7 @@ Lib.setNextPlayerTarget = function(player)
 			return nil
 		end
 
-		if not P_CheckSight(mo, imo) then continue end
+		if not P_CheckSight(mo, imo) then continue end -- Cannot see this potential target
 
 		next = imo
 		break -- Break at first entry
@@ -407,8 +407,8 @@ end
 
 -- doRingBurst: Spills an injured player's rings - Copied from the source
 -- 
--- player (player_t)		- player who is losing rings.
--- num_rings (int)			- Number of rings lost. A maximum of 32 rings will be spawned.
+-- player (player_t)	- player who is losing rings.
+-- num_rings (int)		- Number of rings lost. A maximum of 32 rings will be spawned.
 Lib.doRingBurst = function(player, num_rings)
 	if not valid(player) then return end -- Better safe than sorry
 	local p = player -- Simplify
@@ -458,8 +458,40 @@ Lib.doRingBurst = function(player, num_rings)
 		
 		if (i&1) then P_SetObjectMomZ(ring, ns, true) end
 		ring.momz = $ * P_MobjFlip(mo)
-		-- CR Specific
-		ring.flags = $ | MF_NOCLIPTHING
+		ring.flags = $ | MF_NOCLIPTHING -- CR Specific
 	end
 	player.losstime = $ + 10*TICRATE
+end
+
+-- getWepStats
+-- Flame
+--
+-- index (int)			- index of weapon.
+Lib.getWepStats = function(index)
+	local t = {}
+	if (index > #FLCR.Weapons) then error("Lib.getWepStats: index #"..i.." out of bounds! Max: " .. #FLCR.Weapons) end
+	local w = FLCR.Weapons[index]
+	local pt = w.parttype
+	if not pt then error("Lib.getWepStats: part type missing from weapon index!") end
+
+	table.insert(t, {"atk", w.attack}) -- Attack
+	table.insert(t, {"spd", w.speed}) -- Speed
+	if pt == CRPT_GUN then -- For gun parts in particular
+		table.insert(t, {"hmg", w.homing}) -- Homing
+		table.insert(t, {"rld", w.reload}) -- Reload
+		table.insert(t, {"dwn", w.down}) -- Down
+	elseif pt == CRPT_BOMB then -- For bomb parts in particular
+		table.insert(t, {"dwn", w.down}) -- Down
+		table.insert(t, {"siz", w.size}) -- Size
+		table.insert(t, {"tim", w.time})	-- Time
+	elseif pt == CRPT_POD then -- For pod parts in particular
+		table.insert(t, {"hmg", w.homing}) -- Homing
+		table.insert(t, {"siz", w.size}) -- Size
+		table.insert(t, {"tim", w.time})	-- Time
+	end
+
+	-- Return table of values
+	-- t[x][1] contains string
+	-- t[x][2] contains the value returned from FLCR.Weapons
+	return t
 end

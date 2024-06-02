@@ -482,9 +482,9 @@ addHook("PostThinkFrame", do
 		
 		-- Aiming math towards the center
 		local dist = R_PointToDist2(cam.x, cam.y, center.x, center.y)
-		local hdist = (cam.z - center.z) --R_PointToDist2(0, cam.z, dist, center.z)
+		local hdist = R_PointToDist2(0, center.z, dist, cam.z) --(center.z - cam.z)
 		-- Aim towards the center
-		p.awayviewaiming = R_PointToAngle2(0, 0, dist, -hdist) --+ p.aiming/10-- ANG2
+		p.awayviewaiming = R_PointToAngle2(0, 0, dist, -hdist)/2 --+ p.aiming/10-- ANG2
 	end
 
 	-- Debug visual

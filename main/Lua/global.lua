@@ -14,7 +14,7 @@ rawset(_G, "FLCRLib", {}) -- Flame's Custom Robo Library
 rawset(_G, "FLCRDebug", 0)
 FLCR.PlayerData = {} -- Player Data table
 FLCR.Weapons = {} -- Weapons Table
-FLCR.CameraBattleAngle = 0
+FLCR.CameraBattleAngle = 0 -- Direction of camera during battle
 
 rawset(_G, "valid", function(th)
 	return th and th.valid

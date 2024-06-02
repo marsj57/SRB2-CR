@@ -27,39 +27,13 @@ Lib.getWeaponTable = function(parttype)
 	return t
 end
 
-Lib.getWepStats = function(pt, index)
-	local t = {}
-	local w = FLCR.Weapons[index]
-
-	table.insert(t, {"atk", w.attack}) -- Attack
-	table.insert(t, {"spd", w.speed}) -- Speed
-	if pt == CRPT_GUN then -- For gun parts in particular
-		table.insert(t, {"hmg", w.homing}) -- Homing
-		table.insert(t, {"rld", w.reload}) -- Reload
-		table.insert(t, {"dwn", w.down}) -- Down
-	elseif pt == CRPT_BOMB then -- For bomb parts in particular
-		table.insert(t, {"dwn", w.down}) -- Down
-		table.insert(t, {"siz", w.size}) -- Size
-		table.insert(t, {"tim", w.time})	-- Time
-	elseif pt == CRPT_POD then -- For pod parts in particular
-		table.insert(t, {"hmg", w.homing}) -- Homing
-		table.insert(t, {"siz", w.size}) -- Size
-		table.insert(t, {"tim", w.time})	-- Time
-	end
-
-	-- Return table of values
-	-- t[x][1] contains string
-	-- t[x][2] contains the value returned from FLCR.Weapons
-	return t
-end
-
 local crmenus = {
 	[0] = {
 		name = "Main Menu",
 		options = {
 			{ CRPT_GUN , "Equipped Gun weapon:   "},
 			{ CRPT_BOMB, "Equipped Bomb weapon: "},
-			{ CRPT_POD, "Equipped Pod weapon: " },
+			{ CRPT_POD, "Equipped Pod weapon:   " },
 			--{ CRPT_LEG, "Equipped Leg parts: " },
 			{ 99, "Confirm"}
 		}
@@ -124,7 +98,19 @@ addHook("PlayerSpawn", function(p)
 	end
 end)
 
-Lib.drawCRMenu = function(v, p, c)
+Lib.drawCRMenuBG = function(v, p, c)
+	local center = {
+		x = v.width()/v.dupx(), -- 426
+		y = v.height()/v.dupy() -- 240
+	}
+	local offset = {
+		x = 0,
+		y = 0
+	}
+	v.drawFill(center.x - offset.x, center.y - offset.y, 20, 20, 151)
+end
+
+Lib.drawCRMenuText = function(v, p, c)
 	local menu = p.crmenu
 	if not menu.open then return end
 	if not menu.ref then menu.ref = 0 end
@@ -136,7 +122,7 @@ Lib.drawCRMenu = function(v, p, c)
 			if not crmenus[menu.ref].options[i] then continue end -- Validity check
 			local option = crmenus[menu.ref].options[i][2]
 			local str
-			local flags = V_ALLOWLOWERCASE
+			local flags = V_ALLOWLOWERCASE|V_SNAPTOLEFT|V_SNAPTOTOP
 			if i == menu.choice then
 				str = ">" .. option
 				flags = $|V_YELLOWMAP
@@ -147,13 +133,15 @@ Lib.drawCRMenu = function(v, p, c)
 			if (menu.ref == 0) -- Main menu
 			and (i < menu.options) then
 				local width = v.stringWidth(str)
-				if i ~= menu.choice then width = $ + 8 end
+				local selwidth = v.stringWidth(">")
+				if i ~= menu.choice then width = $ + selwidth end
 				local wsel
 				if i == 1 then wsel = menu.gunselect[2]
 				elseif i == 2 then wsel = menu.bombselect[2]
 				elseif i == 3 then wsel = menu.podselect[2] end
 				if not wsel then continue end -- Validity check
-				v.drawString(10+width, y, wsel)
+				local wselwidth = v.stringWidth(wsel)
+				v.drawString(16+width+wselwidth, y, wsel, flags, "right")
 			end
 			y = $ + 10
 		end
@@ -166,19 +154,19 @@ Lib.drawCRMenu = function(v, p, c)
 				if menu.choice == CRPT_GUN then index = menu.gunselect[3]
 				elseif menu.choice == CRPT_BOMB then index = menu.bombselect[3]
 				elseif menu.choice == CRPT_POD then index = menu.podselect[3] end
-				wstats = Lib.getWepStats(menu.choice, index) -- Pull from Weapon table
+				wstats = Lib.getWepStats(index) -- Pull from Weapon table
 			end
 		else -- Sub menu
 			local index = crmenus[menu.ref].options[menu.choice][3]
-			wstats = Lib.getWepStats(menu.ref, index) -- Pull from Weapon table
+			wstats = Lib.getWepStats(index) -- Pull from Weapon table
 		end
 
 		-- Draw the graphic
 		for Dk,Dv in ipairs(wstats) do
 			local stat, val = Dv[1], Dv[2]
 			local gfx = v.cachePatch("CRWS"..val)
-			v.drawString(10 + (Dk-1)*(v.stringWidth(stat)+10), 60, stat, V_ALLOWLOWERCASE)
-			v.draw(10 + (Dk-1)*(v.stringWidth(stat)+10), 60, gfx)
+			v.drawString(10 + (Dk-1)*(v.stringWidth(stat)+10), 60, stat, V_ALLOWLOWERCASE|V_SNAPTOLEFT|V_SNAPTOTOP)
+			v.draw(10 + (Dk-1)*(v.stringWidth(stat)+10), 60, gfx, V_SNAPTOLEFT|V_SNAPTOTOP)
 		end
 	end
 end
@@ -190,7 +178,9 @@ addHook("HUD", function(v,p,c)
 	if p.spectator -- If a spectator
 	and not p.crplayerdata -- Not in-game
 	and p.crmenu.open then -- And the menu is open?
-		Lib.drawCRMenu(v, p, c) -- Then draw it!
+		-- Then draw it!
+		Lib.drawCRMenuBG(v, p, c)
+		Lib.drawCRMenuText(v, p, c)
 	end
 end, "game")
 

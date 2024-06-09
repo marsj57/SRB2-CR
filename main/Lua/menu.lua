@@ -31,9 +31,9 @@ local crmenus = {
 	[0] = {
 		name = "Main Menu",
 		options = {
-			{ CRPT_GUN , "Equipped Gun weapon:   "},
-			{ CRPT_BOMB, "Equipped Bomb weapon: "},
-			{ CRPT_POD, "Equipped Pod weapon:   " },
+			{ CRPT_GUN , "Equipped Gun weapon:"},
+			{ CRPT_BOMB, "Equipped Bomb weapon:"},
+			{ CRPT_POD, "Equipped Pod weapon:" },
 			--{ CRPT_LEG, "Equipped Leg parts: " },
 			{ 99, "Confirm"}
 		}
@@ -98,55 +98,52 @@ addHook("PlayerSpawn", function(p)
 	end
 end)
 
-Lib.drawCRMenuBG = function(v, p, c)
+-- Simple menu BG. This is just color.
+Lib.drawCRMenuBG = function(v, p)
 	local center = {
-		x = v.width()/v.dupx(), -- 426
-		y = v.height()/v.dupy() -- 240
+		x = (v.width()/v.dupx())/2,
+		y = (v.height()/v.dupy())/2
 	}
 	local offset = {
-		x = 0,
-		y = 0
+		x = 136,
+		y = 100
 	}
-	v.drawFill(center.x - offset.x, center.y - offset.y, 20, 20, 151)
+	local c = p.skincolor or SKINCOLOR_GREY
+	local c1, c2 = skincolors[c].ramp[10], skincolors[c].ramp[14]
+	local f = V_SNAPTOTOP|V_SNAPTOLEFT
+	v.drawFill(center.x - offset.x, center.y - offset.y, offset.x*2, offset.y*2, c2|f) -- BG
+	v.drawFill(center.x - (offset.x-4), center.y - (offset.y-4), (offset.x-4)*2, (offset.y-4)*2, c1|f) -- FG
 end
 
-Lib.drawCRMenuText = function(v, p, c)
+local function wrap(str, limit, indent, indent1)
+	indent = indent or ""
+	indent1 = indent1 or indent
+	limit = limit or 72
+	local here = 1-#indent1
+	local function check(sp, st, word, fi)
+		if fi - here > limit then
+			here = st - #indent
+			return "\n"..indent..word
+		end
+	end
+	return indent1..str:gsub("(%s+)()(%S+)()", check)
+end
+
+Lib.drawCRMenuText = function(v, p)
 	local menu = p.crmenu
 	if not menu.open then return end
 	if not menu.ref then menu.ref = 0 end
+	local center = {
+		x = (v.width()/v.dupx())/2,
+		y = (v.height()/v.dupy())/2
+	}
+	local offset = {
+		x = 134,
+		y = 96
+	}
+	local vflags = V_SNAPTOLEFT|V_SNAPTOTOP
 	if (type(menu.ref) == "number") then
-		-- Draw menu options
-		local scroll, maxscroll = menu.scroll, menu.maxscroll
-		local y = 10
-		for i = scroll, min(scroll+maxscroll, menu.options) do
-			if not crmenus[menu.ref].options[i] then continue end -- Validity check
-			local option = crmenus[menu.ref].options[i][2]
-			local str
-			local flags = V_ALLOWLOWERCASE|V_SNAPTOLEFT|V_SNAPTOTOP
-			if i == menu.choice then
-				str = ">" .. option
-				flags = $|V_YELLOWMAP
-			else
-				str = option
-			end
-			v.drawString(10, y, str, flags)
-			if (menu.ref == 0) -- Main menu
-			and (i < menu.options) then
-				local width = v.stringWidth(str)
-				local selwidth = v.stringWidth(">")
-				if i ~= menu.choice then width = $ + selwidth end
-				local wsel
-				if i == 1 then wsel = menu.gunselect[2]
-				elseif i == 2 then wsel = menu.bombselect[2]
-				elseif i == 3 then wsel = menu.podselect[2] end
-				if not wsel then continue end -- Validity check
-				local wselwidth = v.stringWidth(wsel)
-				v.drawString(16+width+wselwidth, y, wsel, flags, "right")
-			end
-			y = $ + 10
-		end
-		
-		-- Draw graphics
+		-- Get graphic info
 		local wstats = {}
 		if not menu.ref then -- Main Menu
 			if menu.choice < menu.options then
@@ -161,12 +158,66 @@ Lib.drawCRMenuText = function(v, p, c)
 			wstats = Lib.getWepStats(index) -- Pull from Weapon table
 		end
 
-		-- Draw the graphic
+		-- Draw the text and graphic
 		for Dk,Dv in ipairs(wstats) do
 			local stat, val = Dv[1], Dv[2]
+			local statwidth = v.stringWidth(stat)
 			local gfx = v.cachePatch("CRWS"..val)
-			v.drawString(10 + (Dk-1)*(v.stringWidth(stat)+10), 60, stat, V_ALLOWLOWERCASE|V_SNAPTOLEFT|V_SNAPTOTOP)
-			v.draw(10 + (Dk-1)*(v.stringWidth(stat)+10), 60, gfx, V_SNAPTOLEFT|V_SNAPTOTOP)
+			local x = ease.linear((Dk-1)*FRACUNIT/5, center.x - offset.x + gfx.width, center.x + offset.x - gfx.width)
+			v.draw(x, center.y - offset.y + 4, gfx, vflags) -- gfx
+			v.drawString(x + 6, center.y - offset.y + gfx.height+6, stat, V_ALLOWLOWERCASE|vflags) -- text
+		end
+
+		-- Draw menu options
+		local scroll, maxscroll = menu.scroll, menu.maxscroll
+		local y = center.y - offset.y + v.cachePatch("CRWS1").height + 18
+		for i = scroll, min(scroll+maxscroll, menu.options) do
+			if not crmenus[menu.ref].options[i] then continue end -- Validity check
+			local option = crmenus[menu.ref].options[i][2]
+			local str
+			local flags = V_ALLOWLOWERCASE|vflags
+			if i == menu.choice then -- THIS is our selected item
+				str = ">" .. option
+				flags = $|V_YELLOWMAP
+			else
+				str = option
+			end
+			--local strwidth = 3*v.stringWidth(str)/4
+			v.drawString(center.x-offset.x + 16, y, str, flags) -- Menu header
+			
+			if (menu.ref == 0) -- Main menu
+			and (i < menu.options) then
+				--local selwidth = v.stringWidth(">")-1
+				--if i ~= menu.choice then strwidth = $ + selwidth end
+				local wsel
+				if i == 1 then wsel = menu.gunselect[2]
+				elseif i == 2 then wsel = menu.bombselect[2]
+				elseif i == 3 then wsel = menu.podselect[2] end
+				if not wsel then continue end -- Validity check
+				--local wselwidth = v.stringWidth(wsel)
+				v.drawString(center.x+offset.x-16, y, wsel, flags, "right") -- Weapon
+			end
+			y = $ + 10
+		end
+		
+		-- Display weapon description
+		local desc = ""
+		if not menu.ref then -- Main Menu
+			if menu.choice < menu.options then
+				local index
+				if menu.choice == CRPT_GUN then index = menu.gunselect[3]
+				elseif menu.choice == CRPT_BOMB then index = menu.bombselect[3]
+				elseif menu.choice == CRPT_POD then index = menu.podselect[3] end
+				desc = FLCR.Weapons[index].desc
+			end
+		else -- Sub menu
+			local index = crmenus[menu.ref].options[menu.choice][3]
+			desc = FLCR.Weapons[index].desc
+		end
+		-- Draw the descriptive text if descriptive text is present.
+		if string.len(desc) then
+			v.drawString(center.x, center.y+offset.y-58, "-INFORMATION-", vflags|V_GRAYMAP, "center")
+			v.drawString(center.x-offset.x+16, center.y+offset.y-48, wrap(desc,32), vflags|V_AZUREMAP|V_ALLOWLOWERCASE)
 		end
 	end
 end
@@ -179,8 +230,8 @@ addHook("HUD", function(v,p,c)
 	and not p.crplayerdata -- Not in-game
 	and p.crmenu.open then -- And the menu is open?
 		-- Then draw it!
-		Lib.drawCRMenuBG(v, p, c)
-		Lib.drawCRMenuText(v, p, c)
+		Lib.drawCRMenuBG(v, p)
+		Lib.drawCRMenuText(v, p)
 	end
 end, "game")
 

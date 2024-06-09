@@ -62,6 +62,10 @@ mobjinfo[MT_DUMMYMISSILE] = dummy_t
 mobjinfo[MT_DUMMYMISSILE].flags = mobjinfo[MT_REDRING].flags --MF_NOBLOCKMAP|MF_MISSILE|MF_NOGRAVITY
 mobjinfo[MT_DUMMYFX] = dummy_t
 
+-- Player Marker
+SafeFreeslot("SPR_SBTL", "S_SBTL_MARK")
+states[S_SBTL_MARK] = {SPR_SBTL, A|FF_FULLBRIGHT, -1, nil, 0, 0, S_NULL}
+
 -- Custom Bee!
 SafeFreeslot("S_BUMBLEBORE_BULLET")
 states[S_BUMBLEBORE_BULLET] = { SPR_BUMB, A|FF_FULLBRIGHT|FF_ANIMATE, -1, nil, 1, 2, S_NULL }

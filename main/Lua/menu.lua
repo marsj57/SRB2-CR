@@ -68,7 +68,11 @@ Lib.resetWeaponMenu = function()
 		end
 	end
 end
-Lib.resetWeaponMenu()
+Lib.resetWeaponMenu() -- Initialize weapon table
+
+addHook("MapLoad", function()
+	Lib.resetWeaponMenu() -- Reset weapon table on map reload
+end)
 
 addHook("PlayerSpawn", function(p)
 	if not valid(p) then return end
@@ -105,14 +109,18 @@ Lib.drawCRMenuBG = function(v, p)
 		y = (v.height()/v.dupy())/2
 	}
 	local offset = {
-		x = 136,
+		x = 150,
 		y = 100
 	}
 	local c = p.skincolor or SKINCOLOR_GREY
-	local c1, c2 = skincolors[c].ramp[10], skincolors[c].ramp[14]
+	local c1, c2 = skincolors[c].ramp[9], skincolors[c].ramp[15]
 	local f = V_SNAPTOTOP|V_SNAPTOLEFT
 	v.drawFill(center.x - offset.x, center.y - offset.y, offset.x*2, offset.y*2, c2|f) -- BG
 	v.drawFill(center.x - (offset.x-4), center.y - (offset.y-4), (offset.x-4)*2, (offset.y-4)*2, c1|f) -- FG
+	for i = 1, 5 do
+		v.drawFill(center.x - (offset.x-4), center.y - (offset.y-4)+(i-1)*2, (offset.x-4)*2, 2, skincolors[c].ramp[15-i]|f) -- Gradient Top
+		v.drawFill(center.x - (offset.x-4), center.y + (offset.y-4)-(i)*2, (offset.x-4)*2, 2, skincolors[c].ramp[15-i]|f) -- Gradient Bottom
+	end
 end
 
 local function wrap(str, limit, indent, indent1)
@@ -129,6 +137,43 @@ local function wrap(str, limit, indent, indent1)
 	return indent1..str:gsub("(%s+)()(%S+)()", check)
 end
 
+local function drawLine(v, p1, p2, w, h, f)
+	local p1IsTable = (type(p1) == "table")
+	local p2IsTable = (type(p2) == "table")
+	if (not p1IsTable) then
+		local t = type(p1IsTable)
+		error("bad argument #2 to '?' (table expected, got " .. t .. ")")
+	elseif (not p2IsTable) then
+		local t = type(p2IsTable)
+		error("bad argument #3 to '?' (table expected, got " .. t .. ")")
+	end
+	if p2.x < p1.x then
+		local tmp = p2.x
+		p1.x = p2.x
+		p2.x = tmp
+	end
+	if p2.y < p1.y then
+		local tmp = p2.y
+		p1.y = p2.y
+		p2.y = tmp
+	end
+	local dist = R_PointToDist2(p1.x*FRACUNIT, p1.y*FRACUNIT, p2.x*FRACUNIT, p2.y*FRACUNIT)
+	local numpoints = dist/FRACUNIT
+	for i = 1, numpoints do
+		local x = ease.linear(i*FRACUNIT/numpoints, p1.x, p2.x)
+		local y = ease.linear(i*FRACUNIT/numpoints, p1.y, p2.y)
+		if (p1.y == p2.y) then -- Straight Horizontal
+			v.drawFill(x,y,dist/FRACUNIT,h,f)
+			break -- Line drawn. We're done here.
+		elseif (p1.x == p2.x) -- Straight Vertical
+			v.drawFill(x,y,w,dist/FRACUNIT,f)
+			break -- Line drawn. We're done here.
+		else
+			v.drawFill(x,y,w,h,f)
+		end
+	end
+end
+
 Lib.drawCRMenuText = function(v, p)
 	local menu = p.crmenu
 	if not menu.open then return end
@@ -138,13 +183,13 @@ Lib.drawCRMenuText = function(v, p)
 		y = (v.height()/v.dupy())/2
 	}
 	local offset = {
-		x = 134,
+		x = 136,
 		y = 96
 	}
 	local vflags = V_SNAPTOLEFT|V_SNAPTOTOP
 	if (type(menu.ref) == "number") then
-		-- Get graphic info
-		local wstats = {}
+		local wstats = {} -- Stats table
+		local desc = "" -- Description
 		if not menu.ref then -- Main Menu
 			if menu.choice < menu.options then
 				local index
@@ -152,10 +197,12 @@ Lib.drawCRMenuText = function(v, p)
 				elseif menu.choice == CRPT_BOMB then index = menu.bombselect[3]
 				elseif menu.choice == CRPT_POD then index = menu.podselect[3] end
 				wstats = Lib.getWepStats(index) -- Pull from Weapon table
+				desc = FLCR.Weapons[index].desc -- Pull weapon description
 			end
 		else -- Sub menu
 			local index = crmenus[menu.ref].options[menu.choice][3]
 			wstats = Lib.getWepStats(index) -- Pull from Weapon table
+			desc = FLCR.Weapons[index].desc -- Pull weapon description
 		end
 
 		-- Draw the text and graphic
@@ -174,49 +221,60 @@ Lib.drawCRMenuText = function(v, p)
 		for i = scroll, min(scroll+maxscroll, menu.options) do
 			if not crmenus[menu.ref].options[i] then continue end -- Validity check
 			local option = crmenus[menu.ref].options[i][2]
-			local str
 			local flags = V_ALLOWLOWERCASE|vflags
 			if i == menu.choice then -- THIS is our selected item
-				str = ">" .. option
+				local c = p.skincolor or SKINCOLOR_GREY
+				local col = skincolors[c].ramp[14]
+
+				drawLine(v, { x=center.x-offset.x, y=y+1 },
+				{ x=center.x+offset.x-15, y=y+1 }, 2, 9, col|vflags)
+
+				local mcur = v.cachePatch("M_CURSOR")
+				v.draw(center.x-offset.x-8, y, mcur, vflags)
 				flags = $|V_YELLOWMAP
-			else
-				str = option
 			end
-			--local strwidth = 3*v.stringWidth(str)/4
-			v.drawString(center.x-offset.x + 16, y, str, flags) -- Menu header
+			v.drawString(center.x-offset.x + 16, y, option, flags) -- Category Text
 			
 			if (menu.ref == 0) -- Main menu
 			and (i < menu.options) then
-				--local selwidth = v.stringWidth(">")-1
-				--if i ~= menu.choice then strwidth = $ + selwidth end
 				local wsel
 				if i == 1 then wsel = menu.gunselect[2]
 				elseif i == 2 then wsel = menu.bombselect[2]
-				elseif i == 3 then wsel = menu.podselect[2] end
+				elseif i == 3 then wsel = menu.podselect[2]
+				--elseif i == 4 then wsel = menu.legselect[2]
+				end
 				if not wsel then continue end -- Validity check
-				--local wselwidth = v.stringWidth(wsel)
-				v.drawString(center.x+offset.x-16, y, wsel, flags, "right") -- Weapon
+				v.drawString(center.x+offset.x-24, y, wsel, flags, "right") -- Weapon Text
 			end
 			y = $ + 10
 		end
-		
-		-- Display weapon description
-		local desc = ""
-		if not menu.ref then -- Main Menu
-			if menu.choice < menu.options then
-				local index
-				if menu.choice == CRPT_GUN then index = menu.gunselect[3]
-				elseif menu.choice == CRPT_BOMB then index = menu.bombselect[3]
-				elseif menu.choice == CRPT_POD then index = menu.podselect[3] end
-				desc = FLCR.Weapons[index].desc
-			end
-		else -- Sub menu
-			local index = crmenus[menu.ref].options[menu.choice][3]
-			desc = FLCR.Weapons[index].desc
+		-- Extra visual display highlight
+		local parthighlight = {
+			v.cachePatch("CRHHGUN"),
+			v.cachePatch("CRHHBOMB"),
+			v.cachePatch("CRHHPOD"),
+			--v.cachePatch("CRHHLEG"),
+			v.cachePatch("CRHHBASE"),
+		}
+		if (menu.ref == 0) -- Main menu
+		and (menu.choice <= menu.options) then
+			v.draw(center.x+offset.x-20,
+			center.y - offset.y + v.cachePatch("CRWS1").height + 20, parthighlight[menu.choice], vflags)
+			v.draw(center.x+offset.x-20,
+			center.y - offset.y + v.cachePatch("CRWS1").height + 20, v.cachePatch("CRHHSEL"), vflags)
+		elseif (menu.ref > 0) and (menu.ref <= #crmenus) then -- Sub menu
+			v.draw(center.x+offset.x-20,
+			center.y - offset.y + v.cachePatch("CRWS1").height + 20, parthighlight[menu.ref], vflags)
+			v.draw(center.x+offset.x-20,
+			center.y - offset.y + v.cachePatch("CRWS1").height + 20, v.cachePatch("CRHHSEL"), vflags)
 		end
+		--drawLine(v, { x=center.x-offset.x-16, y=center.y-offset.y },
+		--{ x=center.x+offset.x+16, y=center.y+offset.y }, 2, 2, 151|vflags)
+
 		-- Draw the descriptive text if descriptive text is present.
 		if string.len(desc) then
-			v.drawString(center.x, center.y+offset.y-58, "-INFORMATION-", vflags|V_GRAYMAP, "center")
+			if (string.len(desc) > 128) then desc = string.sub($, 1, 128) end -- Trim
+			v.drawString(center.x, center.y+offset.y-58, "- INFORMATION -", vflags|V_GRAYMAP, "center")
 			v.drawString(center.x-offset.x+16, center.y+offset.y-48, wrap(desc,32), vflags|V_AZUREMAP|V_ALLOWLOWERCASE)
 		end
 	end
@@ -275,6 +333,9 @@ Lib.menuSelection = function(p, option)
 	elseif (menu.ref == CRPT_POD) then -- Pod selection
 		menu.podselect = option
 		menu.choice = CRPT_POD -- Memory
+	--elseif (menu.ref == CRPT_LEG) then -- Leg selection
+	--	menu.legselect = option
+	--	menu.choice = CRPT_LEG -- Memory
 	end
 	S_StartSound(nil, sound, p)
 	menu.scroll = 1

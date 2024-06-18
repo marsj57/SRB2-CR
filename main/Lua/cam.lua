@@ -87,7 +87,8 @@ rawset(_G, "R_ProjectSprite", function(v, thing, cam)
 	end
 
 	-- R_ExecuteSetViewSize
-	local fov = isdedicatedserver and ANGLE_45 or FixedAngle(CV_FindVar("fov").value/2)
+	local s, fovcv = pcall(CV_FindVar, "fov")
+	local fov = s and fovcv.value/2 or FixedAngle(45*FRACUNIT)
 	local fovtan = tan(fov)
 	if (splitscreen) then -- Splitscreen FOV should be adjusted to maintain expected vertical view
 		fovtan = 17*fovtan/10
@@ -270,7 +271,8 @@ rawset(_G, "R_ScreenTransform", function(x, y, z)
 	local da = ang - R_PointToAngle(x, y)
 	local sizex = vwidth/2
 	local sizey = vheight/2
-	local fov = isdedicatedserver and ANGLE_90 or FixedAngle(CV_FindVar("fov").value)
+	local s, fov = pcall(CV_FindVar, "fov")
+	local fov = FixedAngle(s and fov.value or 90*FRACUNIT)
 
 	return sizex<<FRACBITS + tan(da)*sizex,
 	sizey<<FRACBITS + (tan(aim) - FixedDiv(z, 1 + FixedMul(cos(da), h)))*sizex,
@@ -409,10 +411,13 @@ addHook("PostThinkFrame", do
 		table.insert(totalPlayers, t)
 	end
 
+	local sh, pcheight = pcall(CV_FindVar, "fov")
+	local sd, pcdist = pcall(CV_FindVar, "fov")
+	local sf, pcfov = pcall(CV_FindVar, "fov")
 	local cv = {
-		height = isdedicatedserver and 192*FRACUNIT or CV_FindVar("cam_height").value,
-		dist = isdedicatedserver and 80*FRACUNIT or CV_FindVar("cam_dist").value,
-		fov = isdedicatedserver and 90*FRACUNIT or CV_FindVar("fov").value
+		height = sh and pcheight.value or 192*FRACUNIT,
+		dist = sd and pcdist.value or 80*FRACUNIT,
+		fov = sf and pcfov.value or 90*FRACUNIT
 	}
 
 	-- Get our center x, y, and z coordinates

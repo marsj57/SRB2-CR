@@ -19,7 +19,6 @@ addHook("MobjThinker", function(mo)
 	return false
 end)
 
-
 -- Guns
 FLCR.AddCRPart({
 	name = "basic",
@@ -28,10 +27,8 @@ FLCR.AddCRPart({
 	spawnsound = sfx_basic,
 	parttype = CRPT_GUN,
 	spawnfunc = function(p, w)
-		if not valid(p) then return end
-		if not p.crplayerdata then return end
+		if not Lib.validCRPlayerData(p) then return end
 		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
-		if not valid(CRPD.player) then return end
 		if not valid(p.mo) then return end
 		local mo = p.mo
 
@@ -116,10 +113,8 @@ FLCR.AddCRPart({
 	spawnsound = sfx_3way,
 	parttype = CRPT_GUN,
 	spawnfunc = function(p, w)
-		if not valid(p) then return end
-		if not p.crplayerdata then return end
+		if not Lib.validCRPlayerData(p) then return end
 		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
-		if not valid(CRPD.player) then return end
 		if not valid(p.mo) then return end
 		local mo = p.mo
 
@@ -223,10 +218,8 @@ FLCR.AddCRPart({
 	spawnsound = sfx_gtlng,
 	parttype = CRPT_GUN,
 	spawnfunc = function(p, w)
-		if not valid(p) then return end
-		if not p.crplayerdata then return end
+		if not Lib.validCRPlayerData(p) then return end
 		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
-		if not valid(CRPD.player) then return end
 		if not valid(p.mo) then return end
 		local mo = p.mo
 
@@ -311,10 +304,8 @@ FLCR.AddCRPart({
 	spawnsound = sfx_vrtcl,
 	parttype = CRPT_GUN,
 	spawnfunc = function(p, w)
-		if not valid(p) then return end
-		if not p.crplayerdata then return end
+		if not Lib.validCRPlayerData(p) then return end
 		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
-		if not valid(CRPD.player) then return end
 		if not valid(p.mo) then return end
 		local mo = p.mo
 		
@@ -420,10 +411,8 @@ FLCR.AddCRPart({
 	spawnsound = sfx_snip,
 	parttype = CRPT_GUN,
 	spawnfunc = function(p, w)
-		if not valid(p) then return end
-		if not p.crplayerdata then return end
+		if not Lib.validCRPlayerData(p) then return end
 		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
-		if not valid(CRPD.player) then return end
 		if not valid(p.mo) then return end
 		local mo = p.mo
 		
@@ -507,10 +496,8 @@ FLCR.AddCRPart({
 	spawnsound = sfx_stun,
 	parttype = CRPT_GUN,
 	spawnfunc = function(p, w)
-		if not valid(p) then return end
-		if not p.crplayerdata then return end
+		if not Lib.validCRPlayerData(p) then return end
 		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
-		if not valid(CRPD.player) then return end
 		if not valid(p.mo) then return end
 		local mo = p.mo
 
@@ -591,10 +578,8 @@ FLCR.AddCRPart({
 	spawnsound = sfx_hnet,
 	parttype = CRPT_GUN,
 	spawnfunc = function(p, w)
-		if not valid(p) then return end
-		if not p.crplayerdata then return end
+		if not Lib.validCRPlayerData(p) then return end
 		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
-		if not valid(CRPD.player) then return end
 		if not valid(p.mo) then return end
 		local mo = p.mo
 
@@ -662,10 +647,8 @@ FLCR.AddCRPart({
 	spawnsound = sfx_frame,
 	parttype = CRPT_GUN,
 	spawnfunc = function(p, w)
-		if not valid(p) then return end
-		if not p.crplayerdata then return end
+		if not Lib.validCRPlayerData(p) then return end
 		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
-		if not valid(CRPD.player) then return end
 		if not valid(p.mo) then return end
 		local mo = p.mo
 		
@@ -752,10 +735,8 @@ FLCR.AddCRPart({
 	spawnsound = sfx_drag01,
 	parttype = CRPT_GUN,
 	spawnfunc = function(p, w)
-		if not valid(p) then return end
-		if not p.crplayerdata then return end
+		if not Lib.validCRPlayerData(p) then return end
 		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
-		if not valid(CRPD.player) then return end
 		if not valid(p.mo) then return end
 		local mo = p.mo
 		
@@ -839,10 +820,8 @@ FLCR.AddCRPart({
 	spawnsound = sfx_splasf,
 	parttype = CRPT_GUN,
 	spawnfunc = function(p, w)
-		if not valid(p) then return end
-		if not p.crplayerdata then return end
+		if not Lib.validCRPlayerData(p) then return end
 		local CRPD = FLCR.PlayerData[p.crplayerdata.id]
-		if not valid(CRPD.player) then return end
 		if not valid(p.mo) then return end
 		local mo = p.mo
 

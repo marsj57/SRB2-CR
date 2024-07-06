@@ -32,6 +32,17 @@ Lib.weaponFire = function(p, id)
 	end
 end
 
+-- validCRPlayerData: Self explainitory.
+-- Validates if Custom Robo PlayerData exists for given player.
+-- Flame
+Lib.validCRPlayerData = function(p)
+	if not valid(p) then return false end -- Not a valid player to begin with
+	if not p.crplayerdata then return false end -- No crplayerdata
+	local CRPD = FLCR.PlayerData[p.crplayerdata.id]
+	if not valid(CRPD.player) then return false end -- No valid player in slot (Possible bot or dummy?)
+	return true -- We're valid.
+end
+
 -- spawnMissile: Spawns a missile. A Variation of P_SPMAngle
 -- Flame
 --
@@ -194,8 +205,7 @@ end
 -- Flame
 -- Get the status of whatever state you're in.
 Lib.getCRState = function(p)
-	if not valid(p) then return false end
-	if not p.crplayerdata then return false end
+	if not Lib.validCRPlayerData(p) then return false end
 	local CRPD = FLCR.PlayerData[p.crplayerdata.id]
 	
 	-- Returns both text and correspnding number
@@ -269,8 +279,7 @@ end
 -- dwn (int)			- amount of 'down' meter to apply
 -- variance (boolean)	- does damage have variance or is it a static value?
 Lib.doDamage = function(plyr, atk, dwn, variance)
-	if not valid(plyr) then return end
-	if not plyr.crplayerdata then return end
+	if not Lib.validCRPlayerData(plyr) then return end
 	local CRPD = FLCR.PlayerData[plyr.crplayerdata.id]
 	if (CRPD.state == CRPS_REBIRTH) then return end -- Invulnerable
 	if not variance then variance = false end -- Default value

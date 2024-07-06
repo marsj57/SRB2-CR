@@ -235,7 +235,7 @@ Lib.drawCRMenuText = function(v, p)
 			end
 			v.drawString(center.x-offset.x + 16, y, option, flags) -- Category Text
 			
-			if (menu.ref == 0) -- Main menu
+			if not menu.ref -- Main menu
 			and (i < menu.options) then
 				local wsel
 				if i == 1 then wsel = menu.gunselect[2]
@@ -256,7 +256,7 @@ Lib.drawCRMenuText = function(v, p)
 			--v.cachePatch("CRHHLEG"),
 			v.cachePatch("CRHHBASE"),
 		}
-		if (menu.ref == 0) -- Main menu
+		if not menu.ref -- Main menu
 		and (menu.choice <= menu.options) then
 			v.draw(center.x+offset.x-20,
 			center.y - offset.y + v.cachePatch("CRWS1").height + 20, parthighlight[menu.choice], vflags)

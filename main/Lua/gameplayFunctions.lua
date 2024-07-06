@@ -73,10 +73,8 @@ end)
 
 addHook("PreThinkFrame", do
 	for player in players.iterate
-		if not valid(player) then continue end
-		if not player.crplayerdata then continue end
+		if not Lib.validCRPlayerData(player) then continue end
 		local CRPD = FLCR.PlayerData[player.crplayerdata.id]
-		if not valid(CRPD.player) then continue end
 		local p = CRPD.player
 
 		p.weapondelay = 1 -- Do not fire weapon rings. EVER!
@@ -101,10 +99,8 @@ end)
 
 addHook("ThinkFrame", do
 	for player in players.iterate
-		if not valid(player) then continue end
-		if not player.crplayerdata then continue end
+		if not Lib.validCRPlayerData(player) then continue end
 		local CRPD = FLCR.PlayerData[player.crplayerdata.id]
-		if not valid(CRPD.player) then continue end
 		local p = CRPD.player
 		if not valid(p.mo) then continue end
 		local mo = p.mo
@@ -223,10 +219,8 @@ end)
 FLCR.PlayerAbilities = {}
 
 Lib.doPlayerAbilities = function(player)
-	if not valid(player) then return false end
-	if not player.crplayerdata then return false end
+	if not Lib.validCRPlayerData(player) then return false end
 	local CRPD = FLCR.PlayerData[player.crplayerdata.id]
-	if not valid(CRPD.player) then return false end
 	local p = CRPD.player -- Simplify player
 	if not valid(p.mo) then return false end
 	local mo = p.mo -- Simplify mobj

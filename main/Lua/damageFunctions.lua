@@ -28,11 +28,9 @@ addHook("ShouldDamage", function(target, inflictor, source, damage, damagetype)
 	-- Vanilla invulnerability check
 	if IsInvulnerable(player) then return false end
 	
-	if not player.crplayerdata then return nil end -- Check for Custom Robo Player data. Process normal behavior otherwise
+	if not Lib.validCRPlayerData(player) then return nil end
 	local CRPD = FLCR.PlayerData[player.crplayerdata.id]
-	if not valid(CRPD.player) then return nil end
-	local p = CRPD.player -- Simplify
-	
+
 	if CRPD.state 
 	and (CRPD.state == CRPS_REBIRTH) 
 	or (CRPD.state == CRPS_ACTION) then
@@ -45,10 +43,8 @@ end, MT_PLAYER)
 addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 	if not valid(target) then return nil end
 	local player = target.player
-	if not valid(player) then return nil end
-	if not player.crplayerdata then return nil end -- Check for Custom Robo Player data. Process normal behavior otherwise
+	if not Lib.validCRPlayerData(player) then return nil end
 	local CRPD = FLCR.PlayerData[player.crplayerdata.id]
-	if not valid(CRPD.player) then return nil end
 	local p = CRPD.player -- Simplify
 
 	if valid(inflictor) then

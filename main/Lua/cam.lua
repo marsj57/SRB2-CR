@@ -88,7 +88,7 @@ rawset(_G, "R_ProjectSprite", function(v, thing, cam)
 
 	-- R_ExecuteSetViewSize
 	local s, fovcv = pcall(CV_FindVar, "fov")
-	local fov = s and fovcv.value/2 or FixedAngle(45*FRACUNIT)
+	local fov = s and FixedAngle(fovcv.value/2) or FixedAngle(45*FRACUNIT)
 	local fovtan = tan(fov)
 	if (splitscreen) then -- Splitscreen FOV should be adjusted to maintain expected vertical view
 		fovtan = 17*fovtan/10
@@ -402,7 +402,7 @@ addHook("PostThinkFrame", do
 
 	if not #totalPlayers then
 		return
-	elseif FLCRDebug
+	elseif FLCRDebug -- Debug visual
 	and (#totalPlayers == 1) then
 		local t = P_SpawnMobj(0,0,0, MT_THOK)
 		t.tics = 1
@@ -411,8 +411,8 @@ addHook("PostThinkFrame", do
 		table.insert(totalPlayers, t)
 	end
 
-	local sh, pcheight = pcall(CV_FindVar, "fov")
-	local sd, pcdist = pcall(CV_FindVar, "fov")
+	local sh, pcheight = pcall(CV_FindVar, "cam_height")
+	local sd, pcdist = pcall(CV_FindVar, "cam_dist")
 	local sf, pcfov = pcall(CV_FindVar, "fov")
 	local cv = {
 		height = sh and pcheight.value or 192*FRACUNIT,

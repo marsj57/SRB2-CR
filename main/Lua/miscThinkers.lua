@@ -117,8 +117,7 @@ addHook("ThinkFrame", do
 	if not G_IsFLCRGametype() then return end
 	-- Target finder, and thinker.
 	for player in players.iterate
-		if not valid(player) then continue end
-		if not player.crplayerdata then continue end
+		if not Lib.validCRPlayerData(player) then continue end
 		local CRPD = FLCR.PlayerData[player.crplayerdata.id]
 		if not valid(CRPD.player) then continue end
 		local p = CRPD.player

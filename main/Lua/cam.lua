@@ -395,16 +395,17 @@ addHook("PostThinkFrame", do
 	if not G_IsFLCRGametype() then return end
 	FLCR.CameraBattleAngle = $+ANG1/6
 	local totalPlayers = {} -- Self explainitory
-	for p in players.iterate
+	for p in players.iterate do
 		if not valid(p.mo) or p.spectator then continue end
 		table.insert(totalPlayers, p.mo) -- Insert every valid player into the above table
 	end
 
 	if not #totalPlayers then
 		return
-	elseif FLCRDebug -- Debug visual
-	and (#totalPlayers == 1) then
-		local t = P_SpawnMobj(0,0,0, MT_THOK)
+	--elseif FLCRDebug -- Debug visual
+	--and (#totalPlayers == 1) then
+	elseif (#totalPlayers == 1) then
+		local t = P_SpawnMobj(0,0,totalPlayers[1].floorz, MT_THOK)
 		t.tics = 1
 		t.color = P_RandomRange(1,#skincolors-1)
 		--t.flags = MF2_DONTDRAW
@@ -426,24 +427,24 @@ addHook("PostThinkFrame", do
 	local minx,maxx = INT32_MAX,INT32_MIN
 	local miny,maxy = INT32_MAX,INT32_MIN
 	local minz,maxz = INT32_MAX,INT32_MIN
-	for _,v in ipairs(totalPlayers)
+	for _,v in ipairs(totalPlayers) do
 		minx,maxx = min($1,v.x),max($2,v.x)
 		miny,maxy = min($1,v.y),max($2,v.y)
-		minz = min($1,v.z)--min($1,v.z + FixedMul(v.scale, (v.height/2 * P_MobjFlip(v))))
-		maxz = max($1,v.z)--max($1,v.z + FixedMul(v.scale, (v.height/2 * P_MobjFlip(v))))
+		minz = min($1,v.z + FixedMul(v.scale, (v.height * P_MobjFlip(v))))
+		maxz = max($1,v.z + FixedMul(v.scale, (v.height * P_MobjFlip(v))))
 	end
 
 	-- Average the center
 	local center = {
-		x = (#totalPlayers > 1) and (maxx+minx)/2 or totalPlayers[1].x,
-		y = (#totalPlayers > 1) and (maxy+miny)/2 or totalPlayers[1].y,
-		z = (#totalPlayers > 1) and (maxz+minz)/2 or FixedMul(totalPlayers[1].z+totalPlayers[1].height,totalPlayers[1].scale)
+		x = (maxx+minx)/2,
+		y = (maxy+miny)/2,
+		z = (maxz+minz)/2
 	}
 
 	-- Get the closest player to the camera
 	-- Thank you for helping me with this mental block, Lach!
 	local l1, l2, l3 = 0,0,0
-	if (#totalPlayers > 1)
+	if (#totalPlayers > 1) then
 		local maxcamdist = INT32_MAX
 		local f, fz = FixedAngle(cv.fov/2), FixedAngle(cv.fov)/3 -- Local FOV value in ANGLE value. Halved.
 		for _,v in ipairs(totalPlayers)	do
@@ -475,7 +476,7 @@ addHook("PostThinkFrame", do
 	}
 
 	local factor = 10
-	for p in players.iterate -- Since everybody has their own awayviewmobj...
+	for p in players.iterate do -- Since everybody has their own awayviewmobj...
 		if not valid(p.awayviewmobj) then continue end
 		local cam = p.awayviewmobj -- Not using the exposed camera_t because the exposed camera_t likes to angle itself to the consoleplayer.
 

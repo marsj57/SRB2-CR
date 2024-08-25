@@ -996,7 +996,7 @@ for _, pn in ipairs(crpodnames)
 						})
 end
 
--- Legs
+-- Legs, player movement, jump abilities
 local crlegnames = {
 	"standard",
 	"high jump",

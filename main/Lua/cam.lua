@@ -411,6 +411,7 @@ addHook("PostThinkFrame", do
 		table.insert(totalPlayers, t)
 	end
 
+	-- Sanity checks for console variables. Especially in dedicated games; these variables do not exist.
 	local sh, pcheight = pcall(CV_FindVar, "cam_height")
 	local sd, pcdist = pcall(CV_FindVar, "cam_dist")
 	local sf, pcfov = pcall(CV_FindVar, "fov")
@@ -428,15 +429,15 @@ addHook("PostThinkFrame", do
 	for _,v in ipairs(totalPlayers)
 		minx,maxx = min($1,v.x),max($2,v.x)
 		miny,maxy = min($1,v.y),max($2,v.y)
-		minz = min($1,v.z + FixedMul(v.scale, (v.height/2 * P_MobjFlip(v))))
-		maxz = max($1,v.z + FixedMul(v.scale, (v.height/2 * P_MobjFlip(v))))
+		minz = min($1,v.z)--min($1,v.z + FixedMul(v.scale, (v.height/2 * P_MobjFlip(v))))
+		maxz = max($1,v.z)--max($1,v.z + FixedMul(v.scale, (v.height/2 * P_MobjFlip(v))))
 	end
 
 	-- Average the center
 	local center = {
-		x = (maxx+minx)/2,
-		y = (maxy+miny)/2,
-		z = (maxz+minz)/2
+		x = (#totalPlayers > 1) and (maxx+minx)/2 or totalPlayers[1].x,
+		y = (#totalPlayers > 1) and (maxy+miny)/2 or totalPlayers[1].y,
+		z = (#totalPlayers > 1) and (maxz+minz)/2 or FixedMul(totalPlayers[1].z+totalPlayers[1].height,totalPlayers[1].scale)
 	}
 
 	-- Get the closest player to the camera
@@ -444,8 +445,8 @@ addHook("PostThinkFrame", do
 	local l1, l2, l3 = 0,0,0
 	if (#totalPlayers > 1)
 		local maxcamdist = INT32_MAX
-		for _,v in ipairs(totalPlayers)	
-			local f = FixedAngle(cv.fov/2) -- Local FOV value in ANGLE value. Halved.
+		local f, fz = FixedAngle(cv.fov/2), FixedAngle(cv.fov)/3 -- Local FOV value in ANGLE value. Halved.
+		for _,v in ipairs(totalPlayers)	do
 			local g = FLCR.CameraBattleAngle - R_PointToAngle2(v.x, v.y, center.x, center.y) -- Our Delta angle
 			if (abs(g) > ANGLE_90) then continue end -- Ignore anything further with a greater Delta (Eg. further away)
 
@@ -455,13 +456,14 @@ addHook("PostThinkFrame", do
 			
 			local dist = R_PointToDist2(v.x, v.y, center.x, center.y) -- Player to center distance
 			local width = FixedMul(sin(g), dist) -- Delta angle sin value
-			
+
 			-- Our final l1, inner triangle towards our center
 			-- Our final l2, outer triangle towards our camera
 			l1, l2 = abs(FixedMul(cos(g), dist)), abs(FixedMul(tan(ANGLE_90 - f), width))
-			-- Our final l3, add some z
-			local z1, z2 = v.z, center.z
-			l3 = R_PointToDist2(0, z1, (l1+l2), z2)
+			
+			local height = R_PointToDist2(0, minz, 3*(l1+l2)/2, maxz)
+			-- Our final l3, height of triangle, length of both inner and outer triangle sides
+			l3 = abs(FixedMul(tan(fz), height))
 		end
 	end
 
@@ -469,7 +471,7 @@ addHook("PostThinkFrame", do
 	local new = {
 		x = center.x - FixedMul(cos(FLCR.CameraBattleAngle), l1+l2+l3) - FixedMul(cos(FLCR.CameraBattleAngle), cv.dist),
 		y = center.y - FixedMul(sin(FLCR.CameraBattleAngle), l1+l2+l3) - FixedMul(sin(FLCR.CameraBattleAngle), cv.dist),
-		z = center.z + l3 + cv.height
+		z = (center.z + l3 + cv.height)*P_MobjFlip(consoleplayer.mo)
 	}
 
 	local factor = 10
@@ -487,9 +489,9 @@ addHook("PostThinkFrame", do
 		
 		-- Aiming math towards the center
 		local dist = R_PointToDist2(cam.x, cam.y, center.x, center.y)
-		local hdist = R_PointToDist2(0, center.z, dist, cam.z) --(center.z - cam.z)
+		local hdist = R_PointToDist2(0, cam.z, dist, center.z) --(center.z - cam.z)
 		-- Aim towards the center
-		p.awayviewaiming = R_PointToAngle2(0, 0, dist, -hdist)/2 --+ p.aiming/10-- ANG2
+		p.awayviewaiming = R_PointToAngle2(0, 0, dist, -hdist)/2--+ (#totalPlayers == 1 and ANG10)
 	end
 
 	-- Debug visual

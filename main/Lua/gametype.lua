@@ -48,3 +48,15 @@ addHook("MapChange", function(mapnum)
 		Lib.removePlayerFromSlot(#p+1)
 	end
 end)
+
+-- Hey! Want to use these functions in your own scripts?
+-- Here's an example of what you can do in your scripts
+--
+-- local s, v = pcall(G_IsFLCRGametype) -- Check to make sure function exists
+-- if s then -- If pcall function status is a success... (Does this function exist?)
+--  print(v) -- Print the result (value) of the function! (Our function returns true/false)
+-- end
+--
+-- print function runs only ***if Sonic Skirmish function is present***
+-- false if not a Sonic Skirmish gamemode
+-- true if it is a Sonic Skirmish gamemode

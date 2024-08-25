@@ -402,9 +402,9 @@ addHook("PostThinkFrame", do
 
 	if not #totalPlayers then
 		return
-	--elseif FLCRDebug -- Debug visual
-	--and (#totalPlayers == 1) then
-	elseif (#totalPlayers == 1) then
+	elseif FLCRDebug -- Debug visual
+	and (#totalPlayers == 1) then
+	--elseif (#totalPlayers == 1) then
 		local t = P_SpawnMobj(0,0,totalPlayers[1].floorz, MT_THOK)
 		t.tics = 1
 		t.color = P_RandomRange(1,#skincolors-1)

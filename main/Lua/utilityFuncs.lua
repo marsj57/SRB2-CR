@@ -374,11 +374,12 @@ Lib.setNextPlayerTarget = function(player)
 	if not valid(player) then return false end
 	if not valid(player.mo) then return false end
 	local mo = player.mo
-	local index = #player -- Player index. Will account for your player 'node'. 
-	-- Eg. In a netgame, if you are player 1, your node will be 0. If you are player 2, your node will be 1, etc
-
-	-- If no existing source, then we don't have anything to switch to!
+	-- If no existing target, then we don't have anything to switch to!
 	if not valid(mo.target) then return false end
+	if not valid(mo.target.player) then return false end
+
+	local index = #mo.target.player -- Player index. Will account for your player 'node'. 
+	-- Eg. In a netgame, if you are player 1, your node will be 0. If you are player 2, your node will be 1, etc
 
 	-- Start at your node and iterate through the maximum player count. Subtract by 1 because we are 0 indexed. 
 	-- (Player nodes are from 0 - 31)
@@ -399,9 +400,9 @@ Lib.setNextPlayerTarget = function(player)
 		if (gametype == GT_CTF)
 		and (not p.ctfteam
 		or (p.ctfteam == player.ctfteam)) then
-			return nil
+			continue
 		elseif (gametype == GT_TEAMMATCH) and (imo.color == mo.color) then
-			return nil
+			continue
 		end
 
 		if not P_CheckSight(mo, imo) then continue end -- Cannot see this potential target

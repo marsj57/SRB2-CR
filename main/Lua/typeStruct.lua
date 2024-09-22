@@ -88,6 +88,7 @@ rawset(_G, "strcol", { -- String Color
 	[CRPS_HIT] = V_REDMAP,
 	[CRPS_DOWN] = V_AZUREMAP,
 	[CRPS_REBIRTH] = V_ROSYMAP,
+	[CRPS_LOSE] = V_INVERTMAP,
 })
 
 FLCR.AddCRPart = function(t)

@@ -14,6 +14,7 @@ local Lib = FLCRLib
 addHook("MobjThinker",function(mo)
 	if not valid(mo) then return false end
 	if G_IsFLCRGametype() then
+		if ((leveltime%7) == 0) then P_SpawnMobjFromMobj(mo,0,0,0,MT_SPARK) end
 		mo.fuse = min($,TICRATE)
 	end
 	return false

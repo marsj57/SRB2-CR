@@ -472,7 +472,7 @@ addHook("PostThinkFrame", do
 	local new = {
 		x = center.x - FixedMul(cos(FLCR.CameraBattleAngle), l1+l2+l3) - FixedMul(cos(FLCR.CameraBattleAngle), cv.dist),
 		y = center.y - FixedMul(sin(FLCR.CameraBattleAngle), l1+l2+l3) - FixedMul(sin(FLCR.CameraBattleAngle), cv.dist),
-		z = (center.z + l3 + cv.height)*P_MobjFlip(consoleplayer.mo)
+		z = center.z + l3 + cv.height
 	}
 
 	local factor = 10

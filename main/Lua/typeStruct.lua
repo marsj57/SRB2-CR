@@ -188,6 +188,7 @@ local defaultPlayerStruct = {
 		firetype = CRPT_INVALID,
 		state = CRPS_INVALID,
 		prevstate = CRPS_INVALID,
+		alivetics = 0,
 		statetics = 0,
 		curknockdown = 0
 	}

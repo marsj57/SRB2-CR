@@ -32,6 +32,7 @@ addHook("TeamSwitch", function(p, _, fromspectators)
 		p.crdeathangle = valid(p.mo) and p.mo.angle or 0
 		if p.crplayerdata then
 			local CRPD = FLCR.PlayerData[p.crplayerdata.id]
+			CRPD.alivetics = 0
 			CRPD.statetics = 0
 			CRPD.firetics = 0
 			CRPD.curknockdown = 0
@@ -53,6 +54,7 @@ addHook("PlayerSpawn", function(p)
 	CRPD.health = 1000
 	CRPD.state = CRPS_NORMAL
 	CRPD.curknockdown = 0
+	CRPD.alivetics = 0
 	mo.scale = 4*FRACUNIT/3
 	p.normalspeed = 2*skins[mo.skin].normalspeed/3
 	p.runspeed = 2*skins[mo.skin].runspeed/3
@@ -110,7 +112,10 @@ addHook("ThinkFrame", do
 		p.wmaskheld = $ or {false, false, false} -- Use 3 weapon mask buttons
 
 		p.losstime = 40*TICRATE -- Special Ring Loss
-		--P_SpawnLockOn(p, p.mo, S_LOCKON1)
+		CRPD.alivetics = min(INT32_MAX-1, $ + 1) -- Counts up instead of down.
+		if (p == consoleplayer) and valid(mo) then
+			P_SpawnLockOn(p, mo, S_LOCKON1)
+		end
 
 		-- Button holding
 		for i = 1, #p.wmaskheld do -- Weapon Mask

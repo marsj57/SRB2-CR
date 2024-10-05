@@ -451,6 +451,7 @@ addHook("MobjDeath", function(mo)
 		mo.momy = $/4
 		if p.crplayerdata then
 			local CRPD = FLCR.PlayerData[p.crplayerdata.id]
+			CRPD.alivetics = 0
 			CRPD.state = CRPS_LOSE
 			CRPD.statetics = 0
 		end

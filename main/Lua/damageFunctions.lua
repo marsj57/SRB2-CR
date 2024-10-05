@@ -58,6 +58,7 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 		-- Do the damage, set the state
 		Lib.doDamage(p, damage, knockdown, true)
 		if (CRPD.health <= 0) then -- Health below 0? Process default behavior
+			CRPD.alivetics = 0
 			p.rings = 0
 			p.powers[pw_shield] = 0
 			return nil

@@ -59,7 +59,7 @@ COM_AddCommand("skirmish_equip", function(p, ...)
 
 	-- TODO: Perhaps a jointime variable that tracks how long
 	-- the player has been in-game and NOT a spectator.
-	if (CRPD.statetics > 5) then
+	if (CRPD.alivetics > 5) then
 		CONS_Printf(p, "Cannot equip a weapon right now.")
 		return
 	end
